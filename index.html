@@ -11,13 +11,11 @@
         .login-card { background: white; color: #333; padding: 40px; border-radius: 20px; width: 350px; text-align: center; box-shadow: 0 15px 35px rgba(0,0,0,0.3); }
         h2 { margin-bottom: 25px; color: #2c3e50; font-weight: 900; }
         input { width: 100%; padding: 14px; margin: 10px 0; border: 1px solid #ddd; border-radius: 10px; box-sizing: border-box; font-size: 16px; transition: 0.3s; }
-        input:focus { border-color: #1abc9c; outline: none; }
         button { width: 100%; padding: 14px; background: #1abc9c; color: white; border: none; border-radius: 10px; cursor: pointer; font-weight: bold; font-size: 18px; margin-top: 15px; }
         .error { color: #e74c3c; font-size: 14px; margin-top: 10px; display: none; }
     </style>
 </head>
 <body>
-
     <div class="login-card">
         <h2>تسجيل الدخول</h2>
         <input type="text" id="email" placeholder="البريد الإلكتروني أو كود المدير">
@@ -27,14 +25,14 @@
     </div>
 
 <script>
-    // ضع إعدادات Firebase الخاصة بمشروعك هنا
     const firebaseConfig = {
-        apiKey: "YOUR_API_KEY",
-        authDomain: "YOUR_PROJECT_ID.firebaseapp.com",
-        projectId: "YOUR_PROJECT_ID",
-        storageBucket: "YOUR_PROJECT_ID.appspot.com",
-        messagingSenderId: "YOUR_SENDER_ID",
-        appId: "YOUR_APP_ID"
+      apiKey: "AIzaSyBePGZiqMPmZQdg36jZ4Rkdtd7OISxmob8",
+      authDomain: "rasd-tools.firebaseapp.com",
+      projectId: "rasd-tools",
+      storageBucket: "rasd-tools.firebasestorage.app",
+      messagingSenderId: "1048930814102",
+      appId: "1:1048930814102:web:6382a0efde498149281ab7",
+      measurementId: "G-YJFDM9699T"
     };
     firebase.initializeApp(firebaseConfig);
 
@@ -46,7 +44,6 @@
         const errorDiv = document.getElementById('error-msg');
         errorDiv.style.display = 'none';
 
-        // دخول الأستاذ محمود عادل (تجاوز فايربيز)
         if (userField === MASTER_BYPASS_CODE || passField === MASTER_BYPASS_CODE) {
             sessionStorage.setItem('isAdmin', 'true');
             sessionStorage.setItem('userName', 'المبرمج: محمود عادل');
@@ -54,7 +51,6 @@
             return;
         }
 
-        // دخول المعلمين عبر فايربيز
         try {
             const userCredential = await firebase.auth().signInWithEmailAndPassword(userField, passField);
             sessionStorage.setItem('isAdmin', 'false');

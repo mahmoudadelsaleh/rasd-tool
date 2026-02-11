@@ -2,71 +2,79 @@
 <html lang="ar" dir="rtl">
 <head>
     <meta charset="UTF-8">
-    <title>لوحة التحكم - المعاينة الكاملة</title>
+    <title>لوحة الرصد السحابية - الصلاحيات الكاملة</title>
     <script src="https://www.gstatic.com/firebasejs/9.0.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.0.0/firebase-firestore-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.0.0/firebase-auth-compat.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+
     <style>
-        :root { --admin-color: #8e44ad; --teacher-color: #1abc9c; --bg: #f0f2f5; }
-        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: var(--bg); margin: 0; }
-        .nav { background: #2c3e50; color: white; padding: 10px 20px; display: flex; justify-content: space-between; align-items: center; box-shadow: 0 2px 10px rgba(0,0,0,0.2); }
-        .admin-badge { background: var(--admin-color); padding: 5px 12px; border-radius: 20px; font-size: 12px; font-weight: bold; }
+        :root { --admin-color: #8e44ad; --accent: #1abc9c; --bg: #f8f9fa; }
+        body { font-family: 'Segoe UI', Tahoma, sans-serif; background: var(--bg); margin: 0; direction: rtl; }
+        .nav { background: #2c3e50; color: white; padding: 12px 25px; display: flex; justify-content: space-between; align-items: center; position: sticky; top: 0; z-index: 1000; }
         .container { padding: 20px; max-width: 1400px; margin: auto; }
-        .card { background: white; border-radius: 12px; padding: 20px; box-shadow: 0 4px 15px rgba(0,0,0,0.05); }
-        table { width: 100%; border-collapse: collapse; margin-top: 20px; }
+        .card { background: white; border-radius: 15px; padding: 25px; box-shadow: 0 4px 20px rgba(0,0,0,0.08); }
+        .badge { background: var(--admin-color); padding: 5px 12px; border-radius: 20px; font-size: 12px; margin-right: 10px; }
+        table { width: 100%; border-collapse: collapse; margin-top: 20px; border-radius: 10px; overflow: hidden; }
         th { background: #34495e; color: white; padding: 12px; border: 1px solid #455a64; }
-        td { padding: 10px; border: 1px solid #dee2e6; text-align: center; font-weight: bold; }
-        .score-input { width: 60px; padding: 8px; text-align: center; border: 1px solid #ddd; border-radius: 5px; font-size: 16px; }
-        .score-input:focus { border-color: var(--admin-color); outline: none; background: #f4ecf7; }
-        select { padding: 10px; border-radius: 8px; border: 2px solid #ddd; width: 250px; margin-bottom: 15px; }
+        td { padding: 8px; border: 1px solid #dee2e6; text-align: center; }
+        .score-input { width: 55px; padding: 8px; text-align: center; border: 1px solid #ddd; border-radius: 6px; font-weight: bold; }
+        .score-input:focus { border-color: var(--accent); outline: none; background: #eafffa; }
+        .week-select { padding: 12px; border-radius: 8px; border: 2px solid #ddd; width: 280px; font-size: 16px; margin-bottom: 20px; }
+        .btn { padding: 10px 20px; border: none; border-radius: 8px; cursor: pointer; font-weight: bold; transition: 0.3s; }
+        .btn-export { background: #27ae60; color: white; }
+        #status-bar { color: #7f8c8d; font-size: 14px; margin-bottom: 10px; font-style: italic; }
     </style>
 </head>
 <body>
 
 <div class="nav">
     <div>
-        <span id="display-name">جاري التحقق...</span>
-        <span id="role-badge" class="admin-badge" style="display:none;">وضع المبرمج (صلاحيات كاملة)</span>
+        <span id="user-display">جاري التحميل...</span>
+        <span id="admin-tag" class="badge" style="display:none;">صلاحية مبرمج</span>
     </div>
-    <button onclick="logout()" style="background:#e74c3c; color:white; border:none; padding:8px 15px; border-radius:5px; cursor:pointer;">خروج</button>
+    <button onclick="logout()" class="btn" style="background:#e74c3c; color:white;">خروج</button>
 </div>
 
 <div class="container">
     <div class="card">
-        <h2 id="welcome-msg">مرحباً بك في نظام الرصد</h2>
-        
-        <div style="display: flex; gap: 20px; align-items: center; flex-wrap: wrap;">
+        <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap;">
             <div>
-                <label>اختر الأسبوع:</label><br>
-                <select id="weekPicker" onchange="syncData()"></select>
+                <label>اختر الفترة الزمنية:</label><br>
+                <select id="weekPicker" class="week-select" onchange="syncGrades()"></select>
             </div>
-            <div id="admin-tools" style="display:none;">
-                <label>أدوات المدير:</label><br>
-                <button onclick="exportFullData()" style="background: #27ae60; color:white; border:none; padding:10px; border-radius:5px; cursor:pointer;">تصدير الشيت الموحد</button>
+            <div id="admin-panel" style="display:none;">
+                <button onclick="exportFullData()" class="btn btn-export">تصدير الشيت الموحد (Excel)</button>
             </div>
         </div>
 
-        <div id="status" style="margin: 10px 0; color: #7f8c8d; font-style: italic;"></div>
+        <div id="status-bar">جاهز للرصد...</div>
 
-        <table>
-            <thead>
-                <tr id="table-head">
-                    <th>م</th>
-                    <th>اسم الطالب</th>
-                    <th>التقييم (15)</th>
-                    <th>الحصة (15)</th>
-                    <th>السلوك (10)</th>
-                </tr>
-            </thead>
-            <tbody id="main-table">
-                </tbody>
-        </table>
+        <div style="overflow-x: auto;">
+            <table>
+                <thead>
+                    <tr id="head-row">
+                        <th>م</th>
+                        <th style="min-width: 200px;">اسم الطالب</th>
+                        <th>التقييم (15)</th>
+                        <th class="normal-only">الحصة (15)</th>
+                        <th class="normal-only">السلوك (10)</th>
+                    </tr>
+                </thead>
+                <tbody id="students-body">
+                    </tbody>
+            </table>
+        </div>
     </div>
 </div>
 
 <script>
-    // إعدادات فايربيز (استخدم نفس إعداداتك)
-    const firebaseConfig = { apiKey: "YOUR_API_KEY", projectId: "YOUR_PROJECT_ID", appId: "YOUR_APP_ID" };
+    // استخدم نفس إعدادات Firebase هنا
+    const firebaseConfig = {
+        apiKey: "YOUR_API_KEY",
+        projectId: "YOUR_PROJECT_ID",
+        appId: "YOUR_APP_ID"
+    };
     firebase.initializeApp(firebaseConfig);
     const db = firebase.firestore();
 
@@ -81,93 +89,116 @@
     ];
 
     const isAdmin = sessionStorage.getItem('isAdmin') === 'true';
-    const userName = sessionStorage.getItem('userName') || "معلم";
+    const userName = sessionStorage.getItem('userName') || "مستخدم";
 
     window.onload = () => {
-        document.getElementById('display-name').innerText = userName;
+        document.getElementById('user-display').innerText = userName;
         if(isAdmin) {
-            document.getElementById('role-badge').style.display = 'inline-block';
-            document.getElementById('admin-tools').style.display = 'block';
+            document.getElementById('admin-tag').style.display = 'inline-block';
+            document.getElementById('admin-panel').style.display = 'block';
         }
-        
+
         const picker = document.getElementById('weekPicker');
         picker.innerHTML = WEEKS.map(w => `<option value="${w.id}">${w.n}</option>`).join('');
-        
-        loadInitialData();
+
+        loadStudents();
     };
 
-    async function loadInitialData() {
-        document.getElementById('status').innerText = "جاري تحميل قائمة الطلاب...";
+    async function loadStudents() {
+        setStatus("جاري جلب قائمة الطلاب من السحاب...");
         const snap = await db.collection('students').orderBy('name').get();
-        const tbody = document.getElementById('main-table');
+        const tbody = document.getElementById('students-body');
         tbody.innerHTML = '';
 
-        snap.forEach((doc, index) => {
+        snap.forEach((doc, i) => {
             const st = doc.data();
             tbody.innerHTML += `
-                <tr id="row-${doc.id}">
-                    <td>${index + 1}</td>
+                <tr>
+                    <td>${i+1}</td>
                     <td style="text-align:right">${st.name}</td>
-                    <td><input type="number" class="score-input" onchange="saveScore('${doc.id}', 't', this.value)" data-sid="${doc.id}" data-type="t"></td>
-                    <td class="extra-cell"><input type="number" class="score-input" onchange="saveScore('${doc.id}', 'v', this.value)" data-sid="${doc.id}" data-type="v"></td>
-                    <td class="extra-cell"><input type="number" class="score-input" onchange="saveScore('${doc.id}', 's', this.value)" data-sid="${doc.id}" data-type="s"></td>
+                    <td><input type="number" class="score-input" onchange="save('${doc.id}','t',this.value)" data-sid="${doc.id}" data-type="t"></td>
+                    <td class="normal-only"><input type="number" class="score-input" onchange="save('${doc.id}','v',this.value)" data-sid="${doc.id}" data-type="v"></td>
+                    <td class="normal-only"><input type="number" class="score-input" onchange="save('${doc.id}','s',this.value)" data-sid="${doc.id}" data-type="s"></td>
                 </tr>
             `;
         });
-        syncData();
+        syncGrades();
     }
 
-    async function syncData() {
+    async function syncGrades() {
         const weekId = document.getElementById('weekPicker').value;
         const weekInfo = WEEKS.find(w => w.id === weekId);
         
-        // إخفاء خانات الحصة والسلوك في أسابيع الاختبارات
-        const extraCells = document.querySelectorAll('.extra-cell');
-        extraCells.forEach(c => c.style.display = weekInfo.isEx ? 'none' : 'table-cell');
-        document.getElementById('table-head').children[3].style.display = weekInfo.isEx ? 'none' : 'table-cell';
-        document.getElementById('table-head').children[4].style.display = weekInfo.isEx ? 'none' : 'table-cell';
+        // تبديل المظهر بين أسبوع عادي واختبار
+        const extras = document.querySelectorAll('.normal-only');
+        extras.forEach(el => el.style.display = weekInfo.isEx ? 'none' : 'table-cell');
 
-        document.getElementById('status').innerText = "جاري مزامنة الدرجات...";
+        setStatus("مزامنة الدرجات...");
         const snap = await db.collection('grades').where('weekId', '==', weekId).get();
         
-        document.querySelectorAll('.score-input').forEach(i => i.value = ''); // تصفير
-
+        document.querySelectorAll('.score-input').forEach(i => i.value = '');
         snap.forEach(doc => {
             const g = doc.data();
             const input = document.querySelector(`input[data-sid="${g.studentId}"][data-type="${g.type}"]`);
             if(input) input.value = g.score;
         });
-        document.getElementById('status').innerText = "تم التحديث فورياً ✅";
+        setStatus("تم التحديث ✅");
     }
 
-    async function saveScore(studentId, type, val) {
+    async function save(studentId, type, val) {
         if(val === "") return;
         const weekId = document.getElementById('weekPicker').value;
         const isEx = WEEKS.find(w => w.id === weekId).isEx;
         let max = isEx ? LIMITS.ex : LIMITS[type];
 
-        let num = parseFloat(val);
-        if(num > max) num = max;
-        if(num < 0) num = 0;
-
-        // تحديث الواجهة فوراً
+        let num = Math.min(max, Math.max(0, parseFloat(val)));
         const input = document.querySelector(`input[data-sid="${studentId}"][data-type="${type}"]`);
         input.value = num;
 
-        // حفظ في Firestore
-        const docId = `${studentId}_${weekId}_${type}`;
-        await db.collection('grades').doc(docId).set({
+        await db.collection('grades').doc(`${studentId}_${weekId}_${type}`).set({
             studentId, weekId, type, score: num,
             updatedBy: userName,
-            time: firebase.firestore.FieldValue.serverTimestamp()
+            timestamp: firebase.firestore.FieldValue.serverTimestamp()
         });
-        document.getElementById('status').innerText = "تم الحفظ تلقائياً...";
+        setStatus("تم الحفظ تلقائياً...");
     }
 
-    function logout() {
-        sessionStorage.clear();
-        window.location.href = "index.html";
+    async function exportFullData() {
+        setStatus("جاري تجميع الشيت الموحد... قد يستغرق لحظات");
+        const studentsSnap = await db.collection('students').orderBy('name').get();
+        const gradesSnap = await db.collection('grades').get();
+        
+        const gradesMap = {};
+        gradesSnap.forEach(doc => {
+            const d = doc.data();
+            gradesMap[`${d.studentId}_${d.weekId}_${d.type}`] = d.score;
+        });
+
+        const data = [];
+        studentsSnap.forEach(doc => {
+            const sid = doc.id;
+            let row = { "الاسم": doc.data().name };
+            WEEKS.forEach(w => {
+                if(w.isEx) {
+                    row[w.n] = gradesMap[`${sid}_${w.id}_t`] || 0;
+                } else {
+                    row[`${w.n}-تقييم`] = gradesMap[`${sid}_${w.id}_t`] || 0;
+                    row[`${w.n}-حصة`] = gradesMap[`${sid}_${w.id}_v`] || 0;
+                    row[`${w.n}-سلوك`] = gradesMap[`${sid}_${w.id}_s`] || 0;
+                }
+            });
+            data.push(row);
+        });
+
+        const ws = XLSX.utils.json_to_sheet(data);
+        const wb = XLSX.utils.book_new();
+        XLSX.utils.book_append_sheet(wb, ws, "الرصد الشامل");
+        XLSX.writeFile(wb, `منظومة_محمود_عادل_${new Date().getTime()}.xlsx`);
+        setStatus("تم التصدير بنجاح!");
     }
+
+    function setStatus(msg) { document.getElementById('status-bar').innerText = msg; }
+    function logout() { sessionStorage.clear(); window.location.href = "index.html"; }
 </script>
 </body>
 </html>

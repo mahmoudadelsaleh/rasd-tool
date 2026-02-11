@@ -3,20 +3,17 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>منظومة الرصد - دخول الإدارة والمعلمين</title>
+    <title>دخول منظومة الرصد - الأستاذ محمود عادل</title>
     <script src="https://www.gstatic.com/firebasejs/9.0.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.0.0/firebase-auth-compat.js"></script>
-    
     <style>
         body { font-family: 'Segoe UI', sans-serif; margin: 0; display: flex; justify-content: center; align-items: center; height: 100vh; background: #2c3e50; color: white; }
         .login-card { background: white; color: #333; padding: 40px; border-radius: 20px; width: 350px; text-align: center; box-shadow: 0 15px 35px rgba(0,0,0,0.3); }
-        .login-card h2 { margin-bottom: 25px; color: #2c3e50; font-weight: 900; }
+        h2 { margin-bottom: 25px; color: #2c3e50; font-weight: 900; }
         input { width: 100%; padding: 14px; margin: 10px 0; border: 1px solid #ddd; border-radius: 10px; box-sizing: border-box; font-size: 16px; transition: 0.3s; }
-        input:focus { border-color: #1abc9c; outline: none; box-shadow: 0 0 8px rgba(26, 188, 156, 0.2); }
+        input:focus { border-color: #1abc9c; outline: none; }
         button { width: 100%; padding: 14px; background: #1abc9c; color: white; border: none; border-radius: 10px; cursor: pointer; font-weight: bold; font-size: 18px; margin-top: 15px; }
-        button:hover { background: #16a085; }
         .error { color: #e74c3c; font-size: 14px; margin-top: 10px; display: none; }
-        .admin-note { font-size: 12px; color: #95a5a6; margin-top: 20px; }
     </style>
 </head>
 <body>
@@ -26,56 +23,47 @@
         <input type="text" id="email" placeholder="البريد الإلكتروني أو كود المدير">
         <input type="password" id="password" placeholder="كلمة المرور">
         <button onclick="smartLogin()">دخول المنظومة</button>
-        <div id="error-msg" class="error">خطأ في بيانات الدخول</div>
-        <p class="admin-note">نظام الرصد السحابي - نسخة المعاينة</p>
+        <div id="error-msg" class="error">بيانات الدخول غير صحيحة</div>
     </div>
 
 <script>
-    // إعدادات فايربيز (تأكد من وضع إعداداتك هنا)
+    // ضع إعدادات Firebase الخاصة بمشروعك هنا
     const firebaseConfig = {
         apiKey: "YOUR_API_KEY",
         authDomain: "YOUR_PROJECT_ID.firebaseapp.com",
         projectId: "YOUR_PROJECT_ID",
         storageBucket: "YOUR_PROJECT_ID.appspot.com",
-        messagingSenderId: "YOUR_ID",
+        messagingSenderId: "YOUR_SENDER_ID",
         appId: "YOUR_APP_ID"
     };
     firebase.initializeApp(firebaseConfig);
 
-    // الكود السري الخاص بالأستاذ محمود عادل صالح
     const MASTER_BYPASS_CODE = "790707071";
 
     async function smartLogin() {
         const userField = document.getElementById('email').value.trim();
         const passField = document.getElementById('password').value.trim();
         const errorDiv = document.getElementById('error-msg');
-        
         errorDiv.style.display = 'none';
 
-        // المسار الأول: دخول المدير (الأستاذ محمود) بالتجاوز المباشر
+        // دخول الأستاذ محمود عادل (تجاوز فايربيز)
         if (userField === MASTER_BYPASS_CODE || passField === MASTER_BYPASS_CODE) {
-            console.log("مرحباً أستاذ محمود - دخول المدير");
-            // حفظ حالة الدخول كمدير في الجلسة لفتح المحتوى الكامل
             sessionStorage.setItem('isAdmin', 'true');
             sessionStorage.setItem('userName', 'المبرمج: محمود عادل');
             window.location.href = "dashboard.html";
             return;
         }
 
-        // المسار الثاني: دخول المعلمين عبر فايربيز
+        // دخول المعلمين عبر فايربيز
         try {
-            await firebase.auth().signInWithEmailAndPassword(userField, passField);
+            const userCredential = await firebase.auth().signInWithEmailAndPassword(userField, passField);
             sessionStorage.setItem('isAdmin', 'false');
+            sessionStorage.setItem('userName', userCredential.user.email);
             window.location.href = "dashboard.html";
         } catch (error) {
             errorDiv.style.display = 'block';
-            errorDiv.innerText = "بيانات الدخول غير صحيحة";
         }
     }
-
-    // السماح بالدخول عند الضغط على Enter
-    document.addEventListener('keypress', (e) => { if(e.key === 'Enter') smartLogin(); });
 </script>
-
 </body>
 </html>

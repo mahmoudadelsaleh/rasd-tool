@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <title>مركز المتابعة والمراسلة | الإدارة</title>
+    <script src="https://www.gstatic.com/firebasejs/9.0.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.0.0/firebase-firestore-compat.js"></script>
+    <style>
+        :root { --admin-main: #2c3e50; --online: #2ecc71; --offline: #95a5a6; }
+        body { font-family: 'Segoe UI', sans-serif; background: #f4f7f6; margin: 0; direction: rtl; }
+        .header { background: var(--admin-main); color: white; padding: 20px; text-align: center; font-size: 24px; font-weight: bold; }
+        .container { padding: 30px; max-width: 1200px; margin: auto; }
+        .teacher-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(350px, 1fr)); gap: 20px; }
+        .teacher-card { background: white; border-radius: 15px; padding: 20px; box-shadow: 0 5px 15px rgba(0,0,0,0.08); position: relative; border-right: 8px solid var(--offline); transition: 0.3s; }
+        .teacher-card.online { border-right-color: var(--online); }
+        .status-dot { width: 12px; height: 12px; border-radius: 50%; display: inline-block; margin-left: 8px; }
+        .online-bg { background: var(--online); box-shadow: 0 0 10px var(--online); }
+        .offline-bg { background: var(--offline); }
+        .msg-box { margin-top: 15px; background: #f9f9f9; padding: 10px; border-radius: 8px; }
+        .btn-send { background: #3498db; color: white; border: none; padding: 8px 15px; border-radius: 5px; cursor: pointer; margin-top: 5px; width: 100%; }
+        .last-activity { font-size: 12px; color: #7f8c8d; margin-top: 5px; }
+    </style>
+</head>
+<body>
+
+<div class="header">مركز مراقبة نشاط المعلمين</div>
+
+<div class="container">
+    <div id="teacherList" class="teacher-grid">
+        </div>
+</div>
+
+<script>
+    // تكوين Firebase الخاص بك
+    const firebaseConfig = {
+        apiKey: "AIzaSyBePGZiqMPmZQdg36jZ4Rkdtd7OISxmob8",
+        projectId: "rasd-tools",
+        // ... ضع بقية البيانات هنا
+    };
+    firebase.initializeApp(firebaseConfig);
+    const db = firebase.firestore();
+
+    // جلب المعلمين ومتابعة نشاطهم لحظياً
+    function monitorTeachers() {
+        db.collection('teachers').onSnapshot(snapshot => {
+            const list = document.getElementById('teacherList');
+            list.innerHTML = '';
+            
+            snapshot.forEach(doc => {
+                const t = doc.data();
+                const isOnline = checkOnlineStatus(t.lastActive);
+                
+                list.innerHTML += `
+                    <div class="teacher-card ${isOnline ? 'online' : ''}">
+                        <div style="display:flex; justify-content:space-between; align-items:start;">
+                            <div>
+                                <h3 style="margin:0">${t.name} <span class="status-dot ${isOnline ? 'online-bg' : 'offline-bg'}"></span></h3>
+                                <div style="color:#2980b9; font-weight:bold;">المادة: ${t.subject}</div>
+                            </div>
+                            <div class="last-activity">آخر نشاط: <br> ${formatDate(t.lastActive)}</div>
+                        </div>
+                        
+                        <div class="msg-box">
+                            <label style="font-size:12px; font-weight:bold;">إرسال توجيه خاص:</label>
+                            <input type="text" id="msg_${doc.id}" placeholder="اكتب رسالتك للمعلم هنا..." style="width:100%; padding:8px; border:1px solid #ddd; border-radius:4px; box-sizing:border-box;">
+                            <button class="btn-send" onclick="sendMessage('${doc.id}')">إرسال للمؤقت</button>
+                        </div>
+                        <div id="notif_${doc.id}" style="font-size:11px; color:#27ae60; margin-top:5px; text-align:center;">
+                            ${t.adminNote ? 'الرسالة الحالية: ' + t.adminNote : ''}
+                        </div>
+                    </div>
+                `;
+            });
+        });
+    }
+
+    function checkOnlineStatus(timestamp) {
+        if(!timestamp) return false;
+        const lastDate = timestamp.toDate();
+        const diff = (new Date() - lastDate) / 1000 / 60; // الفرق بالدقائق
+        return diff < 5; // يعتبر متصلاً إذا كان آخر نشاط خلال آخر 5 دقائق
+    }
+
+    async function sendMessage(tId) {
+        const msg = document.getElementById(`msg_${tId}`).value;
+        if(!msg) return;
+        await db.collection('teachers').doc(tId).update({
+            adminNote: msg,
+            noteTime: firebase.firestore.FieldValue.serverTimestamp()
+        });
+        alert("تم إرسال الإشعار للمعلم بنجاح ✅");
+    }
+
+    function formatDate(ts) {
+        if(!ts) return "غير معروف";
+        return ts.toDate().toLocaleString('ar-EG');
+    }
+
+    monitorTeachers();
+</script>
+</body>
+</html>

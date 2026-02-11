@@ -1,0 +1,178 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <title>لوحة التحكم السحابية - منظومة الرصد</title>
+    <script src="https://www.gstatic.com/firebasejs/9.0.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.0.0/firebase-firestore-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.0.0/firebase-auth-compat.js"></script>
+    
+    <style>
+        :root { --primary: #2c3e50; --accent: #1abc9c; --bg: #f4f7f6; }
+        body { font-family: 'Segoe UI', sans-serif; background: var(--bg); margin: 0; padding-bottom: 60px; }
+        .header { background: var(--primary); color: white; padding: 15px; display: flex; justify-content: space-between; align-items: center; position: sticky; top: 0; z-index: 100; }
+        .container { max-width: 1200px; margin: 20px auto; padding: 0 15px; }
+        .card { background: white; border-radius: 12px; padding: 20px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); margin-bottom: 20px; }
+        table { width: 100%; border-collapse: collapse; background: white; border-radius: 8px; overflow: hidden; }
+        th, td { border: 1px solid #ddd; padding: 12px; text-align: center; }
+        th { background: #34495e; color: white; }
+        .score-input { width: 50px; text-align: center; border: 1px solid #ccc; border-radius: 4px; padding: 5px; font-weight: bold; }
+        .btn { padding: 10px 20px; border: none; border-radius: 6px; cursor: pointer; font-weight: bold; transition: 0.3s; }
+        .btn-save { background: var(--accent); color: white; }
+        .btn-logout { background: #e74c3c; color: white; }
+        .week-selector { width: 100%; padding: 12px; border-radius: 8px; margin-bottom: 15px; font-size: 16px; border: 2px solid var(--primary); }
+    </style>
+</head>
+<body>
+
+<div class="header">
+    <div id="user-info">جاري التحميل...</div>
+    <button class="btn btn-logout" onclick="logout()">تسجيل خروج</button>
+</div>
+
+<div class="container">
+    <div class="card">
+        <h3>رصد الدرجات الأسبوعي</h3>
+        <select id="weekPicker" class="week-selector" onchange="loadGrades()">
+            </select>
+        <div id="loading-status" style="text-align: center; display: none;">جاري مزامنة البيانات...</div>
+        <div id="students-list">
+            <table>
+                <thead>
+                    <tr>
+                        <th>م</th>
+                        <th>اسم الطالب</th>
+                        <th>التقييم (15)</th>
+                        <th>الحصة (15)</th>
+                        <th>السلوك (10)</th>
+                    </tr>
+                </thead>
+                <tbody id="table-body">
+                    </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<script>
+    // 1. إعدادات Firebase (يجب وضع إعدادات مشروعك هنا)
+    const firebaseConfig = {
+        apiKey: "YOUR_API_KEY",
+        authDomain: "YOUR_PROJECT_ID.firebaseapp.com",
+        projectId: "YOUR_PROJECT_ID",
+        storageBucket: "YOUR_PROJECT_ID.appspot.com",
+        messagingSenderId: "YOUR_ID",
+        appId: "YOUR_APP_ID"
+    };
+    firebase.initializeApp(firebaseConfig);
+    const db = firebase.firestore();
+
+    // 2. حدود الدرجات والأسابيع (6-1-4-1-4)
+    const LIMITS = { t: 15, v: 15, s: 10, ex: 15 };
+    const WEEKS = [
+        {id:'w1', n:'الأسبوع 1'}, {id:'w2', n:'الأسبوع 2'}, {id:'w3', n:'الأسبوع 3'},
+        {id:'w4', n:'الأسبوع 4'}, {id:'w5', n:'الأسبوع 5'}, {id:'w6', n:'الأسبوع 6'},
+        {id:'ex1', n:'اختبار الشهر 1', isEx:true},
+        {id:'w7', n:'الأسبوع 7'}, {id:'w8', n:'الأسبوع 8'}, {id:'w9', n:'الأسبوع 9'}, {id:'w10', n:'الأسبوع 10'},
+        {id:'ex2', n:'اختبار الشهر 2', isEx:true},
+        {id:'w11', n:'الأسبوع 11'}, {id:'w12', n:'الأسبوع 12'}, {id:'w13', n:'الأسبوع 13'}, {id:'w14', n:'الأسبوع 14'}
+    ];
+
+    let currentTeacher = null;
+
+    // 3. التحقق من الهوية عند فتح الصفحة
+    firebase.auth().onAuthStateChanged(user => {
+        if (user) {
+            currentTeacher = user;
+            document.getElementById('user-info').innerText = "المعلم: " + user.email;
+            initApp();
+        } else {
+            window.location.href = "index.html"; // العودة لصفحة الدخول إذا لم يسجل
+        }
+    });
+
+    function initApp() {
+        const picker = document.getElementById('weekPicker');
+        picker.innerHTML = WEEKS.map(w => `<option value="${w.id}">${w.n}</option>`).join('');
+        loadStudents();
+    }
+
+    // 4. تحميل قائمة الطلاب من Firestore
+    async function loadStudents() {
+        const snapshot = await db.collection('students').orderBy('name').get();
+        const tbody = document.getElementById('table-body');
+        tbody.innerHTML = '';
+        
+        snapshot.forEach(doc => {
+            const student = doc.data();
+            const id = doc.id;
+            tbody.innerHTML += `
+                <tr id="row-${id}">
+                    <td>-</td>
+                    <td style="text-align: right;">${student.name}</td>
+                    <td><input type="number" class="score-input" data-sid="${id}" data-type="t" onchange="updateGrade('${id}', 't', this.value)"></td>
+                    <td><input type="number" class="score-input" data-sid="${id}" data-type="v" onchange="updateGrade('${id}', 'v', this.value)"></td>
+                    <td><input type="number" class="score-input" data-sid="${id}" data-type="s" onchange="updateGrade('${id}', 's', this.value)"></td>
+                </tr>
+            `;
+        });
+        loadGrades();
+    }
+
+    // 5. تحميل الدرجات الخاصة بالأسبوع المحدد
+    async function loadGrades() {
+        const weekId = document.getElementById('weekPicker').value;
+        const isEx = WEEKS.find(w => w.id === weekId).isEx;
+        
+        // إخفاء/إظهار الخانات حسب نوع الأسبوع (اختبار أم رصد عادي)
+        document.querySelectorAll('[data-type="v"], [data-type="s"]').forEach(el => {
+            el.parentElement.style.display = isEx ? 'none' : 'table-cell';
+        });
+
+        const snapshot = await db.collection('grades').where('weekId', '==', weekId).get();
+        
+        // تصفير الخانات أولاً
+        document.querySelectorAll('.score-input').forEach(input => input.value = '');
+
+        snapshot.forEach(doc => {
+            const data = doc.data();
+            const input = document.querySelector(`[data-sid="${data.studentId}"][data-type="${data.type}"]`);
+            if (input) input.value = data.score;
+        });
+    }
+
+    // 6. تحديث الدرجة في Firestore (التصحيح التلقائي والمزامنة)
+    async function updateGrade(studentId, type, value) {
+        if (value === '') return;
+        
+        const weekId = document.getElementById('weekPicker').value;
+        const isEx = WEEKS.find(w => w.id === weekId).isEx;
+        let max = isEx ? LIMITS.ex : LIMITS[type];
+        
+        let score = parseFloat(value);
+        if (score > max) score = max; // التصحيح التلقائي
+        if (score < 0) score = 0;
+
+        // تحديث الواجهة فوراً
+        const input = document.querySelector(`[data-sid="${studentId}"][data-type="${type}"]`);
+        input.value = score;
+
+        // الحفظ في الفايربيز
+        const gradeDocId = `${studentId}_${weekId}_${type}`;
+        await db.collection('grades').doc(gradeDocId).set({
+            studentId,
+            weekId,
+            type,
+            score,
+            teacherEmail: currentTeacher.email,
+            lastUpdate: firebase.firestore.FieldValue.serverTimestamp()
+        });
+    }
+
+    function logout() {
+        firebase.auth().signOut();
+    }
+</script>
+
+</body>
+</html>

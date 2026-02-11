@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <title>قائمة المعلمين والنشاط | الإدارة</title>
+    <script src="https://www.gstatic.com/firebasejs/9.0.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.0.0/firebase-firestore-compat.js"></script>
+    <style>
+        body { font-family: 'Segoe UI', sans-serif; background: #f0f2f5; padding: 20px; direction: rtl; }
+        .card { background: white; border-radius: 15px; padding: 20px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); max-width: 1000px; margin: auto; }
+        table { width: 100%; border-collapse: collapse; margin-top: 20px; }
+        th { background: #2c3e50; color: white; padding: 12px; }
+        td { padding: 12px; border: 1px solid #eee; text-align: center; }
+        .online { color: #2ecc71; font-weight: bold; }
+        .offline { color: #e74c3c; font-weight: bold; }
+        .btn-back { background: #34495e; color: white; padding: 10px 20px; border-radius: 8px; text-decoration: none; display: inline-block; margin-bottom: 20px; }
+    </style>
+</head>
+<body>
+
+<a href="dashboard.html" class="btn-back">⬅ العودة للوحة التحكم</a>
+
+<div class="card">
+    <h2>قائمة طاقم التدريس المسجل</h2>
+    <table id="teachersTable">
+        <thead>
+            <tr>
+                <th>اسم المعلم</th>
+                <th>المادة</th>
+                <th>اليوزر (الإيميل)</th>
+                <th>كلمة المرور</th>
+                <th>الحالة الآن</th>
+            </tr>
+        </thead>
+        <tbody id="tBody">
+            </tbody>
+    </table>
+</div>
+
+<script>
+    const firebaseConfig = {
+        apiKey: "AIzaSyBePGZiqMPmZQdg36jZ4Rkdtd7OISxmob8",
+        projectId: "rasd-tools",
+    };
+    firebase.initializeApp(firebaseConfig);
+    const db = firebase.firestore();
+
+    // جلب المعلمين لحظياً
+    db.collection('teachers').onSnapshot(snap => {
+        const tbody = document.getElementById('tBody');
+        tbody.innerHTML = '';
+        snap.forEach(doc => {
+            const t = doc.data();
+            const isOnline = checkOnline(t.lastActive);
+            tbody.innerHTML += `
+                <tr>
+                    <td>${t.name}</td>
+                    <td>${t.subject}</td>
+                    <td>${doc.id}</td>
+                    <td>${t.pass}</td>
+                    <td class="${isOnline ? 'online' : 'offline'}">${isOnline ? '● متصل الآن' : 'غير متصل'}</td>
+                </tr>
+            `;
+        });
+    });
+
+    function checkOnline(lastActive) {
+        if(!lastActive) return false;
+        const diff = (new Date() - lastActive.toDate()) / 1000 / 60;
+        return diff < 5; // إذا كان نشطاً في آخر 5 دقائق
+    }
+</script>
+</body>
+</html>

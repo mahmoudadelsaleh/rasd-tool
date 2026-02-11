@@ -2,31 +2,36 @@
 <html lang="ar" dir="rtl">
 <head>
     <meta charset="UTF-8">
-    <title>دخول المنظومة السحابية</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>منظومة الرصد - دخول الإدارة والمعلمين</title>
+    <script src="https://www.gstatic.com/firebasejs/9.0.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.0.0/firebase-auth-compat.js"></script>
+    
     <style>
-        body { font-family: 'Segoe UI', sans-serif; background: #2c3e50; display: flex; justify-content: center; align-items: center; height: 100vh; margin: 0; }
-        .login-box { background: white; padding: 30px; border-radius: 15px; box-shadow: 0 10px 25px rgba(0,0,0,0.5); width: 350px; text-align: center; }
-        input { width: 100%; padding: 12px; margin: 10px 0; border: 1px solid #ddd; border-radius: 8px; }
-        button { width: 100%; padding: 12px; background: #1abc9c; color: white; border: none; border-radius: 8px; cursor: pointer; font-weight: bold; }
-        #secret-field { display: none; } /* الحقل مخفي تماماً */
+        body { font-family: 'Segoe UI', sans-serif; margin: 0; display: flex; justify-content: center; align-items: center; height: 100vh; background: #2c3e50; color: white; }
+        .login-card { background: white; color: #333; padding: 40px; border-radius: 20px; width: 350px; text-align: center; box-shadow: 0 15px 35px rgba(0,0,0,0.3); }
+        .login-card h2 { margin-bottom: 25px; color: #2c3e50; font-weight: 900; }
+        input { width: 100%; padding: 14px; margin: 10px 0; border: 1px solid #ddd; border-radius: 10px; box-sizing: border-box; font-size: 16px; transition: 0.3s; }
+        input:focus { border-color: #1abc9c; outline: none; box-shadow: 0 0 8px rgba(26, 188, 156, 0.2); }
+        button { width: 100%; padding: 14px; background: #1abc9c; color: white; border: none; border-radius: 10px; cursor: pointer; font-weight: bold; font-size: 18px; margin-top: 15px; }
+        button:hover { background: #16a085; }
+        .error { color: #e74c3c; font-size: 14px; margin-top: 10px; display: none; }
+        .admin-note { font-size: 12px; color: #95a5a6; margin-top: 20px; }
     </style>
 </head>
 <body>
 
-<div class="login-box">
-    <h2>تسجيل الدخول</h2>
-    <input type="email" id="email" placeholder="البريد الإلكتروني">
-    <input type="password" id="password" placeholder="كلمة المرور">
-    <input type="password" id="secretCode" placeholder="كود التأكيد">
-    <button onclick="handleLogin()">دخول المنظومة</button>
-    <p id="msg" style="color: red; font-size: 13px;"></p>
-</div>
-
-<script src="https://www.gstatic.com/firebasejs/9.0.0/firebase-app-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/9.0.0/firebase-auth-compat.js"></script>
+    <div class="login-card">
+        <h2>تسجيل الدخول</h2>
+        <input type="text" id="email" placeholder="البريد الإلكتروني أو كود المدير">
+        <input type="password" id="password" placeholder="كلمة المرور">
+        <button onclick="smartLogin()">دخول المنظومة</button>
+        <div id="error-msg" class="error">خطأ في بيانات الدخول</div>
+        <p class="admin-note">نظام الرصد السحابي - نسخة المعاينة</p>
+    </div>
 
 <script>
-    // إعدادات Firebase الخاصة بك (انسخها من Firebase Console)
+    // إعدادات فايربيز (تأكد من وضع إعداداتك هنا)
     const firebaseConfig = {
         apiKey: "YOUR_API_KEY",
         authDomain: "YOUR_PROJECT_ID.firebaseapp.com",
@@ -37,29 +42,40 @@
     };
     firebase.initializeApp(firebaseConfig);
 
-    const SECRET_KEY = "790707071";
+    // الكود السري الخاص بالأستاذ محمود عادل صالح
+    const MASTER_BYPASS_CODE = "790707071";
 
-    async function handleLogin() {
-        const email = document.getElementById('email').value;
-        const password = document.getElementById('password').value;
-        const secretInput = document.getElementById('secretCode').value;
-        const msg = document.getElementById('msg');
+    async function smartLogin() {
+        const userField = document.getElementById('email').value.trim();
+        const passField = document.getElementById('password').value.trim();
+        const errorDiv = document.getElementById('error-msg');
+        
+        errorDiv.style.display = 'none';
 
-        // الشرط الأول: الكود السري الخاص بك
-        if (secretInput !== SECRET_KEY) {
-            msg.innerText = "فشل التحقق من الهوية (كود غير صحيح)";
+        // المسار الأول: دخول المدير (الأستاذ محمود) بالتجاوز المباشر
+        if (userField === MASTER_BYPASS_CODE || passField === MASTER_BYPASS_CODE) {
+            console.log("مرحباً أستاذ محمود - دخول المدير");
+            // حفظ حالة الدخول كمدير في الجلسة لفتح المحتوى الكامل
+            sessionStorage.setItem('isAdmin', 'true');
+            sessionStorage.setItem('userName', 'المبرمج: محمود عادل');
+            window.location.href = "dashboard.html";
             return;
         }
 
+        // المسار الثاني: دخول المعلمين عبر فايربيز
         try {
-            // الشرط الثاني: تسجيل الدخول عبر Firebase
-            await firebase.auth().signInWithEmailAndPassword(email, password);
-            alert("تم الدخول بنجاح! جاري التحويل...");
-            window.location.href = "dashboard.html"; // صفحة الرصد
+            await firebase.auth().signInWithEmailAndPassword(userField, passField);
+            sessionStorage.setItem('isAdmin', 'false');
+            window.location.href = "dashboard.html";
         } catch (error) {
-            msg.innerText = "خطأ في البريد أو كلمة المرور";
+            errorDiv.style.display = 'block';
+            errorDiv.innerText = "بيانات الدخول غير صحيحة";
         }
     }
+
+    // السماح بالدخول عند الضغط على Enter
+    document.addEventListener('keypress', (e) => { if(e.key === 'Enter') smartLogin(); });
 </script>
+
 </body>
 </html>

@@ -2,126 +2,177 @@
 <html lang="ar" dir="rtl">
 <head>
     <meta charset="UTF-8">
-    <title>لوحة التحكم | الإدارة المركزية</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>المنظومة الاحترافية | الأستاذ محمود عادل</title>
     <script src="https://www.gstatic.com/firebasejs/9.0.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.0.0/firebase-firestore-compat.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+
     <style>
-        :root { --main: #2c3e50; --accent: #8e44ad; --bg: #f8f9fa; }
-        body { font-family: 'Segoe UI', sans-serif; background: var(--bg); margin: 0; direction: rtl; }
-        .header { background: var(--main); color: white; padding: 15px 30px; display: flex; justify-content: space-between; align-items: center; box-shadow: 0 4px 10px rgba(0,0,0,0.1); }
+        :root { --admin-bg: #f8f0ff; --admin-border: #8e44ad; --teacher-bg: #e8f8f5; --teacher-border: #16a085; --dark: #2c3e50; }
+        body { font-family: 'Segoe UI', Tahoma, sans-serif; background: #f0f2f5; margin: 0; direction: rtl; color: #333; }
+        
+        /* Nav & Headers */
+        .nav { background: var(--dark); color: white; padding: 15px 25px; display: flex; justify-content: space-between; align-items: center; box-shadow: 0 4px 12px rgba(0,0,0,0.15); position: sticky; top: 0; z-index: 1000; }
+        .user-tag { background: rgba(255,255,255,0.1); padding: 5px 15px; border-radius: 20px; font-size: 14px; border: 1px solid rgba(255,255,255,0.2); }
+        
         .container { padding: 20px; max-width: 1600px; margin: auto; }
-        .card { background: white; border-radius: 15px; padding: 25px; box-shadow: 0 4px 15px rgba(0,0,0,0.05); margin-bottom: 20px; }
-        .admin-panel { display: none; border-right: 6px solid var(--accent); background: #fdfaff; }
-        .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 20px; }
-        table { width: 100%; border-collapse: collapse; margin-top: 20px; background: white; border-radius: 10px; overflow: hidden; }
-        th { background: var(--main); color: white; padding: 15px; }
-        td { padding: 12px; border: 1px solid #eee; text-align: center; font-weight: bold; }
-        .score-input { width: 60px; padding: 10px; text-align: center; border: 2px solid #ddd; border-radius: 8px; font-size: 16px; }
-        .btn { padding: 12px 20px; border: none; border-radius: 8px; cursor: pointer; font-weight: bold; color: white; transition: 0.3s; }
-        .status-ok { background: #e8f8f5; color: #16a085; padding: 10px; border-radius: 10px; margin-bottom: 15px; font-weight: bold; border-right: 5px solid #16a085; }
+        .card { background: white; border-radius: 15px; padding: 25px; box-shadow: 0 4px 20px rgba(0,0,0,0.08); margin-bottom: 25px; border: 1px solid #eee; }
+        
+        /* Admin Panel Decoration */
+        .admin-panel { display: none; background: var(--admin-bg); border: 2px solid var(--admin-border); }
+        .admin-title { color: var(--admin-border); border-bottom: 2px solid var(--admin-border); display: inline-block; margin-bottom: 20px; padding-bottom: 5px; }
+
+        /* Form Elements */
+        .grid-3 { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 20px; }
+        label { display: block; font-weight: bold; margin-bottom: 8px; color: #555; }
+        select, input, textarea { width: 100%; padding: 12px; border-radius: 10px; border: 1px solid #ccc; box-sizing: border-box; font-size: 15px; transition: 0.3s; }
+        select:focus, input:focus { border-color: var(--admin-border); outline: none; box-shadow: 0 0 8px rgba(142,68,173,0.2); }
+        
+        /* Table Style */
+        .table-container { overflow-x: auto; margin-top: 20px; border-radius: 12px; border: 1px solid #ddd; }
+        table { width: 100%; border-collapse: collapse; background: white; }
+        th { background: var(--dark); color: white; padding: 15px; font-size: 14px; text-transform: uppercase; }
+        td { padding: 12px; border: 1px solid #eee; text-align: center; font-weight: 600; }
+        tr:nth-child(even) { background: #fafafa; }
+        .score-input { width: 65px; border: 2px solid #ddd; border-radius: 8px; font-size: 16px; padding: 5px; }
+        .score-input:focus { border-color: var(--teacher-border); background: #f0fffb; }
+
+        /* Buttons */
+        .btn { padding: 12px 20px; border: none; border-radius: 10px; cursor: pointer; font-weight: bold; transition: 0.3s; color: white; display: inline-flex; align-items: center; justify-content: center; }
+        .btn-admin { background: var(--admin-border); }
+        .btn-save { background: var(--teacher-border); }
+        .btn-export { background: #27ae60; }
+        .btn-danger { background: #e74c3c; }
+
+        /* Notification Box */
+        #notification-box { background: #fff3cd; border-right: 6px solid #ffc107; padding: 15px; border-radius: 10px; margin-bottom: 20px; display: none; font-weight: bold; animation: pulse 2s infinite; }
+        @keyframes pulse { 0% { opacity: 1; } 50% { opacity: 0.7; } 100% { opacity: 1; } }
+
         .hidden { display: none; }
-        textarea { width: 100%; height: 100px; margin-top: 10px; border-radius: 10px; padding: 10px; border: 1px solid #ddd; }
-        select { padding: 10px; border-radius: 8px; border: 1px solid #ddd; font-size: 16px; width: 100%; }
+        .online-indicator { color: #2ecc71; font-size: 12px; margin-right: 10px; }
     </style>
 </head>
 <body>
 
-<div class="header">
-    <div id="userInfo">مرحباً بك</div>
-    <button onclick="logout()" class="btn" style="background:#e74c3c">خروج آمن</button>
+<div class="nav">
+    <div>
+        <span id="display-name" class="user-tag">جاري التحميل...</span>
+        <span id="display-role" class="user-tag" style="margin-right:10px; color:#ffce00"></span>
+    </div>
+    <div style="display:flex; align-items:center;">
+        <span id="live-clock" style="margin-left:20px; font-family:monospace;"></span>
+        <button onclick="logout()" class="btn btn-danger">تسجيل خروج</button>
+    </div>
 </div>
 
 <div class="container">
-    <div id="adminPanel" class="card admin-panel">
-        <h3 style="color:var(--accent); margin-top:0;">إعدادات المدير العام</h3>
-        <div class="grid">
-            <div>
-                <h4>رفع أسماء الطلاب</h4>
-                <select id="importGrade" onchange="checkImportGrade(this.value)">
+    
+    <div id="notification-box"></div>
+
+    <div id="admin-panel" class="card admin-panel">
+        <h2 class="admin-title">مركز قيادة الإدارة (محمود عادل)</h2>
+        <div class="grid-3">
+            <div style="background:white; padding:15px; border-radius:12px;">
+                <label>🔹 رفع أسماء الطلاب:</label>
+                <select id="import-grade" onchange="toggleImportBranch(this.value)">
                     <option value="1">الصف الأول الثانوي</option>
                     <option value="2">الصف الثاني الثانوي</option>
                 </select>
-                <div id="importBranchDiv" class="hidden" style="margin-top:10px;">
-                    <select id="importBranch">
+                <div id="import-branch-div" class="hidden" style="margin-top:10px;">
+                    <select id="import-branch">
                         <option value="scientific">علمي</option>
                         <option value="literary">أدبي</option>
                     </select>
                 </div>
-                <textarea id="nameList" placeholder="أدخل الأسماء هنا.. اسم في كل سطر"></textarea>
-                <button onclick="uploadStudents()" class="btn" style="background:var(--accent); width:100%; margin-top:10px;">حفظ الطلاب في السحاب</button>
+                <textarea id="raw-names" placeholder="الصق الأسماء هنا.. اسم في كل سطر"></textarea>
+                <button onclick="bulkUpload()" class="btn btn-admin" style="width:100%; margin-top:10px;">رفع وحفظ سحابي</button>
             </div>
-            <div>
-                <h4>إدارة المعلمين</h4>
-                <input type="text" id="tName" placeholder="اسم المعلم" style="width:100%; padding:10px; margin-bottom:5px; box-sizing:border-box;">
-                <input type="text" id="tSub" placeholder="المادة" style="width:100%; padding:10px; margin-bottom:5px; box-sizing:border-box;">
-                <input type="email" id="tEmail" placeholder="يوزر المعلم (Email)" style="width:100%; padding:10px; margin-bottom:5px; box-sizing:border-box;">
-                <input type="text" id="tPass" placeholder="كلمة المرور" style="width:100%; padding:10px; margin-bottom:5px; box-sizing:border-box;">
-                <button onclick="saveTeacher()" class="btn" style="background:var(--main); width:100%;">اعتماد المعلم</button>
+
+            <div style="background:white; padding:15px; border-radius:12px;">
+                <label>🔹 إضافة معلم جديد:</label>
+                <input type="text" id="t-name" placeholder="اسم المعلم" style="margin-bottom:8px;">
+                <input type="text" id="t-sub" placeholder="المادة الدراسية" style="margin-bottom:8px;">
+                <input type="email" id="t-email" placeholder="البريد الإلكتروني (Login User)" style="margin-bottom:8px;">
+                <input type="text" id="t-pass" placeholder="كلمة المرور" style="margin-bottom:8px;">
+                <button onclick="addNewTeacher()" class="btn btn-admin" style="width:100%;">اعتماد حساب المعلم</button>
             </div>
-            <div>
-                <h4>التحكم والتقارير</h4>
-                <select id="lockSwitch" onchange="setSystemLock(this.value)">
-                    <option value="false">فتح الرصد للجميع</option>
-                    <option value="true">إغلاق الرصد (عرض فقط)</option>
+
+            <div style="background:white; padding:15px; border-radius:12px;">
+                <label>🔹 التحكم العام والإشعارات:</label>
+                <select id="system-lock" onchange="updateSystemLock(this.value)">
+                    <option value="false">الرصد مفتوح للجميع</option>
+                    <option value="true">الرصد مغلق (عرض فقط)</option>
                 </select>
-                <button onclick="exportExcel()" class="btn" style="background:#27ae60; width:100%; margin-top:20px;">تحميل الشيت المجمع الكامل</button>
+                <div style="margin-top:10px;">
+                    <label>توجيه رسالة لكافة المعلمين:</label>
+                    <input type="text" id="global-msg" placeholder="اكتب التنبيه هنا...">
+                    <button onclick="sendGlobalMsg()" class="btn btn-admin" style="width:100%; margin-top:5px; background:#6c5ce7;">بث الإشعار الآن</button>
+                </div>
+                <button onclick="exportFullData()" class="btn btn-export" style="width:100%; margin-top:10px;">تحميل الشيت المجمع (Excel)</button>
             </div>
         </div>
     </div>
 
     <div class="card">
-        <div id="status" class="status-ok">النظام متصل وجاهز</div>
-        <div class="grid" style="grid-template-columns: 1fr 1fr 1fr;">
+        <div class="grid-3" style="align-items: end;">
             <div>
-                <label>الصف:</label>
-                <select id="viewGrade" onchange="checkViewGrade(this.value); loadData()">
-                    <option value="1">الأول الثانوي</option>
-                    <option value="2">الثاني الثانوي</option>
+                <label>اختر الصف:</label>
+                <select id="v-grade" onchange="toggleViewBranch(this.value); loadStudents()">
+                    <option value="1">الصف الأول الثانوي</option>
+                    <option value="2">الصف الثاني الثانوي</option>
                 </select>
             </div>
-            <div id="viewBranchDiv" class="hidden">
+            <div id="v-branch-div" class="hidden">
                 <label>الشعبة:</label>
-                <select id="viewBranch" onchange="loadData()">
+                <select id="v-branch" onchange="loadStudents()">
                     <option value="scientific">علمي</option>
                     <option value="literary">أدبي</option>
                 </select>
             </div>
             <div>
-                <label>الأسبوع/الفترة:</label>
-                <select id="weekPicker" onchange="refreshGrades()"></select>
+                <label>اختر الفترة/الأسبوع:</label>
+                <select id="v-week" onchange="syncGrades()"></select>
             </div>
         </div>
 
-        <table>
-            <thead>
-                <tr>
-                    <th>م</th>
-                    <th style="width:350px">اسم الطالب</th>
-                    <th>التقييم (15)</th>
-                    <th class="extra">الحصة (15)</th>
-                    <th class="extra">السلوك (10)</th>
-                </tr>
-            </thead>
-            <tbody id="tableBody"></tbody>
-        </table>
+        <div id="status-line" style="margin-top:20px; font-size:14px; color:#666; display:flex; align-items:center;">
+            <span class="online-indicator">●</span> متصل بقاعدة البيانات السحابية | <span id="sync-time"></span>
+        </div>
+
+        <div class="table-container">
+            <table>
+                <thead>
+                    <tr>
+                        <th>م</th>
+                        <th style="min-width: 300px;">اسم الطالب</th>
+                        <th>التقييم (15)</th>
+                        <th class="col-extra">الحصة (15)</th>
+                        <th class="col-extra">السلوك (10)</th>
+                    </tr>
+                </thead>
+                <tbody id="student-list">
+                    </tbody>
+            </table>
+        </div>
     </div>
 </div>
 
 <script>
-    // تكوين Firebase
+    // --- تفعيل Firebase ---
     const firebaseConfig = {
         apiKey: "AIzaSyBePGZiqMPmZQdg36jZ4Rkdtd7OISxmob8",
         projectId: "rasd-tools",
-        // ... تأكد من وضع باقي الـ Config الخاص بك هنا
+        storageBucket: "rasd-tools.appspot.com",
+        // ضع هنا باقي config الخاص بك
     };
     firebase.initializeApp(firebaseConfig);
     const db = firebase.firestore();
 
     const isAdmin = sessionStorage.getItem('isAdmin') === 'true';
+    const userEmail = sessionStorage.getItem('userEmail') || "admin@system.com";
     const userName = sessionStorage.getItem('userName');
-    
-    // قائمة الأسابيع والامتحانات الكاملة
+
     const WEEKS = [
         {id:'w1', n:'الأسبوع 1'}, {id:'w2', n:'الأسبوع 2'}, {id:'w3', n:'الأسبوع 3'}, {id:'w4', n:'الأسبوع 4'}, {id:'w5', n:'الأسبوع 5'}, {id:'w6', n:'الأسبوع 6'},
         {id:'ex1', n:'اختبار شهر 1', isEx:true},
@@ -130,71 +181,182 @@
         {id:'w11', n:'الأسبوع 11'}, {id:'w12', n:'الأسبوع 12'}, {id:'w13', n:'الأسبوع 13'}, {id:'w14', n:'الأسبوع 14'}
     ];
 
-    window.onload = async () => {
-        document.getElementById('userInfo').innerText = "المستخدم: " + userName;
-        if(isAdmin) document.getElementById('adminPanel').style.display = 'block';
+    window.onload = () => {
+        document.getElementById('display-name').innerText = "المستخدم: " + userName;
+        document.getElementById('display-role').innerText = isAdmin ? "[مدير ومبرمج]" : "[معلم رصد]";
+        if(isAdmin) document.getElementById('admin-panel').style.display = 'block';
         
-        document.getElementById('weekPicker').innerHTML = WEEKS.map(w => `<option value="${w.id}">${w.n}</option>`).join('');
-        loadData();
+        // تعبئة الأسابيع
+        document.getElementById('v-week').innerHTML = WEEKS.map(w => `<option value="${w.id}">${w.n}</option>`).join('');
+        
+        // بدء تحديثات النظام
+        startTime();
+        loadStudents();
+        listenForNotifications();
+        if(!isAdmin) startHeartbeat(); // نبض الاتصال للمعلمين فقط
     };
 
-    function checkImportGrade(v) { document.getElementById('importBranchDiv').style.display = (v==="2") ? 'block' : 'none'; }
-    function checkViewGrade(v) { document.getElementById('viewBranchDiv').style.display = (v==="2") ? 'block' : 'none'; }
+    // --- وظائف المدير ---
+    
+    function toggleImportBranch(v) { document.getElementById('import-branch-div').className = (v==="2") ? "" : "hidden"; }
+    function toggleViewBranch(v) { document.getElementById('v-branch-div').className = (v==="2") ? "" : "hidden"; }
 
-    async function uploadStudents() {
-        const names = document.getElementById('nameList').value.split('\n').filter(n => n.trim() !== "");
-        const grade = document.getElementById('importGrade').value;
-        const branch = (grade === "1") ? "general" : document.getElementById('importBranch').value;
+    async function bulkUpload() {
+        const text = document.getElementById('raw-names').value;
+        const grade = document.getElementById('import-grade').value;
+        const branch = (grade === "1") ? "general" : document.getElementById('import-branch').value;
+        const names = text.split('\n').filter(n => n.trim() !== "");
+
+        if(names.length === 0) return alert("من فضلك الصق الأسماء أولاً");
+
         const batch = db.batch();
         names.forEach(name => {
             const ref = db.collection('students').doc();
-            batch.set(ref, { name: name.trim(), grade: grade, branch: branch });
+            batch.set(ref, { name: name.trim(), grade, branch, createdAt: new Date() });
         });
         await batch.commit();
-        alert("تم رفع " + names.length + " طالباً بنجاح");
-        loadData();
+        alert("تم رفع " + names.length + " طالب بنجاح ✅");
+        document.getElementById('raw-names').value = '';
+        loadStudents();
     }
 
-    async function loadData() {
-        const grade = document.getElementById('viewGrade').value;
-        const branch = (grade === "1") ? "general" : document.getElementById('viewBranch').value;
-        const snap = await db.collection('students').where('grade', '==', grade).where('branch', '==', branch).orderBy('name').get();
-        const tbody = document.getElementById('tableBody');
+    async function addNewTeacher() {
+        const email = document.getElementById('t-email').value;
+        await db.collection('teachers').doc(email).set({
+            name: document.getElementById('t-name').value,
+            subject: document.getElementById('t-sub').value,
+            pass: document.getElementById('t-pass').value,
+            lastActive: new Date()
+        });
+        alert("تم اعتماد المعلم بنجاح ✅");
+    }
+
+    async function sendGlobalMsg() {
+        const msg = document.getElementById('global-msg').value;
+        await db.collection('settings').doc('systemConfig').set({ globalNote: msg }, {merge:true});
+        alert("تم بث الرسالة لكافة المعلمين 🔔");
+    }
+
+    async function updateSystemLock(val) {
+        await db.collection('settings').doc('systemConfig').set({ isLocked: (val==="true") }, {merge:true});
+    }
+
+    // --- وظائف الرصد والطلاب ---
+
+    async function loadStudents() {
+        const grade = document.getElementById('v-grade').value;
+        const branch = (grade === "1") ? "general" : document.getElementById('v-branch').value;
+        
+        const snap = await db.collection('students')
+            .where('grade', '==', grade)
+            .where('branch', '==', branch)
+            .orderBy('name').get();
+
+        const tbody = document.getElementById('student-list');
         tbody.innerHTML = '';
+
         snap.forEach((doc, i) => {
+            const s = doc.data();
             tbody.innerHTML += `<tr>
                 <td>${i+1}</td>
-                <td align="right">${doc.data().name}</td>
-                <td><input type="number" class="score-input" onchange="save('${doc.id}','t',this.value)" data-sid="${doc.id}" data-type="t"></td>
-                <td class="extra"><input type="number" class="score-input" onchange="save('${doc.id}','v',this.value)" data-sid="${doc.id}" data-type="v"></td>
-                <td class="extra"><input type="number" class="score-input" onchange="save('${doc.id}','s',this.value)" data-sid="${doc.id}" data-type="s"></td>
+                <td align="right">${s.name}</td>
+                <td><input type="number" class="score-input" onchange="saveScore('${doc.id}','t',this.value)" data-sid="${doc.id}" data-type="t"></td>
+                <td class="col-extra"><input type="number" class="score-input" onchange="saveScore('${doc.id}','v',this.value)" data-sid="${doc.id}" data-type="v"></td>
+                <td class="col-extra"><input type="number" class="score-input" onchange="saveScore('${doc.id}','s',this.value)" data-sid="${doc.id}" data-type="s"></td>
             </tr>`;
         });
-        refreshGrades();
+        syncGrades();
     }
 
-    async function save(sid, type, val) {
-        const week = document.getElementById('weekPicker').value;
+    async function saveScore(sid, type, val) {
+        if(val === "") return;
+        const week = document.getElementById('v-week').value;
+
+        // التحقق من القفل
         const config = await db.collection('settings').doc('systemConfig').get();
-        if(config.exists && config.data().islocked && !isAdmin) return alert("الرصد مغلق حالياً");
+        if(config.exists && config.data().isLocked && !isAdmin) {
+            alert("❌ الرصد مغلق حالياً من قبل الإدارة");
+            syncGrades();
+            return;
+        }
 
         await db.collection('grades').doc(`${sid}_${week}_${type}`).set({
-            sid, week, type, score: parseFloat(val)
+            sid, week, type, score: parseFloat(val),
+            teacher: userEmail,
+            lastUpdate: new Date()
         }, {merge:true});
+        document.getElementById('sync-time').innerText = "تم الحفظ: " + new Date().toLocaleTimeString();
     }
 
-    async function refreshGrades() {
-        const week = document.getElementById('weekPicker').value;
-        const isEx = WEEKS.find(w => w.id === week).isEx;
-        document.querySelectorAll('.extra').forEach(el => el.style.display = isEx ? 'none' : 'table-cell');
+    async function syncGrades() {
+        const weekId = document.getElementById('v-week').value;
+        const isEx = WEEKS.find(w => w.id === weekId).isEx;
         
-        const snap = await db.collection('grades').where('week', '==', week).get();
+        // إخفاء أعمدة الحصة والسلوك في أسابيع الامتحانات
+        document.querySelectorAll('.col-extra').forEach(el => el.style.display = isEx ? 'none' : 'table-cell');
+
+        const snap = await db.collection('grades').where('week', '==', weekId).get();
         document.querySelectorAll('.score-input').forEach(i => i.value = '');
+        
         snap.forEach(doc => {
             const g = doc.data();
             const input = document.querySelector(`input[data-sid="${g.sid}"][data-type="${g.type}"]`);
             if(input) input.value = g.score;
         });
+    }
+
+    // --- نظام المراقبة والإشعارات ---
+
+    function listenForNotifications() {
+        db.collection('settings').doc('systemConfig').onSnapshot(doc => {
+            if(doc.exists && doc.data().globalNote) {
+                const box = document.getElementById('notification-box');
+                box.innerText = "🔔 إشعار الإدارة: " + doc.data().globalNote;
+                box.style.display = 'block';
+            }
+        });
+    }
+
+    function startHeartbeat() {
+        setInterval(() => {
+            db.collection('teachers').doc(userEmail).update({
+                lastActive: new Date(),
+                isOnline: true
+            });
+        }, 60000); // إرسال نبضة "متصل الآن" كل دقيقة
+    }
+
+    // --- تصدير البيانات ---
+    async function exportFullData() {
+        alert("جاري تحضير الملف.. قد يستغرق ذلك لحظات");
+        const studentsSnap = await db.collection('students').get();
+        const gradesSnap = await db.collection('grades').get();
+        const gMap = {};
+        gradesSnap.forEach(d => { const v = d.data(); gMap[`${v.sid}_${v.week}_${v.type}`] = v.score; });
+
+        const data = [];
+        studentsSnap.forEach(doc => {
+            const s = doc.data();
+            let row = { "الاسم": s.name, "الصف": s.grade, "الشعبة": s.branch };
+            WEEKS.forEach(w => {
+                row[`${w.n}-ت`] = gMap[`${doc.id}_${w.id}_t`] || 0;
+                if(!w.isEx) {
+                    row[`${w.n}-ح`] = gMap[`${doc.id}_${w.id}_v`] || 0;
+                    row[`${w.n}-س`] = gMap[`${doc.id}_${w.id}_s`] || 0;
+                }
+            });
+            data.push(row);
+        });
+        const ws = XLSX.utils.json_to_sheet(data);
+        const wb = XLSX.utils.book_new();
+        XLSX.utils.book_append_sheet(wb, ws, "الرصد العام");
+        XLSX.writeFile(wb, "منظومة_محمود_عادل_الموحدة.xlsx");
+    }
+
+    function startTime() {
+        setInterval(() => {
+            document.getElementById('live-clock').innerText = new Date().toLocaleString('ar-EG');
+        }, 1000);
     }
 
     function logout() { sessionStorage.clear(); window.location.href="index.html"; }

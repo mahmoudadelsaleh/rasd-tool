@@ -3,61 +3,74 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>دخول منظومة الرصد - الأستاذ محمود عادل</title>
+    <title>تسجيل الدخول | منظومة الأستاذ محمود عادل</title>
     <script src="https://www.gstatic.com/firebasejs/9.0.0/firebase-app-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/9.0.0/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.0.0/firebase-firestore-compat.js"></script>
     <style>
-        body { font-family: 'Segoe UI', sans-serif; margin: 0; display: flex; justify-content: center; align-items: center; height: 100vh; background: #2c3e50; color: white; }
-        .login-card { background: white; color: #333; padding: 40px; border-radius: 20px; width: 350px; text-align: center; box-shadow: 0 15px 35px rgba(0,0,0,0.3); }
-        h2 { margin-bottom: 25px; color: #2c3e50; font-weight: 900; }
-        input { width: 100%; padding: 14px; margin: 10px 0; border: 1px solid #ddd; border-radius: 10px; box-sizing: border-box; font-size: 16px; transition: 0.3s; }
-        button { width: 100%; padding: 14px; background: #1abc9c; color: white; border: none; border-radius: 10px; cursor: pointer; font-weight: bold; font-size: 18px; margin-top: 15px; }
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: linear-gradient(135deg, #2c3e50, #4ca1af); height: 100vh; display: flex; align-items: center; justify-content: center; margin: 0; color: #333; }
+        .login-card { background: white; padding: 40px; border-radius: 20px; box-shadow: 0 15px 35px rgba(0,0,0,0.2); width: 100%; max-width: 400px; text-align: center; }
+        .login-card h2 { color: #2c3e50; margin-bottom: 30px; border-bottom: 2px solid #4ca1af; padding-bottom: 10px; }
+        .input-group { margin-bottom: 20px; text-align: right; }
+        .input-group label { display: block; margin-bottom: 5px; font-weight: bold; color: #555; }
+        .input-group input { width: 100%; padding: 12px; border: 2px solid #ddd; border-radius: 10px; box-sizing: border-box; font-size: 16px; transition: 0.3s; }
+        .input-group input:focus { border-color: #4ca1af; outline: none; }
+        .login-btn { width: 100%; padding: 15px; background: #2c3e50; color: white; border: none; border-radius: 10px; font-size: 18px; font-weight: bold; cursor: pointer; transition: 0.3s; }
+        .login-btn:hover { background: #1a252f; transform: translateY(-2px); }
         .error { color: #e74c3c; font-size: 14px; margin-top: 10px; display: none; }
     </style>
 </head>
 <body>
-    <div class="login-card">
-        <h2>تسجيل الدخول</h2>
-        <input type="text" id="email" placeholder="البريد الإلكتروني أو كود المدير">
-        <input type="password" id="password" placeholder="كلمة المرور">
-        <button onclick="smartLogin()">دخول المنظومة</button>
-        <div id="error-msg" class="error">بيانات الدخول غير صحيحة</div>
+
+<div class="login-card">
+    <h2>المنظومة السحابية</h2>
+    <div class="input-group">
+        <label>اسم المستخدم (Email/Code):</label>
+        <input type="text" id="username" placeholder="أدخل الكود أو البريد">
     </div>
+    <div class="input-group">
+        <label>كلمة المرور:</label>
+        <input type="password" id="password" placeholder="أدخل كلمة المرور">
+    </div>
+    <button class="login-btn" onclick="handleLogin()">دخول للمنظومة</button>
+    <p id="errorMessage" class="error">خطأ في بيانات الدخول، حاول مرة أخرى</p>
+</div>
 
 <script>
+    // تكوين Firebase
     const firebaseConfig = {
-      apiKey: "AIzaSyBePGZiqMPmZQdg36jZ4Rkdtd7OISxmob8",
-      authDomain: "rasd-tools.firebaseapp.com",
-      projectId: "rasd-tools",
-      storageBucket: "rasd-tools.firebasestorage.app",
-      messagingSenderId: "1048930814102",
-      appId: "1:1048930814102:web:6382a0efde498149281ab7",
-      measurementId: "G-YJFDM9699T"
+        apiKey: "AIzaSyBePGZiqMPmZQdg36jZ4Rkdtd7OISxmob8",
+        projectId: "rasd-tools",
+        // ... بقية البيانات
     };
     firebase.initializeApp(firebaseConfig);
+    const db = firebase.firestore();
 
-    const MASTER_BYPASS_CODE = "790707071";
+    async function handleLogin() {
+        const user = document.getElementById('username').value;
+        const pass = document.getElementById('password').value;
+        const err = document.getElementById('errorMessage');
 
-    async function smartLogin() {
-        const userField = document.getElementById('email').value.trim();
-        const passField = document.getElementById('password').value.trim();
-        const errorDiv = document.getElementById('error-msg');
-        errorDiv.style.display = 'none';
-
-        if (userField === MASTER_BYPASS_CODE || passField === MASTER_BYPASS_CODE) {
+        // 1. التحقق من دخول المدير (محمود عادل)
+        if(user === "790707071" && pass === "790707071") {
             sessionStorage.setItem('isAdmin', 'true');
-            sessionStorage.setItem('userName', 'المبرمج: محمود عادل');
+            sessionStorage.setItem('userName', 'المدير محمود عادل');
             window.location.href = "dashboard.html";
             return;
         }
 
+        // 2. التحقق من دخول المعلمين من قاعدة البيانات
         try {
-            const userCredential = await firebase.auth().signInWithEmailAndPassword(userField, passField);
-            sessionStorage.setItem('isAdmin', 'false');
-            sessionStorage.setItem('userName', userCredential.user.email);
-            window.location.href = "dashboard.html";
-        } catch (error) {
-            errorDiv.style.display = 'block';
+            const doc = await db.collection('teachers').doc(user).get();
+            if (doc.exists && doc.data().pass === pass) {
+                sessionStorage.setItem('isAdmin', 'false');
+                sessionStorage.setItem('userName', doc.data().name);
+                sessionStorage.setItem('userEmail', user);
+                window.location.href = "dashboard.html";
+            } else {
+                err.style.display = 'block';
+            }
+        } catch (e) {
+            err.style.display = 'block';
         }
     }
 </script>

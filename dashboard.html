@@ -2,78 +2,62 @@
 <html lang="ar" dir="rtl">
 <head>
     <meta charset="UTF-8">
-    <title>لوحة الرصد السحابية - الصلاحيات الكاملة</title>
+    <title>لوحة الرصد - مشروع rasd-tools</title>
     <script src="https://www.gstatic.com/firebasejs/9.0.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.0.0/firebase-firestore-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.0.0/firebase-auth-compat.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
-
     <style>
         :root { --admin-color: #8e44ad; --accent: #1abc9c; --bg: #f8f9fa; }
-        body { font-family: 'Segoe UI', Tahoma, sans-serif; background: var(--bg); margin: 0; direction: rtl; }
+        body { font-family: 'Segoe UI', sans-serif; background: var(--bg); margin: 0; direction: rtl; }
         .nav { background: #2c3e50; color: white; padding: 12px 25px; display: flex; justify-content: space-between; align-items: center; position: sticky; top: 0; z-index: 1000; }
         .container { padding: 20px; max-width: 1400px; margin: auto; }
         .card { background: white; border-radius: 15px; padding: 25px; box-shadow: 0 4px 20px rgba(0,0,0,0.08); }
         .badge { background: var(--admin-color); padding: 5px 12px; border-radius: 20px; font-size: 12px; margin-right: 10px; }
-        table { width: 100%; border-collapse: collapse; margin-top: 20px; border-radius: 10px; overflow: hidden; }
+        table { width: 100%; border-collapse: collapse; margin-top: 20px; }
         th { background: #34495e; color: white; padding: 12px; border: 1px solid #455a64; }
         td { padding: 8px; border: 1px solid #dee2e6; text-align: center; }
         .score-input { width: 55px; padding: 8px; text-align: center; border: 1px solid #ddd; border-radius: 6px; font-weight: bold; }
-        .score-input:focus { border-color: var(--accent); outline: none; background: #eafffa; }
         .week-select { padding: 12px; border-radius: 8px; border: 2px solid #ddd; width: 280px; font-size: 16px; margin-bottom: 20px; }
-        .btn { padding: 10px 20px; border: none; border-radius: 8px; cursor: pointer; font-weight: bold; transition: 0.3s; }
+        .btn { padding: 10px 20px; border: none; border-radius: 8px; cursor: pointer; font-weight: bold; }
         .btn-export { background: #27ae60; color: white; }
-        #status-bar { color: #7f8c8d; font-size: 14px; margin-bottom: 10px; font-style: italic; }
+        #status-bar { color: #7f8c8d; font-size: 14px; margin-bottom: 10px; }
     </style>
 </head>
 <body>
 
 <div class="nav">
-    <div>
-        <span id="user-display">جاري التحميل...</span>
-        <span id="admin-tag" class="badge" style="display:none;">صلاحية مبرمج</span>
-    </div>
+    <div><span id="user-display">جاري التحميل...</span> <span id="admin-tag" class="badge" style="display:none;">صلاحية مبرمج</span></div>
     <button onclick="logout()" class="btn" style="background:#e74c3c; color:white;">خروج</button>
 </div>
 
 <div class="container">
     <div class="card">
         <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap;">
-            <div>
-                <label>اختر الفترة الزمنية:</label><br>
-                <select id="weekPicker" class="week-select" onchange="syncGrades()"></select>
-            </div>
-            <div id="admin-panel" style="display:none;">
-                <button onclick="exportFullData()" class="btn btn-export">تصدير الشيت الموحد (Excel)</button>
-            </div>
+            <select id="weekPicker" class="week-select" onchange="syncGrades()"></select>
+            <div id="admin-panel" style="display:none;"><button onclick="exportFullData()" class="btn btn-export">تصدير الشيت الموحد</button></div>
         </div>
-
-        <div id="status-bar">جاهز للرصد...</div>
-
+        <div id="status-bar">جاهز...</div>
         <div style="overflow-x: auto;">
             <table>
                 <thead>
-                    <tr id="head-row">
-                        <th>م</th>
-                        <th style="min-width: 200px;">اسم الطالب</th>
-                        <th>التقييم (15)</th>
-                        <th class="normal-only">الحصة (15)</th>
-                        <th class="normal-only">السلوك (10)</th>
-                    </tr>
+                    <tr id="head-row"><th>م</th><th>اسم الطالب</th><th>التقييم (15)</th><th class="normal-only">الحصة (15)</th><th class="normal-only">السلوك (10)</th></tr>
                 </thead>
-                <tbody id="students-body">
-                    </tbody>
+                <tbody id="students-body"></tbody>
             </table>
         </div>
     </div>
 </div>
 
 <script>
-    // استخدم نفس إعدادات Firebase هنا
     const firebaseConfig = {
-        apiKey: "YOUR_API_KEY",
-        projectId: "YOUR_PROJECT_ID",
-        appId: "YOUR_APP_ID"
+      apiKey: "AIzaSyBePGZiqMPmZQdg36jZ4Rkdtd7OISxmob8",
+      authDomain: "rasd-tools.firebaseapp.com",
+      projectId: "rasd-tools",
+      storageBucket: "rasd-tools.firebasestorage.app",
+      messagingSenderId: "1048930814102",
+      appId: "1:1048930814102:web:6382a0efde498149281ab7",
+      measurementId: "G-YJFDM9699T"
     };
     firebase.initializeApp(firebaseConfig);
     const db = firebase.firestore();
@@ -82,9 +66,9 @@
     const WEEKS = [
         {id:'w1', n:'الأسبوع 1'}, {id:'w2', n:'الأسبوع 2'}, {id:'w3', n:'الأسبوع 3'},
         {id:'w4', n:'الأسبوع 4'}, {id:'w5', n:'الأسبوع 5'}, {id:'w6', n:'الأسبوع 6'},
-        {id:'ex1', n:'اختبار الشهر 1', isEx:true},
+        {id:'ex1', n:'اختبار 1', isEx:true},
         {id:'w7', n:'الأسبوع 7'}, {id:'w8', n:'الأسبوع 8'}, {id:'w9', n:'الأسبوع 9'}, {id:'w10', n:'الأسبوع 10'},
-        {id:'ex2', n:'اختبار الشهر 2', isEx:true},
+        {id:'ex2', n:'اختبار 2', isEx:true},
         {id:'w11', n:'الأسبوع 11'}, {id:'w12', n:'الأسبوع 12'}, {id:'w13', n:'الأسبوع 13'}, {id:'w14', n:'الأسبوع 14'}
     ];
 
@@ -97,30 +81,19 @@
             document.getElementById('admin-tag').style.display = 'inline-block';
             document.getElementById('admin-panel').style.display = 'block';
         }
-
-        const picker = document.getElementById('weekPicker');
-        picker.innerHTML = WEEKS.map(w => `<option value="${w.id}">${w.n}</option>`).join('');
-
+        document.getElementById('weekPicker').innerHTML = WEEKS.map(w => `<option value="${w.id}">${w.n}</option>`).join('');
         loadStudents();
     };
 
     async function loadStudents() {
-        setStatus("جاري جلب قائمة الطلاب من السحاب...");
         const snap = await db.collection('students').orderBy('name').get();
         const tbody = document.getElementById('students-body');
         tbody.innerHTML = '';
-
         snap.forEach((doc, i) => {
-            const st = doc.data();
-            tbody.innerHTML += `
-                <tr>
-                    <td>${i+1}</td>
-                    <td style="text-align:right">${st.name}</td>
-                    <td><input type="number" class="score-input" onchange="save('${doc.id}','t',this.value)" data-sid="${doc.id}" data-type="t"></td>
-                    <td class="normal-only"><input type="number" class="score-input" onchange="save('${doc.id}','v',this.value)" data-sid="${doc.id}" data-type="v"></td>
-                    <td class="normal-only"><input type="number" class="score-input" onchange="save('${doc.id}','s',this.value)" data-sid="${doc.id}" data-type="s"></td>
-                </tr>
-            `;
+            tbody.innerHTML += `<tr><td>${i+1}</td><td style="text-align:right">${doc.data().name}</td>
+                <td><input type="number" class="score-input" onchange="save('${doc.id}','t',this.value)" data-sid="${doc.id}" data-type="t"></td>
+                <td class="normal-only"><input type="number" class="score-input" onchange="save('${doc.id}','v',this.value)" data-sid="${doc.id}" data-type="v"></td>
+                <td class="normal-only"><input type="number" class="score-input" onchange="save('${doc.id}','s',this.value)" data-sid="${doc.id}" data-type="s"></td></tr>`;
         });
         syncGrades();
     }
@@ -128,76 +101,47 @@
     async function syncGrades() {
         const weekId = document.getElementById('weekPicker').value;
         const weekInfo = WEEKS.find(w => w.id === weekId);
-        
-        // تبديل المظهر بين أسبوع عادي واختبار
-        const extras = document.querySelectorAll('.normal-only');
-        extras.forEach(el => el.style.display = weekInfo.isEx ? 'none' : 'table-cell');
-
-        setStatus("مزامنة الدرجات...");
+        document.querySelectorAll('.normal-only').forEach(el => el.style.display = weekInfo.isEx ? 'none' : 'table-cell');
         const snap = await db.collection('grades').where('weekId', '==', weekId).get();
-        
         document.querySelectorAll('.score-input').forEach(i => i.value = '');
         snap.forEach(doc => {
             const g = doc.data();
             const input = document.querySelector(`input[data-sid="${g.studentId}"][data-type="${g.type}"]`);
             if(input) input.value = g.score;
         });
-        setStatus("تم التحديث ✅");
     }
 
     async function save(studentId, type, val) {
         if(val === "") return;
         const weekId = document.getElementById('weekPicker').value;
-        const isEx = WEEKS.find(w => w.id === weekId).isEx;
-        let max = isEx ? LIMITS.ex : LIMITS[type];
-
+        let max = WEEKS.find(w => w.id === weekId).isEx ? LIMITS.ex : LIMITS[type];
         let num = Math.min(max, Math.max(0, parseFloat(val)));
-        const input = document.querySelector(`input[data-sid="${studentId}"][data-type="${type}"]`);
-        input.value = num;
-
+        document.querySelector(`input[data-sid="${studentId}"][data-type="${type}"]`).value = num;
         await db.collection('grades').doc(`${studentId}_${weekId}_${type}`).set({
-            studentId, weekId, type, score: num,
-            updatedBy: userName,
-            timestamp: firebase.firestore.FieldValue.serverTimestamp()
+            studentId, weekId, type, score: num, updatedBy: userName, timestamp: firebase.firestore.FieldValue.serverTimestamp()
         });
-        setStatus("تم الحفظ تلقائياً...");
     }
 
     async function exportFullData() {
-        setStatus("جاري تجميع الشيت الموحد... قد يستغرق لحظات");
         const studentsSnap = await db.collection('students').orderBy('name').get();
         const gradesSnap = await db.collection('grades').get();
-        
         const gradesMap = {};
-        gradesSnap.forEach(doc => {
-            const d = doc.data();
-            gradesMap[`${d.studentId}_${d.weekId}_${d.type}`] = d.score;
-        });
-
+        gradesSnap.forEach(doc => { const d = doc.data(); gradesMap[`${d.studentId}_${d.weekId}_${d.type}`] = d.score; });
         const data = [];
         studentsSnap.forEach(doc => {
-            const sid = doc.id;
-            let row = { "الاسم": doc.data().name };
+            const sid = doc.id; let row = { "الاسم": doc.data().name };
             WEEKS.forEach(w => {
-                if(w.isEx) {
-                    row[w.n] = gradesMap[`${sid}_${w.id}_t`] || 0;
-                } else {
-                    row[`${w.n}-تقييم`] = gradesMap[`${sid}_${w.id}_t`] || 0;
-                    row[`${w.n}-حصة`] = gradesMap[`${sid}_${w.id}_v`] || 0;
-                    row[`${w.n}-سلوك`] = gradesMap[`${sid}_${w.id}_s`] || 0;
-                }
+                if(w.isEx) row[w.n] = gradesMap[`${sid}_${w.id}_t`] || 0;
+                else { row[`${w.n}-ت`] = gradesMap[`${sid}_${w.id}_t`] || 0; row[`${w.n}-ح`] = gradesMap[`${sid}_${w.id}_v`] || 0; row[`${w.n}-س`] = gradesMap[`${sid}_${w.id}_s`] || 0; }
             });
             data.push(row);
         });
-
         const ws = XLSX.utils.json_to_sheet(data);
         const wb = XLSX.utils.book_new();
-        XLSX.utils.book_append_sheet(wb, ws, "الرصد الشامل");
-        XLSX.writeFile(wb, `منظومة_محمود_عادل_${new Date().getTime()}.xlsx`);
-        setStatus("تم التصدير بنجاح!");
+        XLSX.utils.book_append_sheet(wb, ws, "الرصد");
+        XLSX.writeFile(wb, `شيت_رصد_موحد.xlsx`);
     }
 
-    function setStatus(msg) { document.getElementById('status-bar').innerText = msg; }
     function logout() { sessionStorage.clear(); window.location.href = "index.html"; }
 </script>
 </body>

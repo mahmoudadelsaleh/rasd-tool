@@ -28,6 +28,8 @@
         table { width: 100%; border-collapse: collapse; margin-top: 15px; background: white; border-radius: 10px; overflow: hidden; }
         th { background: #f1f5f9; padding: 12px; text-align: right; font-size: 13px; color: #475569; }
         td { padding: 12px; border-bottom: 1px solid #f1f5f9; font-size: 14px; }
+        .btn-edit { background: #eab308; color: white; border: none; padding: 5px 10px; border-radius: 5px; cursor: pointer; margin-left: 5px; }
+        .btn-del { background: #ef4444; color: white; border: none; padding: 5px 10px; border-radius: 5px; cursor: pointer; }
         @keyframes slideUp { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
     </style>
 </head>
@@ -63,17 +65,18 @@
 
     <div id="p2" class="tab-panel">
         <div class="card" style="border-color: var(--c1)">
-            <h2 style="color:var(--c1)">تسجيل معلم جديد</h2>
+            <h2 id="tFormTitle" style="color:var(--c1)">تسجيل معلم جديد</h2>
             <input type="text" id="tName" placeholder="الاسم الكامل">
             <input type="text" id="tSub" placeholder="المادة الدراسية">
             <input type="text" id="tUser" placeholder="اسم المستخدم (الإيميل)">
             <input type="text" id="tPass" placeholder="كلمة المرور">
-            <div style="margin:10px 0">
+            <div id="classesCheckboxes" style="margin:10px 0">
                 <label><input type="checkbox" class="t-cls" value="1_general"> 1 ثانوي</label>
                 <label><input type="checkbox" class="t-cls" value="2_scientific"> 2 علمي</label>
                 <label><input type="checkbox" class="t-cls" value="2_literary"> 2 أدبي</label>
             </div>
-            <button class="btn-save" style="background:var(--c1)" onclick="saveTeacher()">حفظ المعلم</button>
+            <button id="btnSaveT" class="btn-save" style="background:var(--c1)" onclick="saveTeacher()">حفظ المعلم</button>
+            <button id="btnCancelEdit" class="btn-save" style="background:#64748b; margin-top:5px; display:none" onclick="cancelTeacherEdit()">إلغاء التعديل</button>
         </div>
     </div>
 
@@ -133,14 +136,13 @@
 </div>
 
 <script>
-    // الإعدادات الخاصة بمشروعك (نفس التي تستخدمها في صفحة المعلم)
     const firebaseConfig = { apiKey: "AIzaSyBePGZiqMPmZQdg36jZ4Rkdtd7OISxmob8", projectId: "rasd-tools" };
     firebase.initializeApp(firebaseConfig);
     const db = firebase.firestore();
 
     let teachers = [], students = [], settings = { startDate: '', lockedWeeks: [], systemActive: true };
+    let editMode = false;
 
-    // تبديل التبويبات
     function openTab(evt, tabId) {
         document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
         document.querySelectorAll('.tab-btn').forEach(b => { 
@@ -156,7 +158,6 @@
     }
 
     window.onload = async () => {
-        // تهيئة الأسابيع في الأقفال والمراقبة
         const lg = document.getElementById('lockGrid');
         const mw = document.getElementById('monW');
         lg.innerHTML = ''; mw.innerHTML = '<option value="">الأسبوع</option>';
@@ -171,8 +172,6 @@
 
     async function loadAllData() {
         document.getElementById('schoolNameDisplay').innerText = "جاري مزامنة البيانات...";
-        
-        // جلب الإعدادات
         const setDoc = await db.collection('settings').doc('global').get();
         if(setDoc.exists) {
             settings = setDoc.data();
@@ -183,18 +182,13 @@
                 if(cb) cb.checked = true;
             });
         }
-
-        // جلب المعلمين والطلاب
         const tSnap = await db.collection('teachers').get();
         teachers = tSnap.docs.map(doc => ({id: doc.id, ...doc.data()}));
-        
         const sSnap = await db.collection('students').get();
         students = sSnap.docs.map(doc => doc.data());
-
         document.getElementById('countT').innerText = teachers.length;
         document.getElementById('countS').innerText = students.length;
         document.getElementById('schoolNameDisplay').innerText = "تم تحديث البيانات بنجاح";
-
         renderTeachersTable();
         populateMonTeachers();
     }
@@ -207,93 +201,124 @@
                 <td>${t.name}</td>
                 <td>${t.subject}</td>
                 <td>${t.classes ? t.classes.join(', ') : 'لا يوجد'}</td>
-                <td><button onclick="deleteT('${t.id}')" style="color:red; border:none; cursor:pointer">حذف</button></td>
+                <td>
+                    <button class="btn-edit" onclick="editTeacher('${t.id}')">تعديل</button>
+                    <button class="btn-del" onclick="deleteT('${t.id}')">حذف</button>
+                </td>
             </tr>`;
         });
     }
 
-    function populateMonTeachers() {
-        const monT = document.getElementById('monT');
-        monT.innerHTML = '<option value="">اختر المعلم</option>';
-        teachers.forEach(t => {
-            monT.innerHTML += `<option value="${t.id}">${t.name}</option>`;
+    function editTeacher(id) {
+        const t = teachers.find(x => x.id === id);
+        if(!t) return;
+        editMode = true;
+        document.getElementById('tFormTitle').innerText = "تعديل بيانات المعلم";
+        document.getElementById('tUser').value = t.id;
+        document.getElementById('tUser').readOnly = true;
+        document.getElementById('tName').value = t.name;
+        document.getElementById('tSub').value = t.subject;
+        document.getElementById('tPass').value = t.pass;
+        document.querySelectorAll('.t-cls').forEach(cb => {
+            cb.checked = t.classes && t.classes.includes(cb.value);
         });
+        document.getElementById('btnSaveT').innerText = "تحديث البيانات";
+        document.getElementById('btnCancelEdit').style.display = "block";
+        openTab({currentTarget: document.querySelector('[onclick*="p2"]')}, 'p2');
     }
 
-    function updateMonClasses() {
-        const t = teachers.find(x => x.id === document.getElementById('monT').value);
-        const mc = document.getElementById('monC');
-        mc.innerHTML = '<option value="">الفصل</option>';
-        if(t && t.classes) {
-            t.classes.forEach(c => mc.innerHTML += `<option value="${c}">${c}</option>`);
-        }
+    function cancelTeacherEdit() {
+        editMode = false;
+        document.getElementById('tFormTitle').innerText = "تسجيل معلم جديد";
+        document.getElementById('tUser').value = '';
+        document.getElementById('tUser').readOnly = false;
+        document.getElementById('tName').value = '';
+        document.getElementById('tSub').value = '';
+        document.getElementById('tPass').value = '';
+        document.querySelectorAll('.t-cls').forEach(cb => cb.checked = false);
+        document.getElementById('btnSaveT').innerText = "حفظ المعلم";
+        document.getElementById('btnCancelEdit').style.display = "none";
     }
 
     async function saveTeacher() {
-        const id = document.getElementById('tUser').value;
+        const id = document.getElementById('tUser').value.trim();
         const data = {
-            name: document.getElementById('tName').value,
-            subject: document.getElementById('tSub').value,
-            pass: document.getElementById('tPass').value,
+            name: document.getElementById('tName').value.trim(),
+            subject: document.getElementById('tSub').value.trim(),
+            pass: document.getElementById('tPass').value.trim(),
             classes: Array.from(document.querySelectorAll('.t-cls:checked')).map(c => c.value)
         };
         if(!id || !data.name) return alert("أكمل البيانات");
         await db.collection('teachers').doc(id).set(data);
-        alert("تم حفظ المعلم بنجاح ✅"); loadAllData();
+        alert(editMode ? "تم التحديث بنجاح ✅" : "تم الحفظ بنجاح ✅");
+        cancelTeacherEdit();
+        loadAllData();
     }
 
     async function uploadStudents() {
-        const names = document.getElementById('sNames').value.split('\n').filter(n => n.trim());
+        const rawNames = document.getElementById('sNames').value.split('\n').filter(n => n.trim());
         const gradeVal = document.getElementById('sGrade').value;
-        if(!gradeVal || names.length === 0) return alert("أدخل الأسماء واختر الصف");
+        if(!gradeVal || rawNames.length === 0) return alert("أدخل الأسماء واختر الصف");
         const [g, b] = gradeVal.split('_');
+        
+        // جلب الطلاب الحاليين لهذا الصف لمنع التكرار
+        const existingS = students.filter(s => s.grade === g && s.branch === b).map(s => s.name);
+        const newNames = rawNames.filter(n => !existingS.includes(n.trim()));
+
+        if(newNames.length === 0) return alert("جميع هذه الأسماء موجودة مسبقاً في هذا الصف!");
+
         const batch = db.batch();
-        names.forEach((n, i) => batch.set(db.collection('students').doc(), {name: n.trim(), grade: g, branch: b, sortOrder: i}));
+        newNames.forEach((n, i) => {
+            const newRef = db.collection('students').doc();
+            batch.set(newRef, {name: n.trim(), grade: g, branch: b, sortOrder: Date.now() + i});
+        });
         await batch.commit();
-        alert("تم رفع الطلاب ✅"); loadAllData();
+        alert(`تم إضافة ${newNames.length} طالب جديد بنجاح ✅`);
+        document.getElementById('sNames').value = '';
+        loadAllData();
     }
 
+    // بقية الدوال (fetchMonitoring, saveManualLocks, saveAutoSettings, deleteT, populateMonTeachers, updateMonClasses) تظل كما هي في النسخة الأصلية
+    function populateMonTeachers() {
+        const monT = document.getElementById('monT');
+        monT.innerHTML = '<option value="">اختر المعلم</option>';
+        teachers.forEach(t => { monT.innerHTML += `<option value="${t.id}">${t.name}</option>`; });
+    }
+    function updateMonClasses() {
+        const t = teachers.find(x => x.id === document.getElementById('monT').value);
+        const mc = document.getElementById('monC');
+        mc.innerHTML = '<option value="">الفصل</option>';
+        if(t && t.classes) { t.classes.forEach(c => mc.innerHTML += `<option value="${c}">${c}</option>`); }
+    }
     async function fetchMonitoring() {
         const tId = document.getElementById('monT').value;
         const week = document.getElementById('monW').value;
         const classVal = document.getElementById('monC').value;
         if(!tId || !week || !classVal) return alert("أكمل اختيارات المراقبة");
-
         const [g, b] = classVal.split('_');
         const resDiv = document.getElementById('monResult');
         resDiv.innerHTML = "جاري جلب بيانات الرصد...";
-
         const gSnap = await db.collection('grades').where('teacher','==',tId).where('week','==',week).get();
         const sSnap = await db.collection('students').where('grade','==',g).where('branch','==',b).get();
-        
         const grades = {};
-        gSnap.forEach(doc => {
-            const d = doc.data();
-            if(!grades[d.sid]) grades[d.sid] = {};
-            grades[d.sid][d.type] = d.score;
-        });
-
+        gSnap.forEach(doc => { const d = doc.data(); if(!grades[d.sid]) grades[d.sid] = {}; grades[d.sid][d.type] = d.score; });
         let html = '<table><thead><tr><th>الطالب</th><th>تقييم</th><th>حصة</th><th>سلوك</th></tr></thead><tbody>';
-        sSnap.forEach(doc => {
-            const s = doc.data();
-            const sc = grades[doc.id] || {};
+        sSnap.docs.sort((a,b)=>a.data().sortOrder - b.data().sortOrder).forEach(doc => {
+            const s = doc.data(); const sc = grades[doc.id] || {};
             html += `<tr><td>${s.name}</td><td>${sc.t||'-'}</td><td>${sc.v||'-'}</td><td>${sc.s||'-'}</td></tr>`;
         });
         resDiv.innerHTML = html + '</tbody></table>';
     }
-
     async function saveManualLocks() {
         settings.lockedWeeks = Array.from(document.querySelectorAll('.w-lock:checked')).map(c => c.value);
         await db.collection('settings').doc('global').set(settings, {merge: true});
     }
-
     async function saveAutoSettings() {
         settings.startDate = document.getElementById('startD').value;
         settings.systemActive = document.getElementById('sysActive').checked;
         await db.collection('settings').doc('global').set(settings, {merge: true});
         alert("تم تحديث الضبط ✅");
     }
-
     async function deleteT(id) {
         if(confirm("هل أنت متأكد من حذف هذا المعلم؟")) {
             await db.collection('teachers').doc(id).delete();

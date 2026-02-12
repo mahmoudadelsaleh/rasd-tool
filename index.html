@@ -7,70 +7,64 @@
     <script src="https://www.gstatic.com/firebasejs/9.0.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.0.0/firebase-firestore-compat.js"></script>
     <style>
-        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: linear-gradient(135deg, #2c3e50, #4ca1af); height: 100vh; display: flex; align-items: center; justify-content: center; margin: 0; color: #333; }
-        .login-card { background: white; padding: 40px; border-radius: 20px; box-shadow: 0 15px 35px rgba(0,0,0,0.2); width: 100%; max-width: 400px; text-align: center; }
-        .login-card h2 { color: #2c3e50; margin-bottom: 30px; border-bottom: 2px solid #4ca1af; padding-bottom: 10px; }
-        .input-group { margin-bottom: 20px; text-align: right; }
-        .input-group label { display: block; margin-bottom: 5px; font-weight: bold; color: #555; }
-        .input-group input { width: 100%; padding: 12px; border: 2px solid #ddd; border-radius: 10px; box-sizing: border-box; font-size: 16px; transition: 0.3s; }
-        .input-group input:focus { border-color: #4ca1af; outline: none; }
-        .login-btn { width: 100%; padding: 15px; background: #2c3e50; color: white; border: none; border-radius: 10px; font-size: 18px; font-weight: bold; cursor: pointer; transition: 0.3s; }
-        .login-btn:hover { background: #1a252f; transform: translateY(-2px); }
-        .error { color: #e74c3c; font-size: 14px; margin-top: 10px; display: none; }
+        body { font-family: 'Segoe UI', Tahoma, sans-serif; background: #2c3e50; display: flex; justify-content: center; align-items: center; height: 100vh; margin: 0; direction: rtl; }
+        .login-card { background: white; padding: 40px; border-radius: 20px; box-shadow: 0 10px 25px rgba(0,0,0,0.3); width: 100%; max-width: 400px; text-align: center; }
+        h2 { color: #2c3e50; margin-bottom: 25px; }
+        input { width: 100%; padding: 15px; margin-bottom: 15px; border: 2px solid #ddd; border-radius: 10px; font-size: 16px; box-sizing: border-box; transition: 0.3s; }
+        input:focus { border-color: #27ae60; outline: none; }
+        .btn-login { width: 100%; padding: 15px; background: #27ae60; border: none; border-radius: 10px; color: white; font-size: 18px; font-weight: bold; cursor: pointer; transition: 0.3s; }
+        .btn-login:hover { background: #219150; }
+        .error { color: #e74c3c; font-size: 14px; margin-bottom: 15px; display: none; }
     </style>
 </head>
 <body>
 
 <div class="login-card">
-    <h2>المنظومة السحابية</h2>
-    <div class="input-group">
-        <label>اسم المستخدم (Email/Code):</label>
-        <input type="text" id="username" placeholder="أدخل الكود أو البريد">
-    </div>
-    <div class="input-group">
-        <label>كلمة المرور:</label>
-        <input type="password" id="password" placeholder="أدخل كلمة المرور">
-    </div>
-    <button class="login-btn" onclick="handleLogin()">دخول للمنظومة</button>
-    <p id="errorMessage" class="error">خطأ في بيانات الدخول، حاول مرة أخرى</p>
+    <h2>تسجيل دخول المنظومة</h2>
+    <div id="error-msg" class="error">بيانات الدخول غير صحيحة!</div>
+    <input type="text" id="user-id" placeholder="البريد الإلكتروني أو كود المدير">
+    <input type="password" id="user-pass" placeholder="كلمة المرور">
+    <button onclick="handleLogin()" class="btn-login">دخول الآن</button>
+    <p style="margin-top:20px; color:#7f8c8d; font-size: 12px;">الإصدار المطور 2026 - م/ محمود عادل</p>
 </div>
 
 <script>
-    // تكوين Firebase
-    const firebaseConfig = {
-        apiKey: "AIzaSyBePGZiqMPmZQdg36jZ4Rkdtd7OISxmob8",
-        projectId: "rasd-tools",
-        // ... بقية البيانات
+    // إعدادات Firebase
+    const firebaseConfig = { 
+        apiKey: "AIzaSyBePGZiqMPmZQdg36jZ4Rkdtd7OISxmob8", 
+        projectId: "rasd-tools" 
     };
     firebase.initializeApp(firebaseConfig);
     const db = firebase.firestore();
 
     async function handleLogin() {
-        const user = document.getElementById('username').value;
-        const pass = document.getElementById('password').value;
-        const err = document.getElementById('errorMessage');
+        const id = document.getElementById('user-id').value.trim();
+        const pass = document.getElementById('user-pass').value.trim();
+        const errorEl = document.getElementById('error-msg');
 
-        // 1. التحقق من دخول المدير (محمود عادل)
-        if(user === "790707071" && pass === "790707071") {
+        // 1. التحقق من كود المدير (محمود عادل)
+        if (id === "790707071" && pass === "790707071") {
             sessionStorage.setItem('isAdmin', 'true');
-            sessionStorage.setItem('userName', 'المدير محمود عادل');
+            sessionStorage.setItem('userEmail', 'admin@system.com');
+            sessionStorage.setItem('userName', 'الأستاذ محمود عادل (المدير)');
             window.location.href = "dashboard.html";
             return;
         }
 
-        // 2. التحقق من دخول المعلمين من قاعدة البيانات
+        // 2. التحقق من المعلمين في قاعدة البيانات
         try {
-            const doc = await db.collection('teachers').doc(user).get();
+            const doc = await db.collection('teachers').doc(id).get();
             if (doc.exists && doc.data().pass === pass) {
                 sessionStorage.setItem('isAdmin', 'false');
+                sessionStorage.setItem('userEmail', id);
                 sessionStorage.setItem('userName', doc.data().name);
-                sessionStorage.setItem('userEmail', user);
                 window.location.href = "dashboard.html";
             } else {
-                err.style.display = 'block';
+                errorEl.style.display = 'block';
             }
         } catch (e) {
-            err.style.display = 'block';
+            console.error(e);
+            alert("حدث خطأ في الاتصال بقاعدة البيانات");
         }
     }
 </script>

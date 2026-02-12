@@ -1,0 +1,269 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>لوحة تحكم القائد v2026</title>
+    <script src="https://www.gstatic.com/firebasejs/9.0.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.0.0/firebase-firestore-compat.js"></script>
+    <style>
+        :root {
+            --bg: #f8fafc; --sidebar: #1e293b; --accent: #3b82f6;
+            --c1: #4f46e5; --c2: #0891b2; --c3: #059669; --c4: #d97706; --c5: #e11d48; --c6: #7c3aed; --c7: #2563eb;
+        }
+        body { font-family: 'Segoe UI', sans-serif; background: var(--bg); margin: 0; display: flex; flex-direction: column; height: 100vh; overflow: hidden; }
+        
+        /* هيدر المنصة */
+        header { background: var(--sidebar); color: white; padding: 15px 25px; display: flex; justify-content: space-between; align-items: center; box-shadow: 0 2px 10px rgba(0,0,0,0.2); }
+        
+        /* شريط التبويبات */
+        .tabs-nav { display: flex; background: white; padding: 5px; gap: 5px; overflow-x: auto; border-bottom: 1px solid #e2e8f0; scrollbar-width: none; }
+        .tab-btn { padding: 12px 20px; border: none; border-radius: 10px; cursor: pointer; font-weight: bold; white-space: nowrap; transition: 0.3s; color: #64748b; background: #f1f5f9; }
+        .tab-btn.active { color: white; transform: translateY(-2px); }
+
+        /* منطقة المحتوى */
+        .content-area { flex: 1; overflow-y: auto; padding: 20px; }
+        .tab-panel { display: none; max-width: 1000px; margin: auto; animation: slideUp 0.4s ease-out; }
+        .tab-panel.active { display: block; }
+
+        /* الكروت */
+        .card { background: white; border-radius: 15px; padding: 20px; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1); margin-bottom: 20px; border-top: 5px solid; }
+        .grid-stats { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px; }
+        .stat-box { padding: 20px; border-radius: 15px; text-align: center; background: #fff; border: 1px solid #e2e8f0; }
+        .stat-box b { font-size: 28px; display: block; color: var(--sidebar); }
+
+        /* الجداول والمدخلات */
+        input, select, textarea { width: 100%; padding: 12px; margin: 8px 0; border-radius: 10px; border: 1px solid #cbd5e1; font-size: 14px; }
+        .btn-save { background: var(--sidebar); color: white; border: none; padding: 12px 25px; border-radius: 10px; cursor: pointer; width: 100%; font-weight: bold; }
+        table { width: 100%; border-collapse: collapse; margin-top: 15px; background: white; border-radius: 10px; overflow: hidden; }
+        th { background: #f1f5f9; padding: 12px; text-align: right; font-size: 13px; color: #475569; }
+        td { padding: 12px; border-bottom: 1px solid #f1f5f9; font-size: 14px; }
+
+        @keyframes slideUp { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
+    </style>
+</head>
+<body>
+
+<header>
+    <div><strong>نظام إدارة الرصد الذكي</strong> | م. محمود عادل</div>
+    <div id="schoolNameDisplay" style="font-size: 14px; color: #94a3b8;">إحصائيات فورية</div>
+</header>
+
+<div class="tabs-nav">
+    <button class="tab-btn active" style="--bg-act: var(--c7)" onclick="openTab(event, 'p1')">📊 إحصائيات</button>
+    <button class="tab-btn" style="--bg-act: var(--c1)" onclick="openTab(event, 'p2')">➕ إضافة معلم</button>
+    <button class="tab-btn" style="--bg-act: var(--c2)" onclick="openTab(event, 'p3')">📝 تعديل معلمين</button>
+    <button class="tab-btn" style="--bg-act: var(--c3)" onclick="openTab(event, 'p4')">🎓 إضافة طلاب</button>
+    <button class="tab-btn" style="--bg-act: var(--c4)" onclick="openTab(event, 'p5')">👁️ مراقبة الرصد</button>
+    <button class="tab-btn" style="--bg-act: var(--c5)" onclick="openTab(event, 'p6')">🔒 أقفال يدوية</button>
+    <button class="tab-btn" style="--bg-act: var(--c6)" onclick="openTab(event, 'p7')">⚙️ ضبط آلي</button>
+</div>
+
+<div class="content-area">
+    <div id="p1" class="tab-panel active">
+        <div class="card" style="border-color: var(--c7)">
+            <h2 style="color:var(--c7)">ملخص إنجاز المدرسة</h2>
+            <div class="grid-stats">
+                <div class="stat-box">إجمالي المعلمين<b id="countT">0</b></div>
+                <div class="stat-box">إجمالي الطلاب<b id="countS">0</b></div>
+                <div class="stat-box">فصول مفعلة<b>3</b></div>
+                <div class="stat-box">حالة النظام<b id="sysStatus" style="color:green">مفتوح</b></div>
+            </div>
+        </div>
+    </div>
+
+    <div id="p2" class="tab-panel">
+        <div class="card" style="border-color: var(--c1)">
+            <h2 style="color:var(--c1)">تسجيل معلم جديد</h2>
+            <input type="text" id="tName" placeholder="الاسم الكامل">
+            <input type="text" id="tSub" placeholder="المادة الدراسية">
+            <input type="text" id="tUser" placeholder="اسم المستخدم">
+            <input type="text" id="tPass" placeholder="كلمة المرور">
+            <p>الفصول المتاحة:</p>
+            <label><input type="checkbox" class="t-cls" value="1_general"> 1 ثانوي</label>
+            <label><input type="checkbox" class="t-cls" value="2_scientific"> 2 علمي</label>
+            <label><input type="checkbox" class="t-cls" value="2_literary"> 2 أدبي</label>
+            <button class="btn-save" style="background:var(--c1); margin-top:15px" onclick="saveTeacher()">حفظ المعلم</button>
+        </div>
+    </div>
+
+    <div id="p3" class="tab-panel">
+        <div class="card" style="border-color: var(--c2)">
+            <h2 style="color:var(--c2)">قائمة المعلمين</h2>
+            <table>
+                <thead><tr><th>المعلم</th><th>المادة</th><th>الفصول</th><th>إجراء</th></tr></thead>
+                <tbody id="teachersTable"></tbody>
+            </table>
+        </div>
+    </div>
+
+    <div id="p4" class="tab-panel">
+        <div class="card" style="border-color: var(--c3)">
+            <h2 style="color:var(--c3)">رفع أسماء الطلاب</h2>
+            <select id="sGrade">
+                <option value="1_general">1 ثانوي</option>
+                <option value="2_scientific">2 ثانوي علمي</option>
+                <option value="2_literary">2 ثانوي أدبي</option>
+            </select>
+            <textarea id="sNames" placeholder="الصق الأسماء هنا.. اسم في كل سطر" rows="8"></textarea>
+            <button class="btn-save" style="background:var(--c3)" onclick="uploadStudents()">بدء الرفع</button>
+        </div>
+    </div>
+
+    <div id="p5" class="tab-panel">
+        <div class="card" style="border-color: var(--c4)">
+            <h2 style="color:var(--c4)">رادار الرصد</h2>
+            <div style="display:flex; gap:10px">
+                <select id="monT" onchange="updateMonClasses()"><option value="">اختر المعلم</option></select>
+                <select id="monC"><option value="">الفصل</option></select>
+                <select id="monW"><option value="">الأسبوع</option></select>
+            </div>
+            <button class="btn-save" style="background:var(--c4)" onclick="fetchMonitoring()">عرض كشف الرصد</button>
+            <div id="monResult"></div>
+        </div>
+    </div>
+
+    <div id="p6" class="tab-panel">
+        <div class="card" style="border-color: var(--c5)">
+            <h2 style="color:var(--c5)">التحكم اليدوي الفوري</h2>
+            <div id="lockGrid" style="display:grid; grid-template-columns:repeat(4,1fr); gap:10px"></div>
+        </div>
+    </div>
+
+    <div id="p7" class="tab-panel">
+        <div class="card" style="border-color: var(--c6)">
+            <h2 style="color:var(--c6)">جدولة الرصد الآلية</h2>
+            <label>تاريخ بداية أول سبت دراسي:</label>
+            <input type="date" id="startD" onchange="saveAutoSettings()">
+            <label><input type="checkbox" id="sysActive" onchange="saveAutoSettings()"> تفعيل المنظومة للمعلمين</label>
+        </div>
+    </div>
+</div>
+
+<script>
+    const firebaseConfig = { apiKey: "AIzaSyBePGZiqMPmZQdg36jZ4Rkdtd7OISxmob8", projectId: "rasd-tools" };
+    firebase.initializeApp(firebaseConfig);
+    const db = firebase.firestore();
+
+    let teachers = [], students = [], settings = { startDate: '', lockedWeeks: [], systemActive: true };
+
+    // تبديل التبويبات
+    function openTab(evt, tabId) {
+        document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
+        document.querySelectorAll('.tab-btn').forEach(b => { b.classList.remove('active'); b.style.background = "#f1f5f9"; });
+        document.getElementById(tabId).classList.add('active');
+        evt.currentTarget.classList.add('active');
+        evt.currentTarget.style.background = evt.currentTarget.style.getPropertyValue('--bg-act');
+    }
+
+    window.onload = async () => {
+        // تهيئة الأسابيع
+        const lg = document.getElementById('lockGrid');
+        const mw = document.getElementById('monW');
+        for(let i=1; i<=14; i++) {
+            lg.innerHTML += `<label style="padding:10px; background:#fef2f2; border-radius:10px; text-align:center; font-size:12px">
+                أسبوع ${i}<br><input type="checkbox" class="w-lock" value="w${i}" onchange="saveManualLocks()">
+            </label>`;
+            mw.innerHTML += `<option value="w${i}">أسبوع ${i}</option>`;
+        }
+        await loadData();
+    };
+
+    async function loadData() {
+        const tSnap = await db.collection('teachers').get();
+        teachers = tSnap.docs.map(doc => ({id: doc.id, ...doc.data()}));
+        const sSnap = await db.collection('students').get();
+        students = sSnap.docs.map(doc => doc.data());
+        
+        const setDoc = await db.collection('settings').doc('global').get();
+        if(setDoc.exists) {
+            settings = setDoc.data();
+            document.getElementById('startD').value = settings.startDate;
+            document.getElementById('sysActive').checked = settings.systemActive;
+            settings.lockedWeeks.forEach(w => {
+                const cb = document.querySelector(`.w-lock[value="${w}"]`);
+                if(cb) cb.checked = true;
+            });
+        }
+        renderDashboard();
+    }
+
+    function renderDashboard() {
+        document.getElementById('countT').innerText = teachers.length;
+        document.getElementById('countS').innerText = students.length;
+        
+        const tTable = document.getElementById('teachersTable');
+        const monT = document.getElementById('monT');
+        tTable.innerHTML = ''; monT.innerHTML = '<option value="">اختر المعلم</option>';
+
+        teachers.forEach(t => {
+            tTable.innerHTML += `<tr><td>${t.name}</td><td>${t.subject}</td><td>${t.classes.join(', ')}</td><td><button onclick="deleteT('${t.id}')" style="color:red; border:none; background:none; cursor:pointer">حذف</button></td></tr>`;
+            monT.innerHTML += `<option value="${t.id}">${t.name}</option>`;
+        });
+    }
+
+    async function saveTeacher() {
+        const id = document.getElementById('tUser').value;
+        const data = {
+            name: document.getElementById('tName').value,
+            subject: document.getElementById('tSub').value,
+            pass: document.getElementById('tPass').value,
+            classes: Array.from(document.querySelectorAll('.t-cls:checked')).map(c => c.value)
+        };
+        await db.collection('teachers').doc(id).set(data);
+        alert("تم الحفظ ✅"); loadData();
+    }
+
+    async function uploadStudents() {
+        const names = document.getElementById('sNames').value.split('\n').filter(n => n.trim());
+        const [g, b] = document.getElementById('sGrade').value.split('_');
+        const batch = db.batch();
+        names.forEach((n, i) => batch.set(db.collection('students').doc(), {name: n.trim(), grade: g, branch: b, sortOrder: i}));
+        await batch.commit();
+        alert("تم رفع الطلاب ✅"); loadData();
+    }
+
+    function updateMonClasses() {
+        const t = teachers.find(x => x.id === document.getElementById('monT').value);
+        const mc = document.getElementById('monC');
+        mc.innerHTML = t ? t.classes.map(c => `<option value="${c}">${c}</option>`).join('') : '';
+    }
+
+    async function fetchMonitoring() {
+        const tId = document.getElementById('monT').value;
+        const week = document.getElementById('monW').value;
+        const [g, b] = document.getElementById('monC').value.split('_');
+        
+        const gSnap = await db.collection('grades').where('teacher','==',tId).where('week','==',week).get();
+        const sSnap = await db.collection('students').where('grade','==',g).where('branch','==',b).get();
+        
+        const grades = {};
+        gSnap.forEach(doc => {
+            const d = doc.data();
+            if(!grades[d.sid]) grades[d.sid] = {};
+            grades[d.sid][d.type] = d.score;
+        });
+
+        let html = '<table><thead><tr><th>الطالب</th><th>تقييم</th><th>حصة</th><th>سلوك</th></tr></thead><tbody>';
+        sSnap.forEach(doc => {
+            const s = doc.data();
+            const sc = grades[doc.id] || {t:'-', v:'-', s:'-'};
+            html += `<tr><td>${s.name}</td><td>${sc.t||'-'}</td><td>${sc.v||'-'}</td><td>${sc.s||'-'}</td></tr>`;
+        });
+        document.getElementById('monResult').innerHTML = html + '</tbody></table>';
+    }
+
+    async function saveManualLocks() {
+        settings.lockedWeeks = Array.from(document.querySelectorAll('.w-lock:checked')).map(c => c.value);
+        await db.collection('settings').doc('global').set(settings, {merge: true});
+    }
+
+    async function saveAutoSettings() {
+        settings.startDate = document.getElementById('startD').value;
+        settings.systemActive = document.getElementById('sysActive').checked;
+        await db.collection('settings').doc('global').set(settings, {merge: true});
+        alert("تم تحديث الضبط ✅");
+    }
+</script>
+</body>
+</html>

@@ -2,91 +2,120 @@
 <html lang="ar" dir="rtl">
 <head>
     <meta charset="UTF-8">
-    <title>منظومة محمود عادل | التحكم الكامل 2026</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>منظومة محمود عادل | التحكم الشامل</title>
     <script src="https://www.gstatic.com/firebasejs/9.0.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.0.0/firebase-firestore-compat.js"></script>
     <style>
-        :root { --admin: #2c3e50; --primary: #27ae60; --accent: #e67e22; --danger: #e74c3c; }
-        body { font-family: 'Segoe UI', sans-serif; background: #f4f7f6; margin: 0; direction: rtl; }
-        .nav { background: var(--admin); color: white; padding: 15px; display: flex; justify-content: space-between; align-items: center; }
-        .container { padding: 20px; max-width: 1400px; margin: auto; }
-        .card { background: white; border-radius: 12px; padding: 20px; box-shadow: 0 4px 10px rgba(0,0,0,0.1); margin-bottom: 20px; }
+        :root { --admin: #2c3e50; --primary: #27ae60; --accent: #e67e22; --danger: #e74c3c; --info: #3498db; }
+        body { font-family: 'Segoe UI', Tahoma, sans-serif; background: #f4f7f6; margin: 0; direction: rtl; }
+        .nav { background: var(--admin); color: white; padding: 15px 25px; display: flex; justify-content: space-between; align-items: center; position: sticky; top: 0; z-index: 1000; box-shadow: 0 2px 10px rgba(0,0,0,0.2); }
+        .container { padding: 20px; max-width: 1500px; margin: auto; }
+        .card { background: white; border-radius: 15px; padding: 20px; box-shadow: 0 4px 15px rgba(0,0,0,0.08); margin-bottom: 20px; border: 1px solid #eee; }
         .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: 20px; }
-        input, select, textarea { width: 100%; padding: 10px; margin-top: 5px; border-radius: 8px; border: 1px solid #ccc; box-sizing: border-box; }
-        .btn { padding: 10px 15px; border: none; border-radius: 6px; cursor: pointer; color: white; font-weight: bold; }
+        h3, h4 { margin-top: 0; color: var(--admin); border-right: 5px solid var(--accent); padding-right: 10px; }
+        input, select, textarea { width: 100%; padding: 12px; margin-top: 8px; border-radius: 10px; border: 1px solid #ccc; font-size: 14px; box-sizing: border-box; }
+        .btn { padding: 12px 20px; border: none; border-radius: 8px; cursor: pointer; color: white; font-weight: bold; transition: 0.3s; display: inline-block; }
         .btn-save { background: var(--primary); }
         .btn-del { background: var(--danger); }
-        .btn-batch { background: var(--accent); }
-        table { width: 100%; border-collapse: collapse; margin-top: 15px; background: white; }
-        th, td { border: 1px solid #ddd; padding: 12px; text-align: center; }
-        th { background: #f8f9fa; }
-        .pending { background: #fff3cd !important; border: 2px solid #ffc107 !important; }
-        .teacher-item { border-bottom: 1px solid #eee; padding: 10px; display: flex; justify-content: space-between; align-items: center; }
-        .status-on { color: green; font-weight: bold; }
-        .status-off { color: red; font-weight: bold; }
+        .btn-accent { background: var(--accent); }
+        .btn-edit { background: var(--info); padding: 5px 10px; font-size: 12px; }
+        
+        /* نظام الإحصائيات */
+        .stat-card { background: #fff; border: 1px solid #ddd; padding: 15px; border-radius: 12px; text-align: center; }
+        .bar-bg { background: #eee; border-radius: 20px; height: 12px; margin: 10px 0; overflow: hidden; }
+        .bar-fill { background: var(--primary); height: 100%; transition: 0.6s; width: 0%; }
+        .leader-box { background: #fff9e6; border: 1px solid #ffeeba; padding: 10px; border-radius: 10px; color: #856404; }
+
+        table { width: 100%; border-collapse: collapse; margin-top: 20px; }
+        th, td { padding: 15px; border: 1px solid #eee; text-align: center; }
+        th { background: #f8f9fa; color: var(--admin); position: sticky; top: 70px; }
+        .in-score { width: 60px; text-align: center; border: 2px solid #ddd; border-radius: 6px; padding: 5px; font-weight: bold; }
+        .pending { border-color: var(--accent) !important; background: #fff3cd !important; }
+        .lock-msg { background: #f8d7da; color: #721c24; padding: 15px; border-radius: 8px; margin-bottom: 15px; font-weight: bold; border: 1px solid #f5c6cb; }
         .hidden { display: none; }
+        .teacher-row { display: flex; justify-content: space-between; align-items: center; padding: 10px; border-bottom: 1px solid #eee; }
     </style>
 </head>
 <body>
 
 <div class="nav">
-    <div><b>لوحة التحكم | <span id="displayUserName">...</span></b></div>
-    <div id="saveStatus">الحالة: مستقر ✅</div>
-    <button onclick="logout()" class="btn btn-del">خروج</button>
+    <div><b>منظومة محمود عادل | <span id="displayUserName">...</span></b></div>
+    <div id="saveStatus" style="font-size: 12px; opacity: 0.8;">المزامنة متصلة ✅</div>
+    <button onclick="logout()" class="btn btn-del" style="padding: 8px 15px;">خروج</button>
 </div>
 
 <div class="container">
     
     <div id="adminPanel" class="card hidden">
-        <h3 style="color:var(--danger)">🛠 إدارة النظام والمعلمين</h3>
+        <h3>🛠 لوحة القيادة والتحكم المركزي</h3>
         <div class="grid">
-            <div style="background: #f9f9f9; padding: 15px; border-radius: 10px;">
-                <h4 id="formTitle">إضافة معلم</h4>
+            
+            <div class="stat-card" style="text-align: right;">
+                <h4>👥 إدارة المعلمين</h4>
                 <input type="text" id="t-name" placeholder="اسم المعلم">
-                <input type="text" id="t-id" placeholder="كود الدخول">
+                <input type="text" id="t-id" placeholder="كود الدخول (إيميل أو رقم)">
                 <input type="text" id="t-pass" placeholder="كلمة المرور">
-                <p style="font-size: 12px; margin-top: 10px;">إلحاق الصفوف والتحكم:</p>
-                <div style="display: flex; gap: 10px; flex-wrap: wrap;">
+                <div style="margin-top:10px; font-size: 13px;">
+                    <b>الصفوف:</b>
                     <label><input type="checkbox" class="t-classes" value="1_general"> 1ث</label>
                     <label><input type="checkbox" class="t-classes" value="2_scientific"> 2ث علمي</label>
                     <label><input type="checkbox" class="t-classes" value="2_literary"> 2ث أدبي</label>
                 </div>
-                <select id="t-status" style="margin-top:10px;">
-                    <option value="open">فتح الرصد لهذا المعلم</option>
-                    <option value="closed">إغلاق الرصد (عرض فقط)</option>
-                </select>
-                <button onclick="saveTeacher()" class="btn btn-save" style="width:100%; margin-top:15px;">حفظ المعلم والتحكم</button>
-                <hr>
-                <div id="teachersList"></div>
+                <button onclick="saveTeacher()" class="btn btn-save" style="width:100%; margin-top:10px;">حفظ بيانات المعلم</button>
+                <div id="teachersList" style="margin-top:15px; max-height: 150px; overflow-y: auto; border: 1px solid #eee; padding: 5px;"></div>
             </div>
 
-            <div style="background: #f9f9f9; padding: 15px; border-radius: 10px;">
-                <h4>استيراد الطلاب</h4>
-                <select id="targetGrade">
-                    <option value="1_general">الأول الثانوي</option>
-                    <option value="2_scientific">الثاني علمي</option>
-                    <option value="2_literary">الثاني أدبي</option>
+            <div class="stat-card" style="text-align: right;">
+                <h4>🔐 التحكم في الرصد</h4>
+                <div style="display: flex; gap: 5px;">
+                    <button onclick="setGlobalLock(false)" class="btn btn-save" style="flex:1">فتح للجميع</button>
+                    <button onclick="setGlobalLock(true)" class="btn btn-del" style="flex:1">غلق للجميع</button>
+                </div>
+                <select id="lockWeekSelect" style="margin-top:10px;">
+                    <option value="none">-- غلق أسبوع محدد --</option>
                 </select>
-                <textarea id="namesInput" placeholder="الصق الأسماء هنا..."></textarea>
-                <button onclick="importStudents()" class="btn btn-save" style="width:100%; margin-top:10px;">تثبيت القائمة</button>
-                <button onclick="clearSystem()" class="btn btn-del" style="width:100%; margin-top:10px;">تصفير الطلاب والرصد</button>
+                <button onclick="updateWeekLock()" class="btn btn-accent" style="width:100%; margin-top:5px;">تثبيت قفل الأسبوع</button>
+                <hr>
+                <div id="exclusionList" style="font-size: 12px;">
+                    <b>معلمون مستثنون من الرصد (مغلق لهم):</b>
+                    <div id="exclusionCheckboxes"></div>
+                </div>
             </div>
+
+            <div class="stat-card">
+                <h4>📊 مؤشر الإنجاز</h4>
+                <div id="leaderBox" class="leader-box">جاري تحليل الأداء...</div>
+                <hr>
+                <select id="monTeacher" onchange="runAnalytics()"></select>
+                <div id="anaResult" style="margin-top:10px;"></div>
+                <textarea id="namesInput" placeholder="الصق أسماء الطلاب للرفع (اسم كل سطر)..." style="height: 60px; margin-top:10px;"></textarea>
+                <button onclick="importStudents()" class="btn btn-accent" style="width:100%">رفع وتثبيت الأسماء</button>
+                <button onclick="clearSystemData()" class="btn btn-del" style="width:100%; margin-top:5px; font-size: 10px;">تصفير شامل (حذر!)</button>
+            </div>
+
         </div>
     </div>
 
     <div class="card">
+        <div id="lockMessage" class="lock-msg hidden">⚠️ الإدارة أغلقت صلاحية الرصد حالياً. يمكنك العرض فقط.</div>
+        
         <div class="grid" style="grid-template-columns: 2fr 1fr 1fr; align-items: end;">
-            <div><label>الصف:</label><select id="viewGrade" onchange="loadTable()"></select></div>
+            <div><label>الصف الدراسي:</label><select id="viewGrade" onchange="loadTable()"></select></div>
             <div><label>الأسبوع:</label><select id="viewWeek" onchange="loadTable()"></select></div>
-            <button id="saveBtn" onclick="forceSaveBatch()" class="btn btn-batch" style="width:100%">💾 حفظ الدرجات (0)</button>
+            <button id="saveBtn" onclick="processSave()" class="btn btn-save" style="width:100%">💾 حفظ التغييرات (0)</button>
         </div>
 
-        <div id="lockMessage" style="color:red; font-weight:bold; margin-top:10px; display:none;">⚠️ الرصد مغلق من قبل المدير</div>
-
-        <div style="overflow-x: auto; margin-top: 20px;">
+        <div style="overflow-x: auto;">
             <table>
                 <thead>
-                    <tr><th>م</th><th style="text-align:right">اسم الطالب</th><th>تقييم (15)</th><th>حصة (15)</th><th>سلوك (10)</th></tr>
+                    <tr>
+                        <th style="width:50px">م</th>
+                        <th style="text-align:right">اسم الطالب</th>
+                        <th>التقييم (15)</th>
+                        <th>الحصة (15)</th>
+                        <th>السلوك (10)</th>
+                    </tr>
                 </thead>
                 <tbody id="mainTbody"></tbody>
             </table>
@@ -95,6 +124,7 @@
 </div>
 
 <script>
+    // إعدادات Firebase
     const firebaseConfig = { apiKey: "AIzaSyBePGZiqMPmZQdg36jZ4Rkdtd7OISxmob8", projectId: "rasd-tools" };
     firebase.initializeApp(firebaseConfig);
     const db = firebase.firestore();
@@ -104,148 +134,196 @@
     const userName = sessionStorage.getItem('userName');
     
     let pendingChanges = {};
-    let isLocked = false;
+    let globalSettings = { allLocked: false, lockedWeeks: [], closedTeachers: [] };
+    let teacherProfile = { classes: [] };
 
     window.onload = async () => {
-        if(!userEmail) window.location.href="index.html";
+        if(!userEmail) { window.location.href="index.html"; return; }
         document.getElementById('displayUserName').innerText = userName;
 
-        const WEEKS = Array.from({length: 14}, (_, i) => ({id:`w${i+1}`, n:`الأسبوع ${i+1}`}));
-        document.getElementById('viewWeek').innerHTML = WEEKS.map(w => `<option value="${w.id}">${w.n}</option>`).join('');
+        // توليد الأسابيع
+        const weeks = Array.from({length: 14}, (_, i) => `w${i+1}`);
+        const weekOptions = weeks.map((w, i) => `<option value="${w}">الأسبوع ${i+1}</option>`).join('');
+        document.getElementById('viewWeek').innerHTML = weekOptions;
+        if(isAdmin) document.getElementById('lockWeekSelect').innerHTML += weekOptions;
+
+        await syncSettings();
 
         if(isAdmin) {
             document.getElementById('adminPanel').classList.remove('hidden');
-            loadTeachersList();
             document.getElementById('viewGrade').innerHTML = `<option value="1_general">1ث</option><option value="2_scientific">2ث علمي</option><option value="2_literary">2ث أدبي</option>`;
+            loadTeachersUI();
         } else {
-            await checkTeacherStatus();
+            await fetchTeacherProfile();
         }
         loadTable();
     };
 
-    // --- وظائف المعلمين والحالة ---
-    async function checkTeacherStatus() {
-        const doc = await db.collection('teachers').doc(userEmail).get();
-        if(doc.exists) {
-            const t = doc.data();
-            isLocked = (t.status === 'closed');
-            document.getElementById('lockMessage').style.display = isLocked ? 'block' : 'none';
-            document.getElementById('viewGrade').innerHTML = (t.classes || []).map(c => `<option value="${c}">${c.replace('_',' ')}</option>`).join('');
-        }
+    // --- وظائف المزامنة والتحكم ---
+    async function syncSettings() {
+        const doc = await db.collection('settings').doc('global').get();
+        if(doc.exists) globalSettings = doc.data();
     }
 
+    async function setGlobalLock(status) {
+        globalSettings.allLocked = status;
+        await db.collection('settings').doc('global').set(globalSettings, {merge:true});
+        alert("تم التحديث بنجاح ✅"); location.reload();
+    }
+
+    async function updateWeekLock() {
+        const w = document.getElementById('lockWeekSelect').value;
+        if(w === "none") globalSettings.lockedWeeks = [];
+        else globalSettings.lockedWeeks = [w];
+        await db.collection('settings').doc('global').set(globalSettings, {merge:true});
+        alert("تم قفل الأسبوع المحدد ✅");
+    }
+
+    // --- إدارة المعلمين ---
     async function saveTeacher() {
         const id = document.getElementById('t-id').value.trim();
         const name = document.getElementById('t-name').value.trim();
         const pass = document.getElementById('t-pass').value.trim();
-        const status = document.getElementById('t-status').value;
         const classes = Array.from(document.querySelectorAll('.t-classes:checked')).map(c => c.value);
-
-        if(!id || !name) return alert("اكمل البيانات!");
-        await db.collection('teachers').doc(id).set({ name, pass, status, classes }, {merge:true});
-        alert("تم الحفظ ✅");
-        location.reload();
+        if(!id || !name || classes.length === 0) return alert("اكمل البيانات");
+        await db.collection('teachers').doc(id).set({ name, pass, classes }, {merge:true});
+        alert("تم الحفظ ✅"); loadTeachersUI();
     }
 
-    async function loadTeachersList() {
+    async function loadTeachersUI() {
         const snap = await db.collection('teachers').get();
         const list = document.getElementById('teachersList');
-        list.innerHTML = '';
+        const excl = document.getElementById('exclusionCheckboxes');
+        const mon = document.getElementById('monTeacher');
+        list.innerHTML = ''; excl.innerHTML = ''; mon.innerHTML = '<option value="">حلل إنجاز المعلم...</option>';
+        
         snap.forEach(doc => {
             const t = doc.data();
-            list.innerHTML += `<div class="teacher-item">
-                <span>${t.name} (${t.status === 'open' ? '✅' : '🚫'})</span>
-                <button onclick="editTeacher('${doc.id}')" class="btn btn-save" style="padding:2px 5px">📝</button>
-            </div>`;
+            list.innerHTML += `<div class="teacher-row"><span>${t.name}</span> <button onclick="deleteTeacher('${doc.id}')" class="btn-del">🗑️</button></div>`;
+            const isChecked = (globalSettings.closedTeachers || []).includes(doc.id) ? 'checked' : '';
+            excl.innerHTML += `<label style="display:block"><input type="checkbox" class="ex-check" value="${doc.id}" ${isChecked} onchange="updateExclusions()"> ${t.name}</label>`;
+            mon.innerHTML += `<option value="${doc.id}">${t.name}</option>`;
         });
+        updateLeaderboard();
     }
 
-    function editTeacher(id) { 
-        document.getElementById('t-id').value = id; 
-        document.getElementById('formTitle').innerText = "تعديل معلم"; 
+    async function updateExclusions() {
+        const closed = Array.from(document.querySelectorAll('.ex-check:checked')).map(c => c.value);
+        globalSettings.closedTeachers = closed;
+        await db.collection('settings').doc('global').set(globalSettings, {merge:true});
     }
 
-    // --- وظائف الطلاب والجدول (الحل الجذري للأسماء) ---
-    async function importStudents() {
-        const names = document.getElementById('namesInput').value.split('\n').filter(n => n.trim() !== "");
-        const [g, b] = document.getElementById('targetGrade').value.split('_');
-        const batch = db.batch();
-        names.forEach((n, i) => {
-            const ref = db.collection('students').doc();
-            batch.set(ref, { name: n.trim(), grade: g, branch: b, sortOrder: i });
-        });
-        await batch.commit();
-        alert("تم رفع القائمة ✅"); loadTable();
+    // --- وظائف الرصد والجدول ---
+    async function fetchTeacherProfile() {
+        const doc = await db.collection('teachers').doc(userEmail).get();
+        if(doc.exists) {
+            teacherProfile = doc.data();
+            document.getElementById('viewGrade').innerHTML = (teacherProfile.classes || []).map(c => `<option value="${c}">${c.replace('_',' ')}</option>`).join('');
+        }
     }
 
     async function loadTable() {
         const gradeVal = document.getElementById('viewGrade').value;
         if(!gradeVal) return;
         const [g, b] = gradeVal.split('_');
-        
-        // جلب البيانات بدون "orderBy" لتجنب أخطاء الفايربيز
+        const week = document.getElementById('viewWeek').value;
+
+        // فحص القفل
+        const isLocked = !isAdmin && (globalSettings.allLocked || globalSettings.lockedWeeks.includes(week) || (globalSettings.closedTeachers || []).includes(userEmail));
+        document.getElementById('lockMessage').classList.toggle('hidden', !isLocked);
+
         const snap = await db.collection('students').where('grade','==',g).where('branch','==',b).get();
-        
-        // ترتيب البيانات يدوياً في المتصفح بناءً على sortOrder
-        const students = [];
-        snap.forEach(doc => students.push({ id: doc.id, ...doc.data() }));
-        students.sort((a, b) => (a.sortOrder || 0) - (b.sortOrder || 0));
+        let students = [];
+        snap.forEach(doc => students.push({id: doc.id, ...doc.data()}));
+        students.sort((a,b) => (a.sortOrder || 0) - (b.sortOrder || 0));
 
         const tbody = document.getElementById('mainTbody');
-        tbody.innerHTML = '';
-        students.forEach((s, idx) => {
+        tbody.innerHTML = students.length ? '' : '<tr><td colspan="5">لا يوجد طلاب</td></tr>';
+        
+        students.forEach((s, i) => {
             tbody.innerHTML += `<tr>
-                <td>${idx + 1}</td>
+                <td>${i+1}</td>
                 <td style="text-align:right">${s.name}</td>
                 <td><input type="number" class="in-score" oninput="queue('${s.id}','t',this,15)" data-sid="${s.id}" data-type="t" ${isLocked ? 'disabled' : ''}></td>
                 <td><input type="number" class="in-score" oninput="queue('${s.id}','v',this,15)" data-sid="${s.id}" data-type="v" ${isLocked ? 'disabled' : ''}></td>
                 <td><input type="number" class="in-score" oninput="queue('${s.id}','s',this,10)" data-sid="${s.id}" data-type="s" ${isLocked ? 'disabled' : ''}></td>
             </tr>`;
         });
-        loadGrades();
+        fillSavedScores();
     }
 
     function queue(sid, type, input, max) {
-        if(isLocked) return;
         let val = parseFloat(input.value);
-        if(val > max) { alert(`الأقصى ${max}`); input.value = ""; return; }
+        if(val > max) { alert(`الحد الأقصى ${max}`); input.value=""; return; }
         const week = document.getElementById('viewWeek').value;
-        pendingChanges[`${sid}_${week}_${type}`] = { sid, week, type, score: val, teacher: userEmail };
+        pendingChanges[`${sid}_${week}_${type}`] = { sid, week, type, score: val, teacher: userEmail, timestamp: new Date() };
         input.classList.add('pending');
-        document.getElementById('saveBtn').innerText = `💾 حفظ الدرجات (${Object.keys(pendingChanges).length})`;
+        document.getElementById('saveBtn').innerText = `💾 حفظ التعديلات (${Object.keys(pendingChanges).length})`;
     }
 
-    async function forceSaveBatch() {
+    async function processSave() {
         const keys = Object.keys(pendingChanges);
-        if(keys.length === 0) return alert("لا يوجد جديد");
+        if(!keys.length) return alert("لا يوجد تغييرات");
         const batch = db.batch();
         keys.forEach(k => batch.set(db.collection('grades').doc(k), pendingChanges[k], {merge:true}));
         await batch.commit();
         pendingChanges = {};
-        document.getElementById('saveBtn').innerText = "💾 حفظ الدرجات (0)";
-        document.querySelectorAll('.pending').forEach(el => el.classList.remove('pending'));
-        alert("تم الحفظ السحابي ✅");
+        document.getElementById('saveBtn').innerText = "💾 حفظ التعديلات (0)";
+        alert("تم الحفظ بنجاح ✅"); loadTable();
     }
 
-    async function loadGrades() {
+    async function fillSavedScores() {
         const week = document.getElementById('viewWeek').value;
         const snap = await db.collection('grades').where('week','==',week).get();
         snap.forEach(doc => {
-            const g = doc.data();
-            const input = document.querySelector(`input[data-sid="${g.sid}"][data-type="${g.type}"]`);
-            if(input) { input.value = g.score; input.classList.remove('pending'); }
+            const d = doc.data();
+            const input = document.querySelector(`input[data-sid="${d.sid}"][data-type="${d.type}"]`);
+            if(input) { input.value = d.score; input.classList.remove('pending'); }
         });
     }
 
-    async function clearSystem() {
-        if(confirm("حذف شامل؟")) {
-            const collections = ['students', 'grades'];
-            for(const c of collections) {
+    // --- إدارة الطلاب والإحصائيات ---
+    async function importStudents() {
+        const raw = document.getElementById('namesInput').value.split('\n').filter(n => n.trim() !== "");
+        const gradeVal = document.getElementById('monGrade')?.value || document.getElementById('viewGrade').value;
+        const [g, b] = gradeVal.split('_');
+        const batch = db.batch();
+        raw.forEach((n, i) => batch.set(db.collection('students').doc(), { name: n.trim(), grade: g, branch: b, sortOrder: i }));
+        await batch.commit(); alert("تم الرفع"); loadTable();
+    }
+
+    async function runAnalytics() {
+        const tId = document.getElementById('monTeacher').value;
+        if(!tId) return;
+        const snap = await db.collection('grades').where('teacher','==',tId).get();
+        const totalEntries = snap.size;
+        document.getElementById('anaResult').innerHTML = `إجمالي خانات الرصد المكتملة: <b>${totalEntries}</b>`;
+    }
+
+    async function updateLeaderboard() {
+        const snap = await db.collection('grades').get();
+        let counts = {};
+        snap.forEach(d => { const t = d.data().teacher; counts[t] = (counts[t] || 0) + 1; });
+        let top = Object.entries(counts).sort((a,b) => b[1] - a[1])[0];
+        if(top) {
+            const tDoc = await db.collection('teachers').doc(top[0]).get();
+            document.getElementById('leaderBox').innerHTML = `🥇 الأعلى إنجازاً: <b>${tDoc.data()?.name || 'غير معروف'}</b>`;
+        }
+    }
+
+    async function clearSystemData() {
+        if(confirm("سيتم حذف الطلاب والدرجات نهائياً! هل أنت متأكد؟")) {
+            const cols = ['students', 'grades'];
+            for(const c of cols) {
                 const snap = await db.collection(c).get();
                 const batch = db.batch(); snap.forEach(d => batch.delete(d.ref)); await batch.commit();
             }
             location.reload();
         }
+    }
+
+    async function deleteTeacher(id) {
+        if(confirm("حذف المعلم؟")) { await db.collection('teachers').doc(id).delete(); loadTeachersUI(); }
     }
 
     function logout() { sessionStorage.clear(); window.location.href="index.html"; }

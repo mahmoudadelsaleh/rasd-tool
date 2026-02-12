@@ -3,114 +3,103 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>منظومة محمود عادل 2026</title>
+    <title>منظومة محمود عادل v2026</title>
     <script src="https://www.gstatic.com/firebasejs/9.0.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.0.0/firebase-firestore-compat.js"></script>
     <style>
-        :root { --admin: #1e293b; --primary: #10b981; --accent: #3b82f6; --danger: #ef4444; --card-bg: #ffffff; }
-        body { font-family: 'Segoe UI', system-ui, sans-serif; background: #f1f5f9; margin: 0; direction: rtl; color: #334155; }
+        :root { --admin: #0f172a; --primary: #10b981; --accent: #3b82f6; --danger: #ef4444; --bg: #f1f5f9; }
+        body { font-family: 'Segoe UI', system-ui, sans-serif; background: var(--bg); margin: 0; padding-bottom: 80px; direction: rtl; }
         
-        /* الهيدر المحمول */
-        .nav { background: var(--admin); color: white; padding: 12px 20px; display: flex; justify-content: space-between; align-items: center; sticky: top; z-index: 100; box-shadow: 0 2px 10px rgba(0,0,0,0.1); }
-        .nav b { font-size: 14px; }
+        /* الهيدر الهوية */
+        .header-profile { background: var(--admin); color: white; padding: 20px; border-radius: 0 0 25px 25px; text-align: center; box-shadow: 0 4px 12px rgba(0,0,0,0.1); }
+        .stats-box { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 15px; background: rgba(255,255,255,0.05); padding: 10px; border-radius: 15px; }
+        .stat-item { font-size: 12px; } .stat-item b { display: block; font-size: 16px; color: var(--primary); }
 
-        /* سطر هوية المعلم المميز */
-        .teacher-profile { background: linear-gradient(135deg, #1e293b, #334155); color: white; padding: 15px; border-radius: 0 0 20px 20px; margin-bottom: 20px; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1); }
-        .profile-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; font-size: 13px; }
-        .progress-container { background: rgba(255,255,255,0.1); border-radius: 10px; height: 8px; margin-top: 10px; overflow: hidden; }
-        .progress-bar { background: var(--primary); height: 100%; width: 0%; transition: 0.5s; }
+        .container { padding: 15px; max-width: 600px; margin: auto; }
+        .card { background: white; border-radius: 20px; padding: 20px; box-shadow: 0 2px 10px rgba(0,0,0,0.05); margin-bottom: 15px; }
 
-        .container { padding: 15px; max-width: 1200px; margin: auto; }
-        .card { background: var(--card-bg); border-radius: 15px; padding: 15px; box-shadow: 0 2px 5px rgba(0,0,0,0.05); margin-bottom: 15px; }
+        /* بطاقة الطالب الجديدة */
+        .student-card { background: white; border-radius: 15px; padding: 15px; margin-bottom: 15px; border: 1px solid #e2e8f0; }
+        .student-name { font-weight: bold; color: var(--admin); font-size: 16px; margin-bottom: 12px; display: block; border-bottom: 1px solid #f1f5f9; padding-bottom: 8px; }
+        .inputs-row { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; }
+        .input-group { text-align: center; }
+        .input-group label { display: block; font-size: 11px; color: #64748b; margin-bottom: 5px; }
+        .in-score { width: 100%; height: 45px; border-radius: 10px; border: 2px solid #cbd5e1; text-align: center; font-size: 18px; font-weight: bold; background: #f8fafc; }
+        .in-score:focus { border-color: var(--accent); outline: none; background: white; }
 
-        /* تنسيقات الجداول للموبايل */
-        .table-responsive { overflow-x: auto; -webkit-overflow-scrolling: touch; }
-        table { width: 100%; border-collapse: collapse; min-width: 400px; }
-        th { background: #f8fafc; padding: 10px; font-size: 12px; color: #64748b; border-bottom: 2px solid #e2e8f0; }
-        td { padding: 10px; border-bottom: 1px solid #f1f5f9; text-align: center; }
+        /* شريط التحكم السفلي */
+        .bottom-nav { position: fixed; bottom: 0; left: 0; right: 0; background: white; padding: 10px 20px; display: flex; gap: 10px; box-shadow: 0 -5px 15px rgba(0,0,0,0.05); z-index: 1000; }
         
-        .in-score { width: 50px; height: 35px; border-radius: 8px; border: 1px solid #cbd5e1; text-align: center; font-weight: bold; font-size: 16px; -moz-appearance: textfield; }
-        .in-score::-webkit-inner-spin-button { display: none; }
+        /* أزرار الإدارة */
+        .t-row { display: flex; justify-content: space-between; align-items: center; background: #f8fafc; padding: 10px; border-radius: 12px; margin-bottom: 8px; border: 1px solid #e2e8f0; }
+        .btn { border: none; border-radius: 12px; cursor: pointer; font-weight: bold; transition: 0.3s; display: flex; align-items: center; justify-content: center; }
+        .btn-save { background: var(--primary); color: white; flex: 2; height: 50px; font-size: 16px; }
+        .btn-util { background: var(--accent); color: white; padding: 8px 15px; font-size: 12px; }
 
-        /* الأزرار */
-        .btn { padding: 10px 15px; border: none; border-radius: 10px; cursor: pointer; color: white; font-weight: bold; font-size: 14px; display: inline-flex; align-items: center; gap: 5px; }
-        .btn-save { background: var(--primary); width: 100%; justify-content: center; height: 45px; margin-top: 10px; }
-        
+        input[type="text"], select, textarea { width: 100%; padding: 12px; border-radius: 12px; border: 1px solid #cbd5e1; margin-bottom: 10px; font-size: 14px; }
         .hidden { display: none !important; }
-        .step-locked { opacity: 0.3; pointer-events: none; }
-        .apply-all { font-size: 10px; color: var(--accent); cursor: pointer; text-decoration: underline; }
+        .locked { opacity: 0.4; pointer-events: none; }
     </style>
 </head>
 <body>
 
-<div class="nav">
-    <div><b>⭐ منظومة أ/ محمود عادل</b></div>
-    <button onclick="logout()" style="background:none; border:none; color:#fda4af; font-weight:bold;">خروج</button>
-</div>
-
-<div id="teacherHeader" class="teacher-profile hidden">
-    <div class="profile-grid">
-        <div>👤 المعلم: <b id="profName">...</b></div>
-        <div style="text-align: left;">📚 الفصول: <span id="profClasses">...</span></div>
-        <div>✅ الأسابيع المكتملة: <b id="profWeeks">0</b></div>
-        <div style="text-align: left;">📈 نسبة الإنجاز: <span id="profPerc">0%</span></div>
+<div id="idBar" class="header-profile">
+    <div style="display:flex; justify-content:space-between; align-items:center">
+        <span id="userName" style="font-weight:bold">جاري التحميل...</span>
+        <button onclick="logout()" style="background:none; border:1px solid #ef4444; color:#ef4444; border-radius:8px; padding:4px 10px; font-size:12px">خروج</button>
     </div>
-    <div class="progress-container"><div id="profBar" class="progress-bar"></div></div>
+    
+    <div class="stats-box">
+        <div class="stat-item">إنجاز الأسبوع <b id="weekPerc">0%</b></div>
+        <div class="stat-item">الإنجاز العام <b id="totalPerc">0%</b></div>
+    </div>
 </div>
 
 <div class="container">
+    
     <div id="adminPanel" class="card hidden">
-        <h4 style="margin-top:0">🛡️ الإدارة والمعاينة</h4>
-        <div style="display: flex; flex-direction: column; gap: 10px;">
-            <select id="monT" onchange="loadMonClasses()"><option value="">-- اختر المعلم --</option></select>
-            <div id="mStep2" class="step-locked"><select id="monC" onchange="loadMonWeeks()"><option value="">-- الصف --</option></select></div>
-            <div id="mStep3" class="step-locked"><select id="monW" onchange="startPreview()"><option value="">-- الأسبوع --</option></select></div>
-            <button id="cancelPrev" class="btn hidden" style="background:#64748b" onclick="cancelPreview()">❌ إغلاق المعاينة</button>
-            <button onclick="document.getElementById('moreAdmin').classList.toggle('hidden')" class="btn" style="background:var(--admin)">⚙️ إعدادات المعلمين والطلاب</button>
-        </div>
+        <h3 style="margin-top:0; font-size:16px">🛡️ لوحة التحكم الإداري</h3>
         
-        <div id="moreAdmin" class="hidden" style="margin-top:15px; border-top:1px solid #eee; pt:15px;">
-            <input type="text" id="t-name" placeholder="اسم المعلم الجديد">
-            <input type="text" id="t-user" placeholder="اسم المستخدم">
-            <input type="text" id="t-pass" placeholder="كلمة المرور">
-            <div style="font-size:12px; margin:5px 0">
+        <div id="tForm">
+            <input type="hidden" id="editId">
+            <input type="text" id="tName" placeholder="اسم المعلم">
+            <input type="text" id="tUser" placeholder="اسم المستخدم">
+            <input type="text" id="tPass" placeholder="كلمة المرور">
+            <div style="font-size:12px; margin-bottom:10px;">
                 <label><input type="checkbox" class="t-cls" value="1_general"> 1ث</label>
                 <label><input type="checkbox" class="t-cls" value="2_scientific"> 2ث ع</label>
                 <label><input type="checkbox" class="t-cls" value="2_literary"> 2ث أ</label>
             </div>
-            <button onclick="saveTeacher()" class="btn btn-save">حفظ المعلم</button>
-            <textarea id="namesArea" placeholder="الصق الأسماء هنا..." style="height:50px; margin-top:10px; width:100%; border-radius:10px;"></textarea>
-            <button onclick="uploadStudents()" class="btn" style="background:var(--accent); width:100%; margin-top:5px;">رفع الطلاب بالترتيب</button>
+            <button onclick="saveT()" id="saveTBtn" class="btn btn-save" style="height:40px; font-size:14px">حفظ / تحديث المعلم</button>
         </div>
-    </div>
-
-    <div class="card">
-        <div id="pBanner" class="hidden" style="color:var(--accent); text-align:center; font-weight:bold; margin-bottom:10px;">وضع المعاينة للقراءة فقط 👁️</div>
         
-        <div id="controls" class="grid" style="display:grid; grid-template-columns: 1.5fr 1fr; gap:10px;">
-            <select id="vGrade" onchange="loadTable()"></select>
-            <select id="vWeek" onchange="loadTable()"></select>
-        </div>
+        <div id="tsList" style="margin-top:15px; max-height:150px; overflow-y:auto"></div>
 
-        <div id="tableWrapper" class="table-responsive hidden">
-            <table>
-                <thead>
-                    <tr>
-                        <th>م</th><th style="text-align:right">الطالب</th>
-                        <th>ت <span class="apply-all" onclick="applyAll('t')">الكل</span></th>
-                        <th>ح <span class="apply-all" onclick="applyAll('v')">الكل</span></th>
-                        <th>س <span class="apply-all" onclick="applyAll('s')">الكل</span></th>
-                    </tr>
-                </thead>
-                <tbody id="tbody"></tbody>
-            </table>
-            <button id="saveBtn" onclick="finalSave()" class="btn btn-save">💾 حفظ التعديلات (0)</button>
-        </div>
-
-        <div id="emptyState" style="text-align:center; padding:40px; color:#94a3b8;">
-            <p>اختر البيانات أعلاه لبدء الرصد</p>
+        <hr style="opacity:0.1; margin:20px 0">
+        
+        <div style="background:#eff6ff; padding:15px; border-radius:15px">
+            <label style="font-size:12px">👁️ معاينة سريعة:</label>
+            <select id="monT" onchange="monStep(1)"><option value="">اختر المعلم</option></select>
+            <select id="monC" class="hidden" onchange="monStep(2)"></select>
+            <select id="monW" class="hidden" onchange="startMon()"></select>
+            <button id="closeMon" class="btn hidden" style="background:#64748b; width:100%; margin-top:5px; height:35px" onclick="location.reload()">إغلاق المعاينة</button>
         </div>
     </div>
+
+    <div id="selectionArea" class="card" style="display:grid; grid-template-columns: 1.5fr 1fr; gap:10px;">
+        <select id="vGrade" onchange="loadTable()"></select>
+        <select id="vWeek" onchange="loadTable()"></select>
+    </div>
+
+    <div id="statusMsg" style="text-align:center; padding:40px; color:#94a3b8;">يرجى اختيار البيانات لعرض الطلاب...</div>
+
+    <div id="studentsList" class="hidden"></div>
+
+</div>
+
+<div class="bottom-nav">
+    <button id="saveDataBtn" onclick="saveData()" class="btn btn-save">💾 حفظ الرصد (0)</button>
+    <button onclick="applyAll()" class="btn btn-util">⚡ الكل</button>
 </div>
 
 <script>
@@ -120,150 +109,170 @@
 
     const isAdmin = sessionStorage.getItem('isAdmin') === 'true';
     const userEmail = sessionStorage.getItem('userEmail');
-    let pending = {}, isPreview = false;
+    let pending = {}, isMon = false;
 
     window.onload = async () => {
         if(!userEmail) window.location.href="index.html";
+        document.getElementById('userName').innerText = (isAdmin ? "المدير: " : "المعلم: ") + sessionStorage.getItem('userName');
         
-        // تجهيز القوائم
         for(let i=1; i<=14; i++) document.getElementById('vWeek').innerHTML += `<option value="w${i}">الأسبوع ${i}</option>`;
 
         if(isAdmin) {
             document.getElementById('adminPanel').classList.remove('hidden');
             document.getElementById('vGrade').innerHTML = `<option value="">-- اختر الصف --</option><option value="1_general">1ث</option><option value="2_scientific">2ث علمي</option><option value="2_literary">2ث أدبي</option>`;
-            loadTeachers();
+            loadTs();
         } else {
-            document.getElementById('teacherHeader').classList.remove('hidden');
-            await loadTeacherProfile();
+            const doc = await db.collection('teachers').doc(userEmail).get();
+            document.getElementById('vGrade').innerHTML = doc.data().classes.map(c => `<option value="${c}">${c}</option>`).join('');
+            updateProgress();
             loadTable();
         }
     };
 
-    async function loadTeacherProfile() {
-        const doc = await db.collection('teachers').doc(userEmail).get();
-        if(doc.exists) {
+    // --- إدارة المعلمين (تعديل وحفظ) ---
+    async function loadTs() {
+        const snap = await db.collection('teachers').get();
+        const list = document.getElementById('tsList');
+        const mon = document.getElementById('monT');
+        list.innerHTML = ''; mon.innerHTML = '<option value="">اختر المعلم للمعاينة</option>';
+        snap.forEach(doc => {
             const t = doc.data();
-            document.getElementById('profName').innerText = t.name;
-            document.getElementById('profClasses').innerText = t.classes.join('، ');
-            document.getElementById('vGrade').innerHTML = t.classes.map(c => `<option value="${c}">${c}</option>`).join('');
-            
-            // حساب الإنجاز
-            const snap = await db.collection('grades').where('teacher','==',userEmail).get();
+            list.innerHTML += `<div class="t-row">
+                <span>${t.name}</span>
+                <div>
+                    <button class="btn" style="background:none; color:var(--accent)" onclick="editT('${doc.id}')">📝</button>
+                    <button class="btn" style="background:none; color:var(--danger)" onclick="delT('${doc.id}')">🗑️</button>
+                </div>
+            </div>`;
+            mon.innerHTML += `<option value="${doc.id}">${t.name}</option>`;
+        });
+    }
+
+    async function editT(id) {
+        const doc = await db.collection('teachers').doc(id).get();
+        const t = doc.data();
+        document.getElementById('editId').value = id;
+        document.getElementById('tUser').value = id;
+        document.getElementById('tName').value = t.name;
+        document.getElementById('tPass').value = t.pass;
+        document.querySelectorAll('.t-cls').forEach(c => c.checked = t.classes.includes(c.value));
+        document.getElementById('saveTBtn').innerText = "تحديث بيانات المعلم";
+        window.scrollTo(0,0);
+    }
+
+    async function saveT() {
+        const id = document.getElementById('tUser').value;
+        const oldId = document.getElementById('editId').value;
+        const data = {
+            name: document.getElementById('tName').value,
+            pass: document.getElementById('tPass').value,
+            classes: Array.from(document.querySelectorAll('.t-cls:checked')).map(c => c.value)
+        };
+        if(oldId && oldId !== id) await db.collection('teachers').doc(oldId).delete();
+        await db.collection('teachers').doc(id).set(data);
+        alert("تم الحفظ ✅"); location.reload();
+    }
+
+    // --- المعاينة الذكية ---
+    async function monStep(step) {
+        const tId = document.getElementById('monT').value;
+        if(step === 1) {
+            const doc = await db.collection('teachers').doc(tId).get();
+            document.getElementById('monC').innerHTML = '<option value="">الصف</option>' + doc.data().classes.map(c => `<option value="${c}">${c}</option>`).join('');
+            document.getElementById('monC').classList.remove('hidden');
+        } else if(step === 2) {
+            const snap = await db.collection('grades').where('teacher','==',tId).get();
             const weeks = new Set(); snap.forEach(d => weeks.add(d.data().week));
-            document.getElementById('profWeeks').innerText = weeks.size;
-            let perc = Math.min((weeks.size / 14) * 100, 100).toFixed(0);
-            document.getElementById('profPerc').innerText = perc + "%";
-            document.getElementById('profBar').style.width = perc + "%";
+            document.getElementById('monW').innerHTML = '<option value="">الأسبوع</option>' + Array.from(weeks).sort().map(w => `<option value="${w}">${w}</option>`).join('');
+            document.getElementById('monW').classList.remove('hidden');
         }
     }
 
-    // --- منطق الجداول للموبايل ---
+    function startMon() {
+        isMon = true;
+        document.getElementById('vGrade').innerHTML = `<option value="${document.getElementById('monC').value}">${document.getElementById('monC').value}</option>`;
+        document.getElementById('vWeek').value = document.getElementById('monW').value;
+        document.getElementById('closeMon').classList.remove('hidden');
+        document.getElementById('saveDataBtn').classList.add('hidden');
+        loadTable();
+    }
+
+    // --- نظام الرصد بالبطاقات ---
     async function loadTable() {
         const gradeVal = document.getElementById('vGrade').value;
-        if(!gradeVal || (isAdmin && !isPreview)) return;
+        if(!gradeVal || (isAdmin && !isMon)) return;
 
-        document.getElementById('emptyState').classList.add('hidden');
-        document.getElementById('tableWrapper').classList.remove('hidden');
+        document.getElementById('statusMsg').classList.add('hidden');
+        const listDiv = document.getElementById('studentsList');
+        listDiv.innerHTML = ''; listDiv.classList.remove('hidden');
 
         const [g, b] = gradeVal.split('_');
         const snap = await db.collection('students').where('grade','==',g).where('branch','==',b).get();
         let students = []; snap.forEach(d => students.push({id: d.id, ...d.data()}));
         students.sort((a,b) => (a.sortOrder || 0) - (b.sortOrder || 0));
 
-        const tbody = document.getElementById('tbody'); tbody.innerHTML = '';
         students.forEach((s, i) => {
-            tbody.innerHTML += `<tr>
-                <td style="font-size:11px">${i+1}</td>
-                <td style="text-align:right; font-size:13px; font-weight:500">${s.name}</td>
-                <td><input type="number" class="in-score" oninput="q('${s.id}','t',this,15)" data-sid="${s.id}" data-type="t" ${isPreview?'disabled':''}></td>
-                <td><input type="number" class="in-score" oninput="q('${s.id}','v',this,15)" data-sid="${s.id}" data-type="v" ${isPreview?'disabled':''}></td>
-                <td><input type="number" class="in-score" oninput="q('${s.id}','s',this,10)" data-sid="${s.id}" data-type="s" ${isPreview?'disabled':''}></td>
-            </tr>`;
+            listDiv.innerHTML += `
+            <div class="student-card">
+                <span class="student-name">${i+1}. ${s.name}</span>
+                <div class="inputs-row">
+                    <div class="input-group"><label>تقييم (15)</label><input type="number" class="in-score" oninput="queue('${s.id}','t',this,15)" data-sid="${s.id}" data-type="t" ${isMon?'disabled':''}></div>
+                    <div class="input-group"><label>حصة (15)</label><input type="number" class="in-score" oninput="queue('${s.id}','v',this,15)" data-sid="${s.id}" data-type="v" ${isMon?'disabled':''}></div>
+                    <div class="input-group"><label>سلوك (10)</label><input type="number" class="in-score" oninput="queue('${s.id}','s',this,10)" data-sid="${s.id}" data-type="s" ${isMon?'disabled':''}></div>
+                </div>
+            </div>`;
         });
-        fillScores();
+        fillGrades();
     }
 
-    function q(sid, type, input, max) {
+    function queue(sid, type, input, max) {
         let v = parseFloat(input.value);
-        if(v > max) { alert("الحد الأقصى " + max); input.value=""; return; }
+        if(v > max) { alert("تجاوزت الحد!"); input.value=""; return; }
         pending[`${sid}_${document.getElementById('vWeek').value}_${type}`] = { sid, week: document.getElementById('vWeek').value, type, score: v, teacher: userEmail };
         input.style.borderColor = "var(--primary)";
-        document.getElementById('saveBtn').innerText = `💾 حفظ التعديلات (${Object.keys(pending).length})`;
+        document.getElementById('saveDataBtn').innerText = `💾 حفظ الرصد (${Object.keys(pending).length})`;
     }
 
-    async function finalSave() {
+    async function saveData() {
         const batch = db.batch();
         for(let k in pending) batch.set(db.collection('grades').doc(k), pending[k], {merge:true});
-        await batch.commit(); 
-        pending = {}; document.getElementById('saveBtn').innerText = "💾 حفظ التعديلات (0)";
-        alert("تم الحفظ بنجاح ✅"); loadTeacherProfile();
+        await batch.commit(); pending = {};
+        document.getElementById('saveDataBtn').innerText = "💾 حفظ الرصد (0)";
+        alert("تم الحفظ بنجاح ✅"); updateProgress(); loadTable();
     }
 
-    async function fillScores() {
+    async function fillGrades() {
         const snap = await db.collection('grades').where('week','==',document.getElementById('vWeek').value).get();
         snap.forEach(doc => {
             const d = doc.data();
             const input = document.querySelector(`input[data-sid="${d.sid}"][data-type="${d.type}"]`);
             if(input) { input.value = d.score; input.style.borderColor = "#cbd5e1"; }
         });
+        if(!isAdmin) calcWeekProgress();
     }
 
-    function applyAll(type) {
-        if(isPreview) return;
-        const val = prompt("الدرجة للجميع:");
-        if(!val) return;
-        document.querySelectorAll(`input[data-type="${type}"]`).forEach(input => {
-            input.value = val; q(input.dataset.sid, type, input, (type=='s'?10:15));
-        });
-    }
-
-    // --- وظائف المدير ---
-    async function loadTeachers() {
-        const snap = await db.collection('teachers').get();
-        const mon = document.getElementById('monT'); mon.innerHTML = '<option value="">-- اختر المعلم --</option>';
-        snap.forEach(d => mon.innerHTML += `<option value="${d.id}">${d.data().name}</option>`);
-    }
-
-    async function loadMonClasses() {
-        const tId = document.getElementById('monT').value;
-        const doc = await db.collection('teachers').doc(tId).get();
-        document.getElementById('monC').innerHTML = '<option value="">-- الصف --</option>' + doc.data().classes.map(c => `<option value="${c}">${c}</option>`).join('');
-        document.getElementById('mStep2').classList.remove('step-locked');
-    }
-
-    async function loadMonWeeks() {
-        const tId = document.getElementById('monT').value;
-        const snap = await db.collection('grades').where('teacher','==',tId).get();
+    // --- حساب الإنجاز ---
+    async function updateProgress() {
+        if(isAdmin) return;
+        const snap = await db.collection('grades').where('teacher','==',userEmail).get();
         const weeks = new Set(); snap.forEach(d => weeks.add(d.data().week));
-        document.getElementById('monW').innerHTML = '<option value="">-- الأسبوع --</option>' + Array.from(weeks).sort().map(w => `<option value="${w}">${w}</option>`).join('');
-        document.getElementById('mStep3').classList.remove('step-locked');
+        document.getElementById('totalPerc').innerText = ((weeks.size / 14) * 100).toFixed(0) + "%";
     }
 
-    function startPreview() {
-        isPreview = true;
-        document.getElementById('vGrade').innerHTML = `<option value="${document.getElementById('monC').value}">${document.getElementById('monC').value}</option>`;
-        document.getElementById('vWeek').value = document.getElementById('monW').value;
-        document.getElementById('pBanner').classList.remove('hidden');
-        document.getElementById('cancelPrev').classList.remove('hidden');
-        loadTable();
+    function calcWeekProgress() {
+        const total = document.querySelectorAll('.student-card').length * 3;
+        let filled = 0;
+        document.querySelectorAll('.in-score').forEach(i => { if(i.value !== "") filled++; });
+        document.getElementById('weekPerc').innerText = ((filled / total) * 100).toFixed(0) + "%";
     }
 
-    function cancelPreview() {
-        location.reload();
-    }
-
-    async function saveTeacher() {
-        const id = document.getElementById('t-user').value;
-        const data = { name: document.getElementById('t-name').value, pass: document.getElementById('t-pass').value, classes: Array.from(document.querySelectorAll('.t-cls:checked')).map(c => c.value) };
-        await db.collection('teachers').doc(id).set(data); alert("تم الحفظ"); loadTeachers();
-    }
-
-    async function uploadStudents() {
-        const names = document.getElementById('namesArea').value.split('\n').filter(n => n.trim() !== "");
-        const [g, b] = document.getElementById('vGrade').value.split('_');
-        const batch = db.batch();
-        names.forEach((n, i) => batch.set(db.collection('students').doc(), { name: n.trim(), grade: g, branch: b, sortOrder: i }));
-        await batch.commit(); alert("تم الرفع");
+    function applyAll() {
+        const type = prompt("اختر النوع: (t للتقييم، v للحصة، s للسلوك)");
+        const val = prompt("الدرجة للكل:");
+        if(!val || !['t','v','s'].includes(type)) return;
+        document.querySelectorAll(`input[data-type="${type}"]`).forEach(i => {
+            i.value = val; queue(i.dataset.sid, type, i, (type==='s'?10:15));
+        });
     }
 
     function logout() { sessionStorage.clear(); window.location.href="index.html"; }

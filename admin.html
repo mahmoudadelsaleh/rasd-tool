@@ -265,5 +265,115 @@
         alert("تم تحديث الضبط ✅");
     }
 </script>
+// 1. جلب البيانات الأساسية فور تحميل الصفحة
+window.onload = async () => {
+    await loadGlobalSettings(); // جلب الإعدادات والأقفال
+    await fetchStats();         // تحديث أرقام الإحصائيات فوراً
+    setupManualLockGrid();     // رسم شبكة الأقفال
+};
+
+// 2. تحديث الإحصائيات من بياناتك الحقيقية
+async function fetchStats() {
+    const tSnap = await db.collection('teachers').get();
+    const sSnap = await db.collection('students').get();
+    
+    document.getElementById('countT').innerText = tSnap.size; // عدد المعلمين الحقيقي
+    document.getElementById('countS').innerText = sSnap.size; // عدد الطلاب الحقيقي
+    
+    // حفظ المعلمين في متغير عام لاستخدامه في التبويبات الأخرى دون إعادة تحميل
+    teachers = tSnap.docs.map(doc => ({id: doc.id, ...doc.data()}));
+    renderTeachersTable(); // تعبئة جدول التعديل
+    populateMonTeachers(); // تعبئة قائمة المراقبة
+}
+
+// 3. ربط تبويب "المراقبة" بالبيانات
+function populateMonTeachers() {
+    const select = document.getElementById('monT');
+    select.innerHTML = '<option value="">اختر المعلم للمراقبة</option>';
+    teachers.forEach(t => {
+        select.innerHTML += `<option value="${t.id}">${t.name} (${t.subject})</option>`;
+    });
+}
+
+// تحديث الفصول بناءً على المعلم المختار في المراقبة
+function updateMonClasses() {
+    const tId = document.getElementById('monT').value;
+    const teacher = teachers.find(t => t.id === tId);
+    const clsSelect = document.getElementById('monC');
+    
+    clsSelect.innerHTML = '<option value="">اختر الفصل</option>';
+    if(teacher && teacher.classes) {
+        teacher.classes.forEach(c => {
+            clsSelect.innerHTML += `<option value="${c}">${c}</option>`;
+        });
+    }
+}
+
+// 4. تشغيل "رادار الرصد" (جلب الدرجات الحقيقية)
+async function fetchMonitoring() {
+    const tId = document.getElementById('monT').value;
+    const week = document.getElementById('monW').value;
+    const classVal = document.getElementById('monC').value;
+    
+    if(!tId || !week || !classVal) return alert("اكمل اختيارات المراقبة");
+
+    const [grade, branch] = classVal.split('_');
+    const resDiv = document.getElementById('monResult');
+    resDiv.innerHTML = "جاري استخراج البيانات من فايربيز...";
+
+    try {
+        // جلب طلاب هذا الفصل
+        const sSnap = await db.collection('students')
+            .where('grade', '==', grade)
+            .where('branch', '==', branch)
+            .get();
+
+        // جلب درجات هذا المعلم في هذا الأسبوع
+        const gSnap = await db.collection('grades')
+            .where('teacher', '==', tId)
+            .where('week', '==', week)
+            .get();
+
+        const gradesMap = {};
+        gSnap.forEach(doc => {
+            const d = doc.data();
+            if(!gradesMap[d.sid]) gradesMap[d.sid] = {};
+            gradesMap[d.sid][d.type] = d.score;
+        });
+
+        let html = `<table><thead><tr><th>الطالب</th><th>تقييم</th><th>حصة</th><th>سلوك</th></tr></thead><tbody>`;
+        sSnap.forEach(doc => {
+            const s = doc.data();
+            const sc = gradesMap[doc.id] || {};
+            html += `<tr>
+                <td>${s.name}</td>
+                <td style="color:${sc.t ? 'green':'red'}">${sc.t || '-'}</td>
+                <td style="color:${sc.v ? 'green':'red'}">${sc.v || '-'}</td>
+                <td style="color:${sc.s ? 'green':'red'}">${sc.s || '-'}</td>
+            </tr>`;
+        });
+        resDiv.innerHTML = html + '</tbody></table>';
+    } catch (e) {
+        resDiv.innerHTML = "خطأ في جلب البيانات: " + e.message;
+    }
+}
+
+// 5. ربط تبويب التعديل
+function renderTeachersTable() {
+    const tbody = document.getElementById('teachersTable');
+    tbody.innerHTML = '';
+    teachers.forEach(t => {
+        tbody.innerHTML += `<tr>
+            <td>${t.name}</td>
+            <td>${t.subject}</td>
+            <td>${t.classes ? t.classes.join(' - ') : ''}</td>
+            <td>
+                <button onclick="editTeacherData('${t.id}')" style="background:#3b82f6; color:white; border:none; padding:5px 10px; border-radius:5px">تعديل</button>
+            </td>
+        </tr>`;
+    });
+}
+
+
 </body>
 </html>

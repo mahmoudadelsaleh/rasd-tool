@@ -2,50 +2,48 @@
 <html lang="ar" dir="rtl">
 <head>
     <meta charset="UTF-8">
-    <title>منظومة محمود عادل | الإصدار الأذكى 2026</title>
+    <title>منظومة محمود عادل التعليمية 2026 | النسخة الماستر</title>
     <script src="https://www.gstatic.com/firebasejs/9.0.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.0.0/firebase-firestore-compat.js"></script>
     <style>
-        :root { --admin: #0f172a; --primary: #10b981; --accent: #3b82f6; --danger: #ef4444; --card-bg: #ffffff; }
-        body { font-family: 'Segoe UI', sans-serif; background: #f8fafc; margin: 0; direction: rtl; }
-        .nav { background: var(--admin); color: white; padding: 15px 30px; display: flex; justify-content: space-between; align-items: center; box-shadow: 0 4px 12px rgba(0,0,0,0.1); }
-        .container { padding: 20px; max-width: 1400px; margin: auto; }
-        .card { background: var(--card-bg); border-radius: 15px; padding: 25px; box-shadow: 0 10px 15px -3px rgba(0,0,0,0.1); margin-bottom: 25px; border: 1px solid #e2e8f0; }
+        :root { --admin-dark: #0f172a; --primary: #10b981; --accent: #3b82f6; --danger: #ef4444; --bg: #f8fafc; }
+        body { font-family: 'Segoe UI', Tahoma, sans-serif; background: var(--bg); margin: 0; direction: rtl; }
+        .nav { background: var(--admin-dark); color: white; padding: 15px 30px; display: flex; justify-content: space-between; align-items: center; box-shadow: 0 4px 10px rgba(0,0,0,0.2); }
+        .container { padding: 20px; max-width: 1450px; margin: auto; }
+        .card { background: white; border-radius: 15px; padding: 25px; box-shadow: 0 4px 20px rgba(0,0,0,0.05); margin-bottom: 25px; border: 1px solid #e2e8f0; }
+        h3 { border-right: 5px solid var(--accent); padding-right: 15px; color: var(--admin-dark); }
         
-        /* عناوين وأزرار */
-        h3 { border-right: 5px solid var(--accent); padding-right: 15px; color: var(--admin); margin-bottom: 20px; }
-        .btn { padding: 12px 20px; border: none; border-radius: 10px; cursor: pointer; color: white; font-weight: bold; transition: 0.3s; display: inline-flex; align-items: center; justify-content: center; }
+        /* أزرار وتحكم */
+        .btn { padding: 12px 20px; border: none; border-radius: 10px; cursor: pointer; color: white; font-weight: bold; transition: 0.3s; }
         .btn-save { background: var(--primary); }
         .btn-danger { background: var(--danger); }
-        .apply-all { cursor: pointer; background: #f1f5f9; border: 1px solid #cbd5e1; padding: 2px 8px; border-radius: 6px; font-size: 11px; color: var(--accent); }
-        .apply-all:hover { background: var(--accent); color: white; }
-
-        /* إدارة المعلمين والطلاب */
+        .apply-all { cursor: pointer; background: #eff6ff; color: var(--accent); border: 1px solid #bfdbfe; padding: 2px 6px; border-radius: 5px; font-size: 11px; }
+        
+        /* شبكة الإدارة والمعاينة */
         .admin-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: 20px; }
         input, select, textarea { width: 100%; padding: 12px; margin: 8px 0; border-radius: 10px; border: 1px solid #cbd5e1; box-sizing: border-box; }
-        .teacher-item { background: #f8fafc; padding: 10px; border-radius: 10px; border: 1px solid #e2e8f0; margin-top: 5px; display: flex; justify-content: space-between; }
-
-        /* معاينة المدير الذكية */
-        .preview-step { background: #eff6ff; padding: 15px; border-radius: 12px; border: 1px solid #bfdbfe; margin-top: 10px; }
-        .step-locked { opacity: 0.4; pointer-events: none; }
+        .step-box { background: #f1f5f9; padding: 12px; border-radius: 12px; border: 1px solid #e2e8f0; transition: 0.3s; margin-top: 10px; }
+        .locked { opacity: 0.4; pointer-events: none; filter: grayscale(1); }
 
         /* الجدول */
         table { width: 100%; border-collapse: separate; border-spacing: 0; margin-top: 20px; }
         th, td { padding: 15px; border-bottom: 1px solid #f1f5f9; text-align: center; }
-        th { background: #f8fafc; position: sticky; top: 0; z-index: 10; font-weight: 600; color: #64748b; }
-        .in-score { width: 65px; text-align: center; padding: 8px; border: 2px solid #e2e8f0; border-radius: 8px; font-weight: bold; transition: 0.3s; }
-        .in-score:focus { border-color: var(--accent); outline: none; box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1); }
-        
+        th { background: #f8fafc; color: #64748b; font-weight: 600; }
+        .in-score { width: 65px; padding: 8px; border: 2px solid #e2e8f0; border-radius: 8px; text-align: center; font-weight: bold; }
+        .in-score:focus { border-color: var(--accent); outline: none; }
+
         .hidden { display: none !important; }
-        .lock-msg { background: #fff1f2; color: #be123c; padding: 15px; border-radius: 10px; text-align: center; margin-bottom: 15px; border: 1px solid #fecdd3; font-weight: bold; }
+        .banner { padding: 15px; border-radius: 12px; text-align: center; font-weight: bold; margin-bottom: 20px; border: 1px solid; }
+        .banner-lock { background: #fff1f2; color: #be123c; border-color: #fecdd3; }
+        .banner-preview { background: #f0f9ff; color: #0369a1; border-color: #bae6fd; }
     </style>
 </head>
 <body>
 
 <div class="nav">
-    <div><b>⭐ منظومة أ/ محمود عادل التعليمية</b></div>
+    <div><b>⭐ منظومة أ/ محمود عادل (الإصدار الاحترافي 2026)</b></div>
     <div style="display: flex; gap: 15px; align-items: center;">
-        <span id="userNameDisplay">...</span>
+        <span id="uName">...</span>
         <button onclick="logout()" class="btn btn-danger" style="padding: 8px 15px;">خروج</button>
     </div>
 </div>
@@ -53,71 +51,72 @@
 <div class="container">
     
     <div id="adminPanel" class="card hidden">
-        <h3>🛡️ مركز الإدارة والرقابة الشاملة</h3>
+        <h3>🛡️ مركز التحكم والرقابة الإدارية</h3>
         <div class="admin-grid">
             
+            <div style="background: #f8fafc; padding: 15px; border-radius: 15px; border: 1px solid #e2e8f0;">
+                <h4 style="margin:0">🔍 معاينة رصد المعلمين</h4>
+                <select id="monT" onchange="step1Select()"><option value="">-- اختر المعلم --</option></select>
+                <div id="step2" class="step-box locked">
+                    <select id="monC" onchange="step2Select()"><option value="">-- اختر الصف --</option></select>
+                </div>
+                <div id="step3" class="step-box locked">
+                    <select id="monW" onchange="startPreview()"><option value="">-- الأسبوع المرصود --</option></select>
+                </div>
+                <button onclick="clearPreview()" class="btn" style="background:#64748b; width:100%; margin-top:10px; font-size:12px;">إلغاء المعاينة / رصد حر</button>
+            </div>
+
             <div>
-                <h4>👥 إضافة/تعديل معلم</h4>
+                <h4>👤 إدارة الطاقم والطلاب</h4>
                 <input type="text" id="t-name" placeholder="اسم المعلم">
-                <input type="text" id="t-id" placeholder="اسم المستخدم (Username)">
+                <input type="text" id="t-id" placeholder="كود المستخدم">
                 <input type="text" id="t-pass" placeholder="كلمة المرور">
-                <div style="font-size: 13px; margin: 10px 0;"><b>الصفوف:</b> 
-                    <label><input type="checkbox" class="t-classes" value="1_general"> 1ث</label>
-                    <label><input type="checkbox" class="t-classes" value="2_scientific"> 2ث علمي</label>
-                    <label><input type="checkbox" class="t-classes" value="2_literary"> 2ث أدبي</label>
+                <div style="font-size:12px; padding: 5px;">
+                    <label><input type="checkbox" class="t-cls" value="1_general"> 1ث</label>
+                    <label><input type="checkbox" class="t-cls" value="2_scientific"> 2ث علمي</label>
+                    <label><input type="checkbox" class="t-cls" value="2_literary"> 2ث أدبي</label>
                 </div>
-                <button onclick="saveTeacher()" class="btn btn-save" style="width:100%">حفظ بيانات المعلم</button>
-                <div id="teachersList" style="margin-top:15px; max-height:150px; overflow-y:auto;"></div>
-            </div>
-
-            <div>
-                <h4>🔍 المعاينة والمراقبة الذكية</h4>
-                <select id="monTeacher" onchange="loadMonClasses()"><option value="">اختر معلماً...</option></select>
-                <div id="monStep2" class="preview-step step-locked">
-                    <select id="monClass" onchange="loadMonWeeks()"><option value="">اختر الصف...</option></select>
-                </div>
-                <div id="monStep3" class="preview-step step-locked">
-                    <select id="monWeek" onchange="enablePreview()"><option value="">اختر الأسبوع المرصود...</option></select>
-                </div>
-                <div id="leaderboard" style="margin-top:15px; font-weight:bold; color:var(--primary);"></div>
-            </div>
-
-            <div>
-                <h4>📥 رفع الأسماء والتحكم</h4>
-                <textarea id="studentNames" placeholder="الصق الأسماء (اسم كل سطر) لتثبيتها بالترتيب..." style="height: 60px;"></textarea>
-                <button onclick="importStudents()" class="btn" style="background:var(--accent); width:100%">تثبيت الطلاب بالترتيب</button>
+                <button onclick="addT()" class="btn btn-save" style="width:100%">إضافة معلم</button>
                 <hr>
-                <label><input type="checkbox" id="smartLock" onchange="saveGlobalSettings()"> 🤖 جدولة تلقائية (أسبوعياً)</label>
-                <input type="date" id="startDay" onchange="saveGlobalSettings()">
-                <button onclick="document.getElementById('manualWeeks').classList.toggle('hidden')" class="btn btn-outline" style="width:100%; margin-top:5px; border:1px solid #ccc; color:#333">قفل الأسابيع يدوياً</button>
-                <div id="manualWeeks" class="hidden" style="display:grid; grid-template-columns: repeat(4, 1fr); gap:5px; margin-top:10px;"></div>
+                <textarea id="stNames" placeholder="الصق الأسماء هنا بالترتيب..." style="height:50px"></textarea>
+                <button onclick="upSt()" class="btn" style="background:var(--accent); width:100%">تثبيت قائمة الطلاب</button>
+            </div>
+
+            <div>
+                <h4>📊 الإنجاز والزمن</h4>
+                <div id="topT" style="color:var(--primary); font-weight:bold; margin-bottom:10px;">🏆 جاري التحليل...</div>
+                <label><input type="checkbox" id="smart" onchange="upSet()"> جدولة تلقائية</label>
+                <input type="date" id="sDate" onchange="upSet()">
+                <button onclick="document.getElementById('manualW').classList.toggle('hidden')" class="btn" style="background:var(--admin-dark); width:100%; margin-top:10px;">قفل الأسابيع يدوياً</button>
+                <div id="manualW" class="hidden" style="display:grid; grid-template-columns:repeat(4,1fr); gap:5px; margin-top:10px;"></div>
             </div>
 
         </div>
     </div>
 
     <div class="card">
-        <div id="lockBanner" class="lock-msg hidden">⚠️ هذا الأسبوع مغلق حالياً. المعاينة فقط مسموحة.</div>
-        <div id="previewBanner" class="lock-msg hidden" style="background:#e0f2fe; color:#0369a1; border-color:#bae6fd;">👁️ وضع المعاينة الذكية (للقراءة فقط)</div>
-        
-        <div class="admin-grid" style="grid-template-columns: 2fr 1fr 1fr; align-items: end;">
+        <div id="lMsg" class="banner banner-lock hidden">🔒 عذراً، هذا الأسبوع مغلق حالياً.</div>
+        <div id="pMsg" class="banner banner-preview hidden">👁️ وضع المعاينة (للقراءة فقط) لبيانات المعلم المختار.</div>
+
+        <div id="mainControls" class="admin-grid" style="grid-template-columns: 2fr 1fr 1fr; align-items: end;">
             <div><label>الصف:</label><select id="vGrade" onchange="loadTable()"></select></div>
             <div><label>الأسبوع:</label><select id="vWeek" onchange="loadTable()"></select></div>
-            <button id="saveBtn" onclick="processSave()" class="btn btn-save" style="width:100%">💾 حفظ البيانات (0)</button>
+            <button id="saveBtn" onclick="save()" class="btn btn-save" style="width:100%">💾 حفظ البيانات (0)</button>
         </div>
 
-        <div style="overflow-x: auto;">
+        <div id="emptyState" style="text-align:center; padding:50px; color:#94a3b8;">يرجى اختيار البيانات لبدء العرض...</div>
+        
+        <div id="tableContent" class="hidden">
             <table>
                 <thead>
                     <tr>
-                        <th style="width:50px">م</th>
-                        <th style="text-align:right">اسم الطالب</th>
-                        <th>تقييم <span class="apply-all" onclick="applyAll('t', 15)">⬇ الكل</span></th>
-                        <th>حصة <span class="apply-all" onclick="applyAll('v', 15)">⬇ الكل</span></th>
-                        <th>سلوك <span class="apply-all" onclick="applyAll('s', 10)">⬇ الكل</span></th>
+                        <th>م</th><th style="text-align:right">اسم الطالب</th>
+                        <th>تقييم <span class="apply-all" onclick="applyAll('t',15)">الكل</span></th>
+                        <th>حصة <span class="apply-all" onclick="applyAll('v',15)">الكل</span></th>
+                        <th>سلوك <span class="apply-all" onclick="applyAll('s',10)">الكل</span></th>
                     </tr>
                 </thead>
-                <tbody id="mainTableBody"></tbody>
+                <tbody id="tbody"></tbody>
             </table>
         </div>
     </div>
@@ -130,178 +129,144 @@
 
     const isAdmin = sessionStorage.getItem('isAdmin') === 'true';
     const userEmail = sessionStorage.getItem('userEmail');
-    let pendingChanges = {};
+    let pending = {};
     let isPreview = false;
-    let globalSets = { lockedWeeks: [], smartLock: false, startDate: "" };
+    let globalS = { lockedWeeks: [], smart: false, sDate: "" };
 
     window.onload = async () => {
         if(!userEmail) window.location.href="index.html";
-        document.getElementById('userNameDisplay').innerText = sessionStorage.getItem('userName');
+        document.getElementById('uName').innerText = sessionStorage.getItem('userName');
 
         // تجهيز الأسابيع
         for(let i=1; i<=14; i++) {
-            const wId = `w${i}`;
-            document.getElementById('vWeek').innerHTML += `<option value="${wId}">الأسبوع ${i}</option>`;
-            if(isAdmin) document.getElementById('manualWeeks').innerHTML += `<label><input type="checkbox" class="week-chk" value="${wId}" onchange="saveGlobalSettings()"> أ${i}</label>`;
+            document.getElementById('vWeek').innerHTML += `<option value="w${i}">الأسبوع ${i}</option>`;
+            if(isAdmin) document.getElementById('manualW').innerHTML += `<label><input type="checkbox" class="w-chk" value="w${i}" onchange="upSet()"> أ${i}</label>`;
         }
 
-        await fetchGlobalSettings();
+        const gDoc = await db.collection('settings').doc('global').get();
+        if(gDoc.exists) {
+            globalS = gDoc.data();
+            if(isAdmin) {
+                document.getElementById('smart').checked = globalS.smart;
+                document.getElementById('sDate').value = globalS.sDate;
+                globalS.lockedWeeks.forEach(w => { const c = document.querySelector(`.w-chk[value="${w}"]`); if(c) c.checked = true; });
+            }
+        }
 
         if(isAdmin) {
             document.getElementById('adminPanel').classList.remove('hidden');
-            document.getElementById('vGrade').innerHTML = `<option value="1_general">1ث</option><option value="2_scientific">2ث علمي</option><option value="2_literary">2ث أدبي</option>`;
-            refreshTeachers();
-            updateLeaderboard();
+            document.getElementById('vGrade').innerHTML = `<option value="">-- اختر الصف --</option><option value="1_general">1ث</option><option value="2_scientific">2ث علمي</option><option value="2_literary">2ث أدبي</option>`;
+            loadTs(); updateLead();
         } else {
-            loadTeacherProfile();
+            const doc = await db.collection('teachers').doc(userEmail).get();
+            document.getElementById('vGrade').innerHTML = doc.data().classes.map(c => `<option value="${c}">${c}</option>`).join('');
+            loadTable();
         }
-        loadTable();
     };
 
-    // --- وظائف الإدارة ---
-    async function fetchGlobalSettings() {
-        const doc = await db.collection('settings').doc('global').get();
-        if(doc.exists) {
-            globalSets = doc.data();
-            if(isAdmin) {
-                document.getElementById('smartLock').checked = globalSets.smartLock;
-                document.getElementById('startDay').value = globalSets.startDate;
-                globalSets.lockedWeeks.forEach(w => {
-                    const c = document.querySelector(`.week-chk[value="${w}"]`);
-                    if(c) c.checked = true;
-                });
-            }
-        }
-    }
-
-    async function saveGlobalSettings() {
-        if(!isAdmin) return;
-        globalSets.smartLock = document.getElementById('smartLock').checked;
-        globalSets.startDate = document.getElementById('startDay').value;
-        globalSets.lockedWeeks = Array.from(document.querySelectorAll('.week-chk:checked')).map(c => c.value);
-        await db.collection('settings').doc('global').set(globalSets);
-        loadTable();
-    }
-
-    async function saveTeacher() {
-        const id = document.getElementById('t-id').value.trim();
-        const name = document.getElementById('t-name').value.trim();
-        const pass = document.getElementById('t-pass').value.trim();
-        const classes = Array.from(document.querySelectorAll('.t-classes:checked')).map(c => c.value);
-        if(!id || !name) return alert("اكمل البيانات");
-        await db.collection('teachers').doc(id).set({ name, pass, classes }, {merge:true});
-        alert("تم الحفظ ✅"); refreshTeachers();
-    }
-
-    async function refreshTeachers() {
+    // --- وظائف الإدارة والمعاينة ---
+    async function loadTs() {
         const snap = await db.collection('teachers').get();
-        const list = document.getElementById('teachersList');
-        const mon = document.getElementById('monTeacher');
-        list.innerHTML = ''; mon.innerHTML = '<option value="">اختر معلماً للمعاينة...</option>';
-        snap.forEach(doc => {
-            const t = doc.data();
-            list.innerHTML += `<div class="teacher-item"><span>${t.name}</span> <button onclick="delT('${doc.id}')" style="border:none; cursor:pointer">🗑️</button></div>`;
-            mon.innerHTML += `<option value="${doc.id}">${t.name}</option>`;
-        });
+        const mon = document.getElementById('monT');
+        snap.forEach(d => mon.innerHTML += `<option value="${d.id}">${d.data().name}</option>`);
     }
 
-    // --- المعاينة الذكية (تختفي وتظهر) ---
-    async function loadMonClasses() {
-        const tId = document.getElementById('monTeacher').value;
-        if(!tId) return;
+    async function step1Select() {
+        const tId = document.getElementById('monT').value;
+        if(!tId) return clearPreview();
         const doc = await db.collection('teachers').doc(tId).get();
-        const monClass = document.getElementById('monClass');
-        monClass.innerHTML = '<option value="">اختر الصف...</option>';
-        doc.data().classes.forEach(c => monClass.innerHTML += `<option value="${c}">${c}</option>`);
-        document.getElementById('monStep2').classList.remove('step-locked');
+        document.getElementById('monC').innerHTML = '<option value="">-- الصف --</option>' + doc.data().classes.map(c => `<option value="${c}">${c}</option>`).join('');
+        document.getElementById('step2').classList.remove('locked');
+        hideTable();
     }
 
-    async function loadMonWeeks() {
-        const tId = document.getElementById('monTeacher').value;
-        const grade = document.getElementById('monClass').value;
+    async function step2Select() {
+        const tId = document.getElementById('monT').value;
         const snap = await db.collection('grades').where('teacher','==',tId).get();
-        const weeks = new Set();
-        snap.forEach(d => weeks.add(d.data().week));
-        const monWeek = document.getElementById('monWeek');
-        monWeek.innerHTML = '<option value="">الأسابيع المكتملة...</option>';
-        Array.from(weeks).sort().forEach(w => monWeek.innerHTML += `<option value="${w}">${w}</option>`);
-        document.getElementById('monStep3').classList.remove('step-locked');
+        const weeks = new Set(); snap.forEach(d => weeks.add(d.data().week));
+        document.getElementById('monW').innerHTML = '<option value="">-- الأسابيع --</option>' + Array.from(weeks).sort().map(w => `<option value="${w}">${w}</option>`).join('');
+        document.getElementById('step3').classList.remove('locked');
+        hideTable();
     }
 
-    function enablePreview() {
+    function startPreview() {
         isPreview = true;
-        document.getElementById('vGrade').value = document.getElementById('monClass').value;
-        document.getElementById('vWeek').value = document.getElementById('monWeek').value;
-        document.getElementById('previewBanner').classList.remove('hidden');
+        document.getElementById('vGrade').value = document.getElementById('monC').value;
+        document.getElementById('vWeek').value = document.getElementById('monW').value;
+        document.getElementById('pMsg').classList.remove('hidden');
         document.getElementById('saveBtn').classList.add('hidden');
         loadTable();
     }
 
-    // --- وظائف الرصد والجدول ---
+    function clearPreview() {
+        isPreview = false;
+        document.getElementById('monT').value = "";
+        document.getElementById('step2').classList.add('locked');
+        document.getElementById('step3').classList.add('locked');
+        document.getElementById('pMsg').classList.add('hidden');
+        document.getElementById('saveBtn').classList.remove('hidden');
+        hideTable();
+    }
+
+    function hideTable() {
+        document.getElementById('tableContent').classList.add('hidden');
+        document.getElementById('emptyState').classList.remove('hidden');
+    }
+
+    // --- منطق الجدول والدرجات ---
     async function loadTable() {
         const week = document.getElementById('vWeek').value;
         const gradeVal = document.getElementById('vGrade').value;
-        if(!gradeVal) return;
+        if(!gradeVal) return hideTable();
 
-        // فحص القفل
-        const isAutoLocked = globalSets.smartLock && globalSets.startDate && 
-                             (parseInt(week.replace('w','')) > (Math.floor((new Date() - new Date(globalSets.startDate))/(1000*60*60*24*7)) + 1));
-        const isLocked = !isAdmin && (globalSets.lockedWeeks.includes(week) || isAutoLocked);
-        
-        document.getElementById('lockBanner').classList.toggle('hidden', !isLocked);
-        if(!isPreview) {
-            document.getElementById('previewBanner').classList.add('hidden');
-            document.getElementById('saveBtn').classList.remove('hidden');
-        }
+        const isLocked = !isAdmin && (globalS.lockedWeeks.includes(week) || (globalS.smart && globalS.sDate && parseInt(week.replace('w','')) > (Math.floor((new Date() - new Date(globalS.sDate))/(1000*60*60*24*7)) + 1)));
+        document.getElementById('lMsg').classList.toggle('hidden', !isLocked);
+        document.getElementById('emptyState').classList.add('hidden');
+        document.getElementById('tableContent').classList.remove('hidden');
 
         const [g, b] = gradeVal.split('_');
         const snap = await db.collection('students').where('grade','==',g).where('branch','==',b).get();
-        let students = [];
-        snap.forEach(d => students.push({id: d.id, ...d.data()}));
+        let students = []; snap.forEach(d => students.push({id: d.id, ...d.data()}));
         students.sort((a,b) => (a.sortOrder || 0) - (b.sortOrder || 0));
 
-        const tbody = document.getElementById('mainTableBody');
-        tbody.innerHTML = '';
+        const tbody = document.getElementById('tbody'); tbody.innerHTML = '';
         students.forEach((s, i) => {
             tbody.innerHTML += `<tr>
                 <td>${i+1}</td><td style="text-align:right">${s.name}</td>
-                <td><input type="number" class="in-score" oninput="queue('${s.id}','t',this,15)" data-sid="${s.id}" data-type="t" ${(isLocked || isPreview)?'disabled':''}></td>
-                <td><input type="number" class="in-score" oninput="queue('${s.id}','v',this,15)" data-sid="${s.id}" data-type="v" ${(isLocked || isPreview)?'disabled':''}></td>
-                <td><input type="number" class="in-score" oninput="queue('${s.id}','s',this,10)" data-sid="${s.id}" data-type="s" ${(isLocked || isPreview)?'disabled':''}></td>
+                <td><input type="number" class="in-score" oninput="q('${s.id}','t',this,15)" data-sid="${s.id}" data-type="t" ${ (isLocked || isPreview)?'disabled':'' }></td>
+                <td><input type="number" class="in-score" oninput="q('${s.id}','v',this,15)" data-sid="${s.id}" data-type="v" ${ (isLocked || isPreview)?'disabled':'' }></td>
+                <td><input type="number" class="in-score" oninput="q('${s.id}','s',this,10)" data-sid="${s.id}" data-type="s" ${ (isLocked || isPreview)?'disabled':'' }></td>
             </tr>`;
         });
-        fillGrades();
+        fill();
     }
 
     function applyAll(type, max) {
-        const val = prompt(`إدخال درجة ${type} للجميع:`);
-        if(!val || val > max) return alert("درجة غير صالحة");
+        if(isPreview) return;
+        const val = prompt("الدرجة للكل:");
+        if(val === null || val === "") return;
         document.querySelectorAll(`input[data-type="${type}"]`).forEach(input => {
-            input.value = val;
-            queue(input.dataset.sid, type, input, max);
+            input.value = val; q(input.dataset.sid, type, input, max);
         });
     }
 
-    function queue(sid, type, input, max) {
+    function q(sid, type, input, max) {
         let v = parseFloat(input.value);
         if(v > max) { alert("تجاوزت الحد!"); input.value=""; return; }
-        pendingChanges[`${sid}_${document.getElementById('vWeek').value}_${type}`] = { 
-            sid, week: document.getElementById('vWeek').value, type, score: v, teacher: userEmail 
-        };
+        pending[`${sid}_${document.getElementById('vWeek').value}_${type}`] = { sid, week: document.getElementById('vWeek').value, type, score: v, teacher: userEmail };
         input.style.borderColor = "var(--accent)";
-        document.getElementById('saveBtn').innerText = `💾 حفظ التعديلات (${Object.keys(pendingChanges).length})`;
+        document.getElementById('saveBtn').innerText = `💾 حفظ (${Object.keys(pending).length})`;
     }
 
-    async function processSave() {
+    async function save() {
         const batch = db.batch();
-        for(let k in pendingChanges) batch.set(db.collection('grades').doc(k), pendingChanges[k], {merge:true});
-        await batch.commit();
-        pendingChanges = {};
+        for(let k in pending) batch.set(db.collection('grades').doc(k), pending[k], {merge:true});
+        await batch.commit(); pending = {};
         document.getElementById('saveBtn').innerText = "💾 حفظ البيانات (0)";
-        alert("تم الحفظ بنجاح ✅"); loadTable();
+        alert("تم الحفظ ✅"); loadTable();
     }
 
-    async function fillGrades() {
+    async function fill() {
         const snap = await db.collection('grades').where('week','==',document.getElementById('vWeek').value).get();
         snap.forEach(doc => {
             const d = doc.data();
@@ -310,31 +275,42 @@
         });
     }
 
-    async function importStudents() {
-        const names = document.getElementById('studentNames').value.split('\n').filter(n => n.trim() !== "");
+    // --- وظائف عامة ---
+    async function upSt() {
+        const names = document.getElementById('stNames').value.split('\n').filter(n => n.trim() !== "");
         const [g, b] = document.getElementById('vGrade').value.split('_');
         const batch = db.batch();
         names.forEach((n, i) => batch.set(db.collection('students').doc(), { name: n.trim(), grade: g, branch: b, sortOrder: i }));
-        await batch.commit(); alert("تم رفع الطلاب بالترتيب ✅"); loadTable();
+        await batch.commit(); alert("تم الرفع بالترتيب ✅"); loadTable();
     }
 
-    async function updateLeaderboard() {
+    async function addT() {
+        const id = document.getElementById('t-id').value;
+        const name = document.getElementById('t-name').value;
+        const pass = document.getElementById('t-pass').value;
+        const classes = Array.from(document.querySelectorAll('.t-cls:checked')).map(c => c.value);
+        await db.collection('teachers').doc(id).set({ name, pass, classes });
+        alert("تم الحفظ ✅"); location.reload();
+    }
+
+    async function upSet() {
+        globalS.smart = document.getElementById('smart').checked;
+        globalS.sDate = document.getElementById('sDate').value;
+        globalS.lockedWeeks = Array.from(document.querySelectorAll('.w-chk:checked')).map(c => c.value);
+        await db.collection('settings').doc('global').set(globalS);
+        loadTable();
+    }
+
+    async function updateLead() {
         const snap = await db.collection('grades').get();
-        let counts = {};
-        snap.forEach(d => { const t = d.data().teacher; counts[t] = (counts[t] || 0) + 1; });
+        let counts = {}; snap.forEach(d => { const t = d.data().teacher; counts[t] = (counts[t] || 0) + 1; });
         let top = Object.entries(counts).sort((a,b) => b[1] - a[1])[0];
         if(top) {
             const tDoc = await db.collection('teachers').doc(top[0]).get();
-            document.getElementById('leaderboard').innerHTML = `🥇 المعلم الأكثر إنجازاً: ${tDoc.data()?.name || '...'}`;
+            document.getElementById('topT').innerHTML = `🏆 الأكثر إنجازاً: ${tDoc.data()?.name || '...'}`;
         }
     }
 
-    async function loadTeacherProfile() {
-        const doc = await db.collection('teachers').doc(userEmail).get();
-        if(doc.exists) document.getElementById('vGrade').innerHTML = doc.data().classes.map(c => `<option value="${c}">${c}</option>`).join('');
-    }
-
-    async function delT(id) { if(confirm("حذف؟")) { await db.collection('teachers').doc(id).delete(); refreshTeachers(); } }
     function logout() { sessionStorage.clear(); window.location.href="index.html"; }
 </script>
 </body>

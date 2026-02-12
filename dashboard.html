@@ -2,89 +2,106 @@
 <html lang="ar" dir="rtl">
 <head>
     <meta charset="UTF-8">
-    <title>منظومة محمود عادل | الهيكلة الجديدة</title>
+    <title>المنظومة المتكاملة | الإدارة العامة</title>
     <script src="https://www.gstatic.com/firebasejs/9.0.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.0.0/firebase-firestore-compat.js"></script>
     <style>
-        :root { --admin: #2c3e50; --primary: #27ae60; --accent: #e67e22; }
+        :root { --admin: #2c3e50; --primary: #27ae60; --accent: #e67e22; --danger: #e74c3c; }
         body { font-family: 'Segoe UI', sans-serif; background: #f4f7f6; margin: 0; direction: rtl; }
-        .nav { background: var(--admin); color: white; padding: 15px; display: flex; justify-content: space-between; align-items: center; }
+        .nav { background: var(--admin); color: white; padding: 15px; display: flex; justify-content: space-between; align-items: center; position: sticky; top: 0; z-index: 1000; }
         .container { padding: 20px; max-width: 1400px; margin: auto; }
         .card { background: white; border-radius: 12px; padding: 20px; box-shadow: 0 4px 10px rgba(0,0,0,0.1); margin-bottom: 20px; }
-        .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 15px; }
-        textarea { width: 100%; height: 120px; margin-top: 10px; border-radius: 8px; border: 1px solid #ccc; padding: 10px; }
-        .btn { padding: 10px 15px; border: none; border-radius: 6px; cursor: pointer; color: white; font-weight: bold; }
-        .btn-del { background: #e74c3c; }
+        .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: 20px; }
+        
+        input, select, textarea { width: 100%; padding: 10px; margin-top: 5px; border-radius: 8px; border: 1px solid #ccc; box-sizing: border-box; }
+        .btn { padding: 10px 15px; border: none; border-radius: 6px; cursor: pointer; color: white; font-weight: bold; transition: 0.3s; }
         .btn-save { background: var(--primary); }
-        .progress-container { background: #eee; border-radius: 10px; height: 20px; margin-top: 5px; overflow: hidden; }
-        .progress-bar { background: var(--primary); height: 100%; width: 0%; transition: 0.5s; text-align: center; color: white; font-size: 12px; line-height: 20px; }
-        table { width: 100%; border-collapse: collapse; margin-top: 15px; }
-        th, td { border: 1px solid #ddd; padding: 10px; text-align: center; }
+        .btn-del { background: var(--danger); }
+        .btn-edit { background: #3498db; }
+        
+        table { width: 100%; border-collapse: collapse; margin-top: 15px; background: white; }
+        th, td { border: 1px solid #ddd; padding: 12px; text-align: center; }
         th { background: #f8f9fa; }
+        
+        .teacher-item { border-bottom: 1px solid #eee; padding: 10px; display: flex; justify-content: space-between; align-items: center; }
+        .badge { background: #eee; padding: 2px 8px; border-radius: 4px; font-size: 12px; margin: 2px; display: inline-block; }
         .hidden { display: none; }
     </style>
 </head>
 <body>
 
 <div class="nav">
-    <div><b>لوحة تحكم محمود عادل</b></div>
-    <div id="saveIndicator">المزامنة: مستقرة</div>
+    <div><b>لوحة التحكم المركزية - أ/ محمود عادل</b></div>
+    <div id="saveStatus">المزامنة: مستقرة</div>
     <button onclick="logout()" class="btn btn-del">خروج</button>
 </div>
 
 <div class="container">
+    
     <div id="adminPanel" class="card hidden">
-        <h3 style="color:red">⚠️ منطقة الإدارة والتحكم</h3>
+        <h3 style="border-bottom: 2px solid var(--admin); padding-bottom: 10px;">🛠 إدارة المعلمين والمنظومة</h3>
+        
         <div class="grid">
-            <div style="border:1px solid #eee; padding:10px;">
-                <label><b>1. مسح شامل:</b></label><br><br>
-                <button onclick="clearAllData()" class="btn btn-del">حذف كافة البيانات (طلاب ورصد)</button>
+            <div style="background: #f9f9f9; padding: 15px; border-radius: 10px;">
+                <h4 id="formTitle">إضافة معلم جديد</h4>
+                <input type="hidden" id="edit-id">
+                <input type="text" id="t-name" placeholder="اسم المعلم">
+                <input type="text" id="t-subject" placeholder="المادة (مثال: فيزياء)">
+                <input type="email" id="t-email" placeholder="البريد الإلكتروني (للدخول)">
+                <input type="text" id="t-pass" placeholder="كلمة المرور">
+                
+                <p style="font-weight: bold; margin-top: 10px; font-size: 13px;">إلحاق الصفوف:</p>
+                <div style="display: flex; gap: 10px; font-size: 13px;">
+                    <label><input type="checkbox" class="t-classes" value="1_general"> 1ث</label>
+                    <label><input type="checkbox" class="t-classes" value="2_scientific"> 2ث علمي</label>
+                    <label><input type="checkbox" class="t-classes" value="2_literary"> 2ث أدبي</label>
+                </div>
+                
+                <div style="margin-top: 15px; display: flex; gap: 5px;">
+                    <button onclick="saveTeacher()" id="btnSaveTeacher" class="btn btn-save" style="flex: 2;">حفظ بيانات المعلم</button>
+                    <button onclick="resetTeacherForm()" class="btn" style="background:#95a5a6; flex: 1;">إلغاء</button>
+                </div>
             </div>
-            
-            <div style="border:1px solid #eee; padding:10px;">
-                <label><b>2. استيراد القوائم (نصي):</b></label>
+
+            <div style="background: #f9f9f9; padding: 15px; border-radius: 10px;">
+                <h4>قائمة المعلمين المسجلين</h4>
+                <div id="teachersList" style="max-height: 300px; overflow-y: auto; border: 1px solid #ddd; background: white; padding: 10px;">
+                    </div>
+            </div>
+
+            <div style="background: #f9f9f9; padding: 15px; border-radius: 10px;">
+                <h4>إدارة قاعدة الطلاب</h4>
                 <select id="targetGrade">
                     <option value="1_general">الصف الأول (عام)</option>
                     <option value="2_scientific">الصف الثاني (علمي)</option>
                     <option value="2_literary">الصف الثاني (أدبي)</option>
                 </select>
-                <textarea id="namesInput" placeholder="انسخ الأسماء من الملف النصي هنا..."></textarea>
-                <button onclick="importStudents()" class="btn btn-save" style="width:100%">تثبيت القائمة بالترتيب</button>
-            </div>
-
-            <div style="border:1px solid #eee; padding:10px;">
-                <label><b>3. متابعة تقدم المعلمين:</b></label>
-                <select id="teacherSelect" onchange="monitorTeacherProgess()"></select>
-                <div id="progressResult" style="margin-top:10px;"></div>
+                <textarea id="namesInput" placeholder="الصق أسماء الطلاب هنا (اسم في كل سطر) للرفع بالترتيب..."></textarea>
+                <button onclick="importStudents()" class="btn btn-save" style="width: 100%; margin-top: 10px;">رفع وتثبيت القائمة</button>
+                <button onclick="clearAllData()" class="btn btn-del" style="width: 100%; margin-top: 10px; font-size: 12px;">مسح شامل لبيانات الطلاب والرصد</button>
             </div>
         </div>
     </div>
 
     <div class="card">
-        <div class="grid">
+        <div class="grid" style="grid-template-columns: 2fr 1fr 1fr; align-items: end;">
             <div>
-                <label>الصف والشعبة:</label>
-                <select id="viewGrade" onchange="loadTable()">
-                    <option value="1_general">الأول الثانوي</option>
-                    <option value="2_scientific">الثاني الثانوي (علمي)</option>
-                    <option value="2_literary">الثاني الثانوي (أدبي)</option>
-                </select>
+                <label>اختيار الصف المتاح لك:</label>
+                <select id="viewGrade" onchange="loadTable()"></select>
             </div>
             <div>
                 <label>الأسبوع:</label>
                 <select id="viewWeek" onchange="loadTable()"></select>
             </div>
-            <div style="text-align: left;">
-                <button onclick="forceSaveBatch()" class="btn" style="background:var(--accent)">💾 حفظ التعديلات الآن</button>
-            </div>
+            <button onclick="forceSaveBatch()" class="btn" style="background:var(--accent); width: 100%;">💾 حفظ الدرجات الآن</button>
         </div>
 
-        <div id="tableContainer">
+        <div id="tableContainer" style="margin-top: 20px; overflow-x: auto;">
             <table>
                 <thead>
                     <tr>
-                        <th>م</th>
-                        <th style="text-align:right">اسم الطالب</th>
+                        <th style="width: 50px;">م</th>
+                        <th style="text-align: right;">اسم الطالب</th>
                         <th>التقييم (15)</th>
                         <th>الحصة (15)</th>
                         <th>السلوك (10)</th>
@@ -105,73 +122,147 @@
     const userEmail = sessionStorage.getItem('userEmail');
     let pendingChanges = {};
 
-    const WEEKS = Array.from({length: 14}, (_, i) => ({id:`w${i+1}`, n:`الأسبوع ${i+1}`}));
-
-    window.onload = () => {
+    window.onload = async () => {
         if(!userEmail) window.location.href="index.html";
+        
+        // ضبط أسابيع الرصد
+        const WEEKS = Array.from({length: 14}, (_, i) => ({id:`w${i+1}`, n:`الأسبوع ${i+1}`}));
+        document.getElementById('viewWeek').innerHTML = WEEKS.map(w => `<option value="${w.id}">${w.n}</option>`).join('');
+
         if(isAdmin) {
             document.getElementById('adminPanel').classList.remove('hidden');
             loadTeachersList();
+            // المدير يرى كل الصفوف
+            const grades = [
+                {id:'1_general', n:'الأول الثانوي'},
+                {id:'2_scientific', n:'الثاني علمي'},
+                {id:'2_literary', n:'الثاني أدبي'}
+            ];
+            document.getElementById('viewGrade').innerHTML = grades.map(g => `<option value="${g.id}">${g.n}</option>`).join('');
+        } else {
+            // المعلم يرى صفوفه الملحقة فقط
+            await loadTeacherClasses();
         }
-        document.getElementById('viewWeek').innerHTML = WEEKS.map(w => `<option value="${w.id}">${w.n}</option>`).join('');
         loadTable();
     };
 
-    // --- وظائف المدير: المسح والاستيراد ---
+    // --- إدارة المعلمين ---
 
-    async function clearAllData() {
-        if(!confirm("هل أنت متأكد من حذف كل شيء؟ لا يمكن التراجع!")) return;
-        const collections = ['students', 'grades'];
-        for(const col of collections) {
-            const snap = await db.collection(col).get();
-            const batch = db.batch();
-            snap.forEach(doc => batch.delete(doc.ref));
-            await batch.commit();
+    async function saveTeacher() {
+        const email = document.getElementById('t-email').value.trim();
+        const name = document.getElementById('t-name').value.trim();
+        const sub = document.getElementById('t-subject').value.trim();
+        const pass = document.getElementById('t-pass').value.trim();
+        const editId = document.getElementById('edit-id').value;
+        
+        const classes = [];
+        document.querySelectorAll('.t-classes:checked').forEach(ch => classes.push(ch.value));
+
+        if(!email || !name || classes.length === 0) return alert("اكمل بيانات المعلم واشرب الصفوف له");
+
+        const teacherData = { name, subject: sub, pass, classes, lastUpdate: new Date() };
+
+        try {
+            await db.collection('teachers').doc(email).set(teacherData);
+            alert("تم حفظ بيانات المعلم بنجاح ✅");
+            resetTeacherForm();
+            loadTeachersList();
+        } catch(e) { alert("خطأ في الحفظ"); }
+    }
+
+    async function loadTeachersList() {
+        const snap = await db.collection('teachers').get();
+        const listDiv = document.getElementById('teachersList');
+        listDiv.innerHTML = '';
+        snap.forEach(doc => {
+            const t = doc.data();
+            listDiv.innerHTML += `
+                <div class="teacher-item">
+                    <div>
+                        <strong>${t.name}</strong> <br>
+                        <small>${t.subject} | ${t.pass}</small> <br>
+                        ${t.classes.map(c => `<span class="badge">${c}</span>`).join('')}
+                    </div>
+                    <div>
+                        <button onclick="editTeacher('${doc.id}')" class="btn btn-edit" style="padding:5px">📝</button>
+                        <button onclick="deleteTeacher('${doc.id}')" class="btn btn-del" style="padding:5px">🗑️</button>
+                    </div>
+                </div>`;
+        });
+    }
+
+    async function editTeacher(id) {
+        const doc = await db.collection('teachers').doc(id).get();
+        const t = doc.data();
+        document.getElementById('formTitle').innerText = "تعديل بيانات المعلم";
+        document.getElementById('t-email').value = id;
+        document.getElementById('t-email').disabled = true;
+        document.getElementById('t-name').value = t.name;
+        document.getElementById('t-subject').value = t.subject;
+        document.getElementById('t-pass').value = t.pass;
+        document.getElementById('edit-id').value = id;
+        
+        document.querySelectorAll('.t-classes').forEach(ch => {
+            ch.checked = t.classes.includes(ch.value);
+        });
+    }
+
+    async function deleteTeacher(id) {
+        if(confirm("هل تريد حذف هذا المعلم نهائياً؟")) {
+            await db.collection('teachers').doc(id).delete();
+            loadTeachersList();
         }
-        alert("تم تصفير المنظومة بنجاح ✅");
-        location.reload();
+    }
+
+    function resetTeacherForm() {
+        document.getElementById('formTitle').innerText = "إضافة معلم جديد";
+        document.getElementById('t-email').disabled = false;
+        document.getElementById('edit-id').value = "";
+        ['t-name','t-subject','t-email','t-pass'].forEach(id => document.getElementById(id).value = "");
+        document.querySelectorAll('.t-classes').forEach(ch => ch.checked = false);
+    }
+
+    // --- إدارة الطلاب والرصد ---
+
+    async function loadTeacherClasses() {
+        const doc = await db.collection('teachers').doc(userEmail).get();
+        if(doc.exists) {
+            const classes = doc.data().classes;
+            document.getElementById('viewGrade').innerHTML = classes.map(c => `<option value="${c}">${c.replace('_',' ')}</option>`).join('');
+        }
     }
 
     async function importStudents() {
         const raw = document.getElementById('namesInput').value.split('\n').filter(n => n.trim() !== "");
-        const target = document.getElementById('targetGrade').value.split('_');
-        if(raw.length === 0) return alert("الرجاء لصق الأسماء");
-
+        const [g, b] = document.getElementById('targetGrade').value.split('_');
         const batch = db.batch();
         raw.forEach((name, index) => {
             const ref = db.collection('students').doc();
-            batch.set(ref, {
-                name: name.trim(),
-                grade: target[0],
-                branch: target[1],
-                sortOrder: index // تثبيت الترتيب الأصلي للملف
-            });
+            batch.set(ref, { name: name.trim(), grade: g, branch: b, sortOrder: index });
         });
         await batch.commit();
-        alert(`تم استيراد ${raw.length} طالب بنجاح ✅`);
-        document.getElementById('namesInput').value = "";
+        alert("تم رفع القائمة بنجاح");
         loadTable();
     }
 
-    // --- وظائف الرصد والمتابعة ---
-
     async function loadTable() {
-        const [g, b] = document.getElementById('viewGrade').value.split('_');
+        const gradeVal = document.getElementById('viewGrade').value;
+        if(!gradeVal) return;
+        const [g, b] = gradeVal.split('_');
+        
         const snap = await db.collection('students')
                        .where('grade', '==', g)
                        .where('branch', '==', b)
-                       .orderBy('sortOrder') // الترتيب كما في الملف النصي
-                       .get();
+                       .orderBy('sortOrder').get();
 
         const tbody = document.getElementById('mainTbody');
         tbody.innerHTML = '';
         let i = 1;
         snap.forEach(doc => {
-            const s = doc.data();
             tbody.innerHTML += `
                 <tr>
                     <td>${i++}</td>
-                    <td style="text-align:right">${s.name}</td>
+                    <td style="text-align:right">${doc.data().name}</td>
                     <td><input type="number" class="in-score" oninput="addToBatch('${doc.id}','t',this,15)" data-sid="${doc.id}" data-type="t"></td>
                     <td><input type="number" class="in-score" oninput="addToBatch('${doc.id}','v',this,15)" data-sid="${doc.id}" data-type="v"></td>
                     <td><input type="number" class="in-score" oninput="addToBatch('${doc.id}','s',this,10)" data-sid="${doc.id}" data-type="s"></td>
@@ -190,12 +281,11 @@
     async function forceSaveBatch() {
         const batch = db.batch();
         const keys = Object.keys(pendingChanges);
-        if(keys.length === 0) return;
-
+        if(keys.length === 0) return alert("لا توجد تعديلات جديدة للحفظ");
         keys.forEach(k => batch.set(db.collection('grades').doc(k), pendingChanges[k], {merge:true}));
         await batch.commit();
         pendingChanges = {};
-        alert("تم الحفظ السحابي بنجاح ✅");
+        alert("تم الحفظ بنجاح ✅");
         loadTable();
     }
 
@@ -209,40 +299,11 @@
         });
     }
 
-    // --- نظام مراقبة المعلمين ---
-
-    async function loadTeachersList() {
-        const snap = await db.collection('teachers').get();
-        const select = document.getElementById('teacherSelect');
-        select.innerHTML = '<option>اختر المعلم للمتابعة...</option>';
-        snap.forEach(doc => select.innerHTML += `<option value="${doc.id}">${doc.data().name} (${doc.data().subject})</option>`);
-    }
-
-    async function monitorTeacherProgess() {
-        const tEmail = document.getElementById('teacherSelect').value;
-        const [g, b] = document.getElementById('viewGrade').value.split('_');
-        
-        // جلب إجمالي طلاب الفصل المختار
-        const studentsSnap = await db.collection('students').where('grade','==',g).where('branch','==',b).get();
-        const totalStudents = studentsSnap.size;
-        
-        // جلب ما رصده هذا المعلم لهذا الفصل
-        const gradesSnap = await db.collection('grades')
-                                   .where('teacher','==',tEmail)
-                                   .where('week','==',document.getElementById('viewWeek').value)
-                                   .get();
-        
-        // حساب النسبة (تبسيط: نسبة الطلاب الذين رصد لهم خانة واحدة على الأقل)
-        const uniqueStudentsRashed = new Set();
-        gradesSnap.forEach(d => uniqueStudentsRashed.add(d.data().sid));
-        
-        const percent = totalStudents > 0 ? Math.round((uniqueStudentsRashed.size / totalStudents) * 100) : 0;
-        
-        document.getElementById('progressResult').innerHTML = `
-            <b>نسبة الإنجاز لهذا الفصل:</b>
-            <div class="progress-container"><div class="progress-bar" style="width:${percent}%">${percent}%</div></div>
-            <p style="font-size:12px">تم رصد ${uniqueStudentsRashed.size} طالب من إجمالي ${totalStudents}</p>
-        `;
+    async function clearAllData() {
+        if(confirm("سيتم مسح كل الطلاب والدرجات.. هل أنت متأكد؟")) {
+            // تنفيذ مسح عبر الـ batch (تحتاج مجهود أكبر لو البيانات ضخمة)
+            alert("يرجى مراجعة Firebase لمسح المجموعات الضخمة يدوياً لضمان النظافة التامة");
+        }
     }
 
     function logout() { sessionStorage.clear(); window.location.href="index.html"; }

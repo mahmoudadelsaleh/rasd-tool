@@ -3,70 +3,90 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>تسجيل الدخول | منظومة الأستاذ محمود عادل</title>
+    <title>منظومة الرصد 2026 | تسجيل الدخول</title>
     <script src="https://www.gstatic.com/firebasejs/9.0.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.0.0/firebase-firestore-compat.js"></script>
     <style>
-        body { font-family: 'Segoe UI', Tahoma, sans-serif; background: #2c3e50; display: flex; justify-content: center; align-items: center; height: 100vh; margin: 0; direction: rtl; }
-        .login-card { background: white; padding: 40px; border-radius: 20px; box-shadow: 0 10px 25px rgba(0,0,0,0.3); width: 100%; max-width: 400px; text-align: center; }
-        h2 { color: #2c3e50; margin-bottom: 25px; }
-        input { width: 100%; padding: 15px; margin-bottom: 15px; border: 2px solid #ddd; border-radius: 10px; font-size: 16px; box-sizing: border-box; transition: 0.3s; }
-        input:focus { border-color: #27ae60; outline: none; }
-        .btn-login { width: 100%; padding: 15px; background: #27ae60; border: none; border-radius: 10px; color: white; font-size: 18px; font-weight: bold; cursor: pointer; transition: 0.3s; }
-        .btn-login:hover { background: #219150; }
-        .error { color: #e74c3c; font-size: 14px; margin-bottom: 15px; display: none; }
+        body { font-family: 'Segoe UI', Tahoma, sans-serif; background: linear-gradient(135deg, #1e293b 0%, #334155 100%); margin: 0; display: flex; align-items: center; justify-content: center; height: 100vh; color: white; }
+        .login-card { background: white; color: #1e293b; padding: 40px; border-radius: 25px; box-shadow: 0 15px 35px rgba(0,0,0,0.3); width: 100%; max-width: 400px; text-align: center; }
+        .logo { font-size: 50px; margin-bottom: 10px; }
+        h2 { margin-bottom: 30px; color: #1e293b; font-size: 24px; }
+        input { width: 100%; padding: 15px; margin-bottom: 15px; border: 2px solid #e2e8f0; border-radius: 12px; font-size: 16px; box-sizing: border-box; transition: 0.3s; }
+        input:focus { border-color: #3b82f6; outline: none; }
+        .btn-login { width: 100%; padding: 15px; background: #3b82f6; color: white; border: none; border-radius: 12px; font-size: 18px; font-weight: bold; cursor: pointer; transition: 0.3s; }
+        .btn-login:hover { background: #2563eb; transform: translateY(-2px); }
+        .error-msg { color: #e11d48; font-size: 14px; margin-top: 10px; display: none; }
+        .footer { margin-top: 20px; font-size: 12px; color: #64748b; }
     </style>
 </head>
 <body>
 
 <div class="login-card">
+    <div class="logo">💎</div>
     <h2>تسجيل دخول المنظومة</h2>
-    <div id="error-msg" class="error">بيانات الدخول غير صحيحة!</div>
-    <input type="text" id="user-id" placeholder="البريد الإلكتروني أو كود المدير">
-    <input type="password" id="user-pass" placeholder="كلمة المرور">
-    <button onclick="handleLogin()" class="btn-login">دخول الآن</button>
-    <p style="margin-top:20px; color:#7f8c8d; font-size: 12px;">الإصدار المطور 2026 - م/ محمود عادل</p>
+    
+    <input type="text" id="userEmail" placeholder="اسم المستخدم أو البريد">
+    <input type="password" id="userPass" placeholder="كلمة المرور">
+    
+    <button class="btn-login" onclick="handleLogin()">دخول النظام</button>
+    
+    <div id="errorBox" class="error-msg">خطأ في اسم المستخدم أو كلمة المرور</div>
+    
+    <div class="footer">حقوق النشر محفوظة © 2026 - م. محمود عادل</div>
 </div>
 
 <script>
-    // إعدادات Firebase
-    const firebaseConfig = { 
-        apiKey: "AIzaSyBePGZiqMPmZQdg36jZ4Rkdtd7OISxmob8", 
-        projectId: "rasd-tools" 
-    };
+    // نفس إعدادات الفايربيز الخاصة بك
+    const firebaseConfig = { apiKey: "AIzaSyBePGZiqMPmZQdg36jZ4Rkdtd7OISxmob8", projectId: "rasd-tools" };
     firebase.initializeApp(firebaseConfig);
     const db = firebase.firestore();
 
     async function handleLogin() {
-        const id = document.getElementById('user-id').value.trim();
-        const pass = document.getElementById('user-pass').value.trim();
-        const errorEl = document.getElementById('error-msg');
-
-        // 1. التحقق من كود المدير (محمود عادل)
-        if (id === "790707071" && pass === "790707071") {
-            sessionStorage.setItem('isAdmin', 'true');
-            sessionStorage.setItem('userEmail', 'admin@system.com');
-            sessionStorage.setItem('userName', 'الأستاذ محمود عادل (المدير)');
-            window.location.href = "dashboard.html";
+        const user = document.getElementById('userEmail').value.trim();
+        const pass = document.getElementById('userPass').value.trim();
+        const errorBox = document.getElementById('errorBox');
+        
+        if (!user || !pass) {
+            showError("يرجى إدخال كافة البيانات");
             return;
         }
 
-        // 2. التحقق من المعلمين في قاعدة البيانات
+        // 1. التحقق إذا كان المدير
+        // ملاحظة: يمكنك تغيير admin إلى أي اسم مستخدم تفضله
+        if (user === "admin" && pass === "123456") {
+            sessionStorage.setItem('userEmail', 'admin');
+            sessionStorage.setItem('isAdmin', 'true');
+            window.location.href = "admin.html";
+            return;
+        }
+
+        // 2. التحقق إذا كان معلماً من قاعدة البيانات
         try {
-            const doc = await db.collection('teachers').doc(id).get();
-            if (doc.exists && doc.data().pass === pass) {
-                sessionStorage.setItem('isAdmin', 'false');
-                sessionStorage.setItem('userEmail', id);
-                sessionStorage.setItem('userName', doc.data().name);
-                window.location.href = "dashboard.html";
+            const tDoc = await db.collection('teachers').doc(user).get();
+            
+            if (tDoc.exists) {
+                const data = tDoc.data();
+                if (data.pass === pass) {
+                    sessionStorage.setItem('userEmail', user);
+                    sessionStorage.setItem('isAdmin', 'false');
+                    window.location.href = "teacher.html";
+                } else {
+                    showError("كلمة المرور غير صحيحة");
+                }
             } else {
-                errorEl.style.display = 'block';
+                showError("اسم المستخدم غير موجود");
             }
         } catch (e) {
-            console.error(e);
-            alert("حدث خطأ في الاتصال بقاعدة البيانات");
+            showError("حدث خطأ في الاتصال بالسيرفر");
         }
     }
+
+    function showError(msg) {
+        const errorBox = document.getElementById('errorBox');
+        errorBox.innerText = msg;
+        errorBox.style.display = "block";
+    }
 </script>
+
 </body>
 </html>

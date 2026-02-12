@@ -3,53 +3,49 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>منظومة محمود عادل v2026</title>
+    <title>منظومة محمود عادل v2026 | النسخة المعتمدة</title>
     <script src="https://www.gstatic.com/firebasejs/9.0.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.0.0/firebase-firestore-compat.js"></script>
     <style>
         :root { --admin: #0f172a; --primary: #10b981; --accent: #3b82f6; --danger: #ef4444; --bg: #f1f5f9; }
         body { font-family: 'Segoe UI', system-ui, sans-serif; background: var(--bg); margin: 0; padding-bottom: 80px; direction: rtl; }
         
-        /* الهيدر الهوية */
         .header-profile { background: var(--admin); color: white; padding: 20px; border-radius: 0 0 25px 25px; text-align: center; box-shadow: 0 4px 12px rgba(0,0,0,0.1); }
         .stats-box { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 15px; background: rgba(255,255,255,0.05); padding: 10px; border-radius: 15px; }
-        .stat-item { font-size: 12px; } .stat-item b { display: block; font-size: 16px; color: var(--primary); }
+        .stat-item { font-size: 11px; } .stat-item b { display: block; font-size: 15px; color: var(--primary); }
 
         .container { padding: 15px; max-width: 600px; margin: auto; }
-        .card { background: white; border-radius: 20px; padding: 20px; box-shadow: 0 2px 10px rgba(0,0,0,0.05); margin-bottom: 15px; }
+        .card { background: white; border-radius: 20px; padding: 15px; box-shadow: 0 2px 10px rgba(0,0,0,0.05); margin-bottom: 15px; }
 
-        /* بطاقة الطالب الجديدة */
-        .student-card { background: white; border-radius: 15px; padding: 15px; margin-bottom: 15px; border: 1px solid #e2e8f0; }
-        .student-name { font-weight: bold; color: var(--admin); font-size: 16px; margin-bottom: 12px; display: block; border-bottom: 1px solid #f1f5f9; padding-bottom: 8px; }
-        .inputs-row { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; }
-        .input-group { text-align: center; }
-        .input-group label { display: block; font-size: 11px; color: #64748b; margin-bottom: 5px; }
-        .in-score { width: 100%; height: 45px; border-radius: 10px; border: 2px solid #cbd5e1; text-align: center; font-size: 18px; font-weight: bold; background: #f8fafc; }
-        .in-score:focus { border-color: var(--accent); outline: none; background: white; }
-
-        /* شريط التحكم السفلي */
-        .bottom-nav { position: fixed; bottom: 0; left: 0; right: 0; background: white; padding: 10px 20px; display: flex; gap: 10px; box-shadow: 0 -5px 15px rgba(0,0,0,0.05); z-index: 1000; }
+        .student-card { background: white; border-radius: 15px; padding: 15px; margin-bottom: 12px; border: 1px solid #e2e8f0; }
+        .student-name { font-weight: bold; color: var(--admin); font-size: 15px; margin-bottom: 10px; display: block; border-bottom: 1px solid #f1f5f9; padding-bottom: 5px; }
+        .inputs-row { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
+        .input-group label { display: block; font-size: 10px; color: #64748b; margin-bottom: 4px; text-align: center; }
+        .in-score { width: 100%; height: 40px; border-radius: 8px; border: 2px solid #cbd5e1; text-align: center; font-size: 17px; font-weight: bold; background: #f8fafc; }
         
-        /* أزرار الإدارة */
-        .t-row { display: flex; justify-content: space-between; align-items: center; background: #f8fafc; padding: 10px; border-radius: 12px; margin-bottom: 8px; border: 1px solid #e2e8f0; }
-        .btn { border: none; border-radius: 12px; cursor: pointer; font-weight: bold; transition: 0.3s; display: flex; align-items: center; justify-content: center; }
-        .btn-save { background: var(--primary); color: white; flex: 2; height: 50px; font-size: 16px; }
+        .bottom-nav { position: fixed; bottom: 0; left: 0; right: 0; background: white; padding: 12px 20px; display: flex; gap: 10px; box-shadow: 0 -5px 15px rgba(0,0,0,0.05); z-index: 1000; }
+        
+        .t-row { display: flex; justify-content: space-between; align-items: center; background: #f8fafc; padding: 10px; border-radius: 12px; margin-bottom: 8px; border: 1px solid #e2e8f0; font-size: 13px; }
+        .btn { border: none; border-radius: 10px; cursor: pointer; font-weight: bold; transition: 0.3s; display: flex; align-items: center; justify-content: center; }
+        .btn-save { background: var(--primary); color: white; flex: 2; height: 45px; font-size: 15px; }
         .btn-util { background: var(--accent); color: white; padding: 8px 15px; font-size: 12px; }
 
-        input[type="text"], select, textarea { width: 100%; padding: 12px; border-radius: 12px; border: 1px solid #cbd5e1; margin-bottom: 10px; font-size: 14px; }
+        input, select, textarea { width: 100%; padding: 10px; border-radius: 10px; border: 1px solid #cbd5e1; margin-bottom: 8px; font-size: 14px; box-sizing: border-box; }
         .hidden { display: none !important; }
-        .locked { opacity: 0.4; pointer-events: none; }
     </style>
 </head>
 <body>
 
 <div id="idBar" class="header-profile">
     <div style="display:flex; justify-content:space-between; align-items:center">
-        <span id="userName" style="font-weight:bold">جاري التحميل...</span>
-        <button onclick="logout()" style="background:none; border:1px solid #ef4444; color:#ef4444; border-radius:8px; padding:4px 10px; font-size:12px">خروج</button>
+        <div>
+            <span id="userName" style="font-weight:bold; display:block">جاري التحميل...</span>
+            <small id="userSubject" style="color: #94a3b8;"></small>
+        </div>
+        <button onclick="logout()" style="background:none; border:1px solid #ef4444; color:#ef4444; border-radius:8px; padding:4px 10px; font-size:11px">خروج</button>
     </div>
     
-    <div class="stats-box">
+    <div id="teacherStats" class="stats-box hidden">
         <div class="stat-item">إنجاز الأسبوع <b id="weekPerc">0%</b></div>
         <div class="stat-item">الإنجاز العام <b id="totalPerc">0%</b></div>
     </div>
@@ -58,31 +54,30 @@
 <div class="container">
     
     <div id="adminPanel" class="card hidden">
-        <h3 style="margin-top:0; font-size:16px">🛡️ لوحة التحكم الإداري</h3>
+        <h3 style="margin: 0 0 15px 0; font-size:15px; color: var(--accent)">🛡️ إدارة النظام</h3>
         
         <div id="tForm">
             <input type="hidden" id="editId">
             <input type="text" id="tName" placeholder="اسم المعلم">
+            <input type="text" id="tSubject" placeholder="المادة (مثلاً: رياضيات)">
             <input type="text" id="tUser" placeholder="اسم المستخدم">
             <input type="text" id="tPass" placeholder="كلمة المرور">
-            <div style="font-size:12px; margin-bottom:10px;">
+            <div style="font-size:11px; margin-bottom:10px;">
                 <label><input type="checkbox" class="t-cls" value="1_general"> 1ث</label>
                 <label><input type="checkbox" class="t-cls" value="2_scientific"> 2ث ع</label>
                 <label><input type="checkbox" class="t-cls" value="2_literary"> 2ث أ</label>
             </div>
-            <button onclick="saveT()" id="saveTBtn" class="btn btn-save" style="height:40px; font-size:14px">حفظ / تحديث المعلم</button>
+            <button onclick="saveT()" id="saveTBtn" class="btn btn-save" style="height:38px; font-size:13px">حفظ بيانات المعلم</button>
         </div>
         
-        <div id="tsList" style="margin-top:15px; max-height:150px; overflow-y:auto"></div>
+        <div id="tsList" style="margin-top:15px; max-height:120px; overflow-y:auto; border-top: 1px solid #eee; padding-top:10px"></div>
 
-        <hr style="opacity:0.1; margin:20px 0">
-        
-        <div style="background:#eff6ff; padding:15px; border-radius:15px">
-            <label style="font-size:12px">👁️ معاينة سريعة:</label>
+        <div style="background:#eff6ff; padding:12px; border-radius:12px; margin-top:15px">
+            <label style="font-size:11px; font-weight:bold">👁️ رقابة الرصد:</label>
             <select id="monT" onchange="monStep(1)"><option value="">اختر المعلم</option></select>
             <select id="monC" class="hidden" onchange="monStep(2)"></select>
             <select id="monW" class="hidden" onchange="startMon()"></select>
-            <button id="closeMon" class="btn hidden" style="background:#64748b; width:100%; margin-top:5px; height:35px" onclick="location.reload()">إغلاق المعاينة</button>
+            <button id="closeMon" class="btn hidden" style="background:#64748b; width:100%; margin-top:5px; height:32px; font-size:12px" onclick="location.reload()">إنهاء الرقابة</button>
         </div>
     </div>
 
@@ -91,13 +86,11 @@
         <select id="vWeek" onchange="loadTable()"></select>
     </div>
 
-    <div id="statusMsg" style="text-align:center; padding:40px; color:#94a3b8;">يرجى اختيار البيانات لعرض الطلاب...</div>
-
+    <div id="statusMsg" style="text-align:center; padding:40px; color:#94a3b8;">يرجى اختيار البيانات...</div>
     <div id="studentsList" class="hidden"></div>
-
 </div>
 
-<div class="bottom-nav">
+<div id="teacherActions" class="bottom-nav hidden">
     <button id="saveDataBtn" onclick="saveData()" class="btn btn-save">💾 حفظ الرصد (0)</button>
     <button onclick="applyAll()" class="btn btn-util">⚡ الكل</button>
 </div>
@@ -113,7 +106,7 @@
 
     window.onload = async () => {
         if(!userEmail) window.location.href="index.html";
-        document.getElementById('userName').innerText = (isAdmin ? "المدير: " : "المعلم: ") + sessionStorage.getItem('userName');
+        document.getElementById('userName').innerText = sessionStorage.getItem('userName');
         
         for(let i=1; i<=14; i++) document.getElementById('vWeek').innerHTML += `<option value="w${i}">الأسبوع ${i}</option>`;
 
@@ -122,23 +115,26 @@
             document.getElementById('vGrade').innerHTML = `<option value="">-- اختر الصف --</option><option value="1_general">1ث</option><option value="2_scientific">2ث علمي</option><option value="2_literary">2ث أدبي</option>`;
             loadTs();
         } else {
+            document.getElementById('teacherStats').classList.remove('hidden');
+            document.getElementById('teacherActions').classList.remove('hidden');
             const doc = await db.collection('teachers').doc(userEmail).get();
+            document.getElementById('userSubject').innerText = "مادة: " + (doc.data().subject || "عام");
             document.getElementById('vGrade').innerHTML = doc.data().classes.map(c => `<option value="${c}">${c}</option>`).join('');
             updateProgress();
             loadTable();
         }
     };
 
-    // --- إدارة المعلمين (تعديل وحفظ) ---
+    // --- إدارة المعلمين (إضافة وتعديل) ---
     async function loadTs() {
         const snap = await db.collection('teachers').get();
         const list = document.getElementById('tsList');
         const mon = document.getElementById('monT');
-        list.innerHTML = ''; mon.innerHTML = '<option value="">اختر المعلم للمعاينة</option>';
+        list.innerHTML = ''; mon.innerHTML = '<option value="">اختر المعلم للرقابة</option>';
         snap.forEach(doc => {
             const t = doc.data();
             list.innerHTML += `<div class="t-row">
-                <span>${t.name}</span>
+                <span><b>${t.name}</b> (${t.subject || 'بدون مادة'})</span>
                 <div>
                     <button class="btn" style="background:none; color:var(--accent)" onclick="editT('${doc.id}')">📝</button>
                     <button class="btn" style="background:none; color:var(--danger)" onclick="delT('${doc.id}')">🗑️</button>
@@ -154,9 +150,10 @@
         document.getElementById('editId').value = id;
         document.getElementById('tUser').value = id;
         document.getElementById('tName').value = t.name;
+        document.getElementById('tSubject').value = t.subject || "";
         document.getElementById('tPass').value = t.pass;
         document.querySelectorAll('.t-cls').forEach(c => c.checked = t.classes.includes(c.value));
-        document.getElementById('saveTBtn').innerText = "تحديث بيانات المعلم";
+        document.getElementById('saveTBtn').innerText = "تحديث المعلم الحالي";
         window.scrollTo(0,0);
     }
 
@@ -165,15 +162,17 @@
         const oldId = document.getElementById('editId').value;
         const data = {
             name: document.getElementById('tName').value,
+            subject: document.getElementById('tSubject').value,
             pass: document.getElementById('tPass').value,
             classes: Array.from(document.querySelectorAll('.t-cls:checked')).map(c => c.value)
         };
+        if(!id || !data.name) return alert("يرجى إكمال البيانات");
         if(oldId && oldId !== id) await db.collection('teachers').doc(oldId).delete();
         await db.collection('teachers').doc(id).set(data);
         alert("تم الحفظ ✅"); location.reload();
     }
 
-    // --- المعاينة الذكية ---
+    // --- الرقابة والمعاينة ---
     async function monStep(step) {
         const tId = document.getElementById('monT').value;
         if(step === 1) {
@@ -193,11 +192,10 @@
         document.getElementById('vGrade').innerHTML = `<option value="${document.getElementById('monC').value}">${document.getElementById('monC').value}</option>`;
         document.getElementById('vWeek').value = document.getElementById('monW').value;
         document.getElementById('closeMon').classList.remove('hidden');
-        document.getElementById('saveDataBtn').classList.add('hidden');
         loadTable();
     }
 
-    // --- نظام الرصد بالبطاقات ---
+    // --- نظام البطاقات والدرجات ---
     async function loadTable() {
         const gradeVal = document.getElementById('vGrade').value;
         if(!gradeVal || (isAdmin && !isMon)) return;
@@ -216,9 +214,9 @@
             <div class="student-card">
                 <span class="student-name">${i+1}. ${s.name}</span>
                 <div class="inputs-row">
-                    <div class="input-group"><label>تقييم (15)</label><input type="number" class="in-score" oninput="queue('${s.id}','t',this,15)" data-sid="${s.id}" data-type="t" ${isMon?'disabled':''}></div>
-                    <div class="input-group"><label>حصة (15)</label><input type="number" class="in-score" oninput="queue('${s.id}','v',this,15)" data-sid="${s.id}" data-type="v" ${isMon?'disabled':''}></div>
-                    <div class="input-group"><label>سلوك (10)</label><input type="number" class="in-score" oninput="queue('${s.id}','s',this,10)" data-sid="${s.id}" data-type="s" ${isMon?'disabled':''}></div>
+                    <div class="input-group"><label>تقييم</label><input type="number" class="in-score" oninput="queue('${s.id}','t',this,15)" data-sid="${s.id}" data-type="t" ${isMon?'disabled':''}></div>
+                    <div class="input-group"><label>حصة</label><input type="number" class="in-score" oninput="queue('${s.id}','v',this,15)" data-sid="${s.id}" data-type="v" ${isMon?'disabled':''}></div>
+                    <div class="input-group"><label>سلوك</label><input type="number" class="in-score" oninput="queue('${s.id}','s',this,10)" data-sid="${s.id}" data-type="s" ${isMon?'disabled':''}></div>
                 </div>
             </div>`;
         });
@@ -227,7 +225,7 @@
 
     function queue(sid, type, input, max) {
         let v = parseFloat(input.value);
-        if(v > max) { alert("تجاوزت الحد!"); input.value=""; return; }
+        if(v > max) { alert("تجاوزت الحد المسموح!"); input.value=""; return; }
         pending[`${sid}_${document.getElementById('vWeek').value}_${type}`] = { sid, week: document.getElementById('vWeek').value, type, score: v, teacher: userEmail };
         input.style.borderColor = "var(--primary)";
         document.getElementById('saveDataBtn').innerText = `💾 حفظ الرصد (${Object.keys(pending).length})`;
@@ -238,7 +236,7 @@
         for(let k in pending) batch.set(db.collection('grades').doc(k), pending[k], {merge:true});
         await batch.commit(); pending = {};
         document.getElementById('saveDataBtn').innerText = "💾 حفظ الرصد (0)";
-        alert("تم الحفظ بنجاح ✅"); updateProgress(); loadTable();
+        alert("تم حفظ الرصد بنجاح ✅"); updateProgress(); loadTable();
     }
 
     async function fillGrades() {
@@ -251,9 +249,7 @@
         if(!isAdmin) calcWeekProgress();
     }
 
-    // --- حساب الإنجاز ---
     async function updateProgress() {
-        if(isAdmin) return;
         const snap = await db.collection('grades').where('teacher','==',userEmail).get();
         const weeks = new Set(); snap.forEach(d => weeks.add(d.data().week));
         document.getElementById('totalPerc').innerText = ((weeks.size / 14) * 100).toFixed(0) + "%";
@@ -263,18 +259,19 @@
         const total = document.querySelectorAll('.student-card').length * 3;
         let filled = 0;
         document.querySelectorAll('.in-score').forEach(i => { if(i.value !== "") filled++; });
-        document.getElementById('weekPerc').innerText = ((filled / total) * 100).toFixed(0) + "%";
+        document.getElementById('weekPerc').innerText = (total > 0 ? ((filled / total) * 100).toFixed(0) : 0) + "%";
     }
 
     function applyAll() {
-        const type = prompt("اختر النوع: (t للتقييم، v للحصة، s للسلوك)");
-        const val = prompt("الدرجة للكل:");
+        const type = prompt("اختر: (t تقييم، v حصة، s سلوك)");
+        const val = prompt("الدرجة للجميع:");
         if(!val || !['t','v','s'].includes(type)) return;
         document.querySelectorAll(`input[data-type="${type}"]`).forEach(i => {
             i.value = val; queue(i.dataset.sid, type, i, (type==='s'?10:15));
         });
     }
 
+    function delT(id) { if(confirm("حذف المعلم نهائياً؟")) { db.collection('teachers').doc(id).delete(); loadTs(); } }
     function logout() { sessionStorage.clear(); window.location.href="index.html"; }
 </script>
 </body>

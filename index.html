@@ -34,25 +34,20 @@
         const u = document.getElementById('user').value.trim();
         const p = document.getElementById('pass').value.trim();
         const err = document.getElementById('err');
-        
         err.style.display = "none";
 
-        // 1. الدخول المباشر للمدير (أنت)
         if (u === "admin" && p === "790707071") {
             sessionStorage.setItem('userEmail', 'admin');
             sessionStorage.setItem('isAdmin', 'true');
-            window.location.href = "admin.html"; // تأكد أن ملف صفحة الأدمن بهذا الاسم
+            window.location.href = "admin.html";
             return;
         }
 
-        // 2. إذا لم يكن المدير، ابحث في قاعدة بيانات المعلمين
         try {
             const tDoc = await db.collection('teachers').doc(u).get();
             if (tDoc.exists) {
-                const data = tDoc.data();
-                if (data.pass === p) {
+                if (tDoc.data().pass === p) {
                     sessionStorage.setItem('userEmail', u);
-                    sessionStorage.setItem('isAdmin', 'false');
                     window.location.href = "teacher.html";
                 } else {
                     err.innerText = "كلمة المرور غير صحيحة";
@@ -63,7 +58,7 @@
                 err.style.display = "block";
             }
         } catch (e) {
-            err.innerText = "خطأ في الاتصال بالخادم";
+            err.innerText = "خطأ في الاتصال";
             err.style.display = "block";
         }
     }

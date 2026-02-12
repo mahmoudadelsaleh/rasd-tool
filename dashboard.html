@@ -2,110 +2,95 @@
 <html lang="ar" dir="rtl">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>لوحة التحكم | الأستاذ محمود عادل</title>
+    <title>منظومة محمود عادل | الهيكلة الجديدة</title>
     <script src="https://www.gstatic.com/firebasejs/9.0.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.0.0/firebase-firestore-compat.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
-
     <style>
-        :root { --admin: #8e44ad; --teacher: #16a085; --dark: #2c3e50; --accent: #e67e22; }
+        :root { --admin: #2c3e50; --primary: #27ae60; --accent: #e67e22; }
         body { font-family: 'Segoe UI', sans-serif; background: #f4f7f6; margin: 0; direction: rtl; }
-        .nav { background: var(--dark); color: white; padding: 15px 30px; display: flex; justify-content: space-between; align-items: center; box-shadow: 0 2px 10px rgba(0,0,0,0.2); position: sticky; top: 0; z-index: 1000; }
-        .container { padding: 25px; max-width: 1500px; margin: auto; }
-        .card { background: white; border-radius: 15px; padding: 25px; box-shadow: 0 4px 15px rgba(0,0,0,0.05); margin-bottom: 25px; border: 1px solid #e0e0e0; }
-        .admin-only { display: none; border-right: 8px solid var(--admin); background: #fdfaff; }
-        .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 20px; }
-        label { display: block; margin-bottom: 8px; font-weight: bold; }
-        select, input, textarea { width: 100%; padding: 12px; border: 1px solid #ccc; border-radius: 10px; font-size: 15px; box-sizing: border-box; }
-        .btn { padding: 12px 20px; border: none; border-radius: 10px; cursor: pointer; font-weight: bold; color: white; transition: 0.3s; }
-        .btn-admin { background: var(--admin); }
-        .btn-teacher { background: var(--teacher); }
-        .btn-save { background: var(--accent); animation: pulse 2s infinite; }
-        .btn-danger { background: #e74c3c; }
-        @keyframes pulse { 0% {box-shadow: 0 0 0 0 rgba(230, 126, 34, 0.4);} 70% {box-shadow: 0 0 0 10px rgba(230, 126, 34, 0);} 100% {box-shadow: 0 0 0 0 rgba(230, 126, 34, 0);} }
-        table { width: 100%; border-collapse: collapse; margin-top: 20px; background: white; }
-        th { background: var(--dark); color: white; padding: 15px; }
-        td { padding: 12px; border: 1px solid #f0f0f0; text-align: center; font-weight: 600; }
-        .score-input { width: 65px; padding: 8px; text-align: center; border: 2px solid #ddd; border-radius: 8px; }
-        .pending-save { background-color: #fff3cd !important; border-color: #ffc107 !important; }
-        #notif-bar { background: #fff3cd; color: #856404; padding: 15px; border-radius: 10px; margin-bottom: 20px; display: none; font-weight: bold; }
+        .nav { background: var(--admin); color: white; padding: 15px; display: flex; justify-content: space-between; align-items: center; }
+        .container { padding: 20px; max-width: 1400px; margin: auto; }
+        .card { background: white; border-radius: 12px; padding: 20px; box-shadow: 0 4px 10px rgba(0,0,0,0.1); margin-bottom: 20px; }
+        .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 15px; }
+        textarea { width: 100%; height: 120px; margin-top: 10px; border-radius: 8px; border: 1px solid #ccc; padding: 10px; }
+        .btn { padding: 10px 15px; border: none; border-radius: 6px; cursor: pointer; color: white; font-weight: bold; }
+        .btn-del { background: #e74c3c; }
+        .btn-save { background: var(--primary); }
+        .progress-container { background: #eee; border-radius: 10px; height: 20px; margin-top: 5px; overflow: hidden; }
+        .progress-bar { background: var(--primary); height: 100%; width: 0%; transition: 0.5s; text-align: center; color: white; font-size: 12px; line-height: 20px; }
+        table { width: 100%; border-collapse: collapse; margin-top: 15px; }
+        th, td { border: 1px solid #ddd; padding: 10px; text-align: center; }
+        th { background: #f8f9fa; }
         .hidden { display: none; }
     </style>
 </head>
 <body>
 
 <div class="nav">
-    <div><span id="u-name">جاري التحميل...</span> <span id="u-role" style="font-size: 12px; opacity: 0.8;"></span></div>
-    <div style="display:flex; gap:10px;">
-        <button id="manualSaveBtn" onclick="forceSave()" class="btn btn-save">حفظ التغييرات الآن (0)</button>
-        <button onclick="logout()" class="btn btn-danger">خروج</button>
-    </div>
+    <div><b>لوحة تحكم محمود عادل</b></div>
+    <div id="saveIndicator">المزامنة: مستقرة</div>
+    <button onclick="logout()" class="btn btn-del">خروج</button>
 </div>
 
 <div class="container">
-    <div id="notif-bar"></div>
-
-    <div id="admin-panel" class="card admin-only">
-        <h3 style="color:var(--admin); margin-top:0;">🛠 إعدادات المدير</h3>
+    <div id="adminPanel" class="card hidden">
+        <h3 style="color:red">⚠️ منطقة الإدارة والتحكم</h3>
         <div class="grid">
-            <div>
-                <label>رفع أسماء الطلاب:</label>
-                <select id="up-grade" onchange="toggleBranch('up-branch-div', this.value)">
-                    <option value="1">الصف الأول الثانوي</option>
-                    <option value="2">الصف الثاني الثانوي</option>
-                </select>
-                <div id="up-branch-div" class="hidden" style="margin-top:10px;">
-                    <select id="up-branch"><option value="scientific">علمي</option><option value="literary">أدبي</option></select>
-                </div>
-                <textarea id="up-names" placeholder="الأسماء هنا (اسم في كل سطر)"></textarea>
-                <button onclick="uploadAction()" class="btn btn-admin" style="width:100%; margin-top:10px;">حفظ الطلاب</button>
+            <div style="border:1px solid #eee; padding:10px;">
+                <label><b>1. مسح شامل:</b></label><br><br>
+                <button onclick="clearAllData()" class="btn btn-del">حذف كافة البيانات (طلاب ورصد)</button>
             </div>
-            <div>
-                <label>إضافة معلم:</label>
-                <input type="text" id="t-name" placeholder="الاسم">
-                <input type="text" id="t-sub" placeholder="المادة" style="margin-top:5px;">
-                <input type="email" id="t-email" placeholder="الإيميل" style="margin-top:5px;">
-                <input type="text" id="t-pass" placeholder="الباسورد" style="margin-top:5px;">
-                <button onclick="addTeacherAction()" class="btn btn-admin" style="width:100%; margin-top:10px;">اعتماد المعلم</button>
-            </div>
-            <div>
-                <label>تحكم النظام:</label>
-                <select id="lock-sys" onchange="setLock(this.value)">
-                    <option value="false">الرصد مفتوح</option>
-                    <option value="true">إغلاق الرصد</option>
+            
+            <div style="border:1px solid #eee; padding:10px;">
+                <label><b>2. استيراد القوائم (نصي):</b></label>
+                <select id="targetGrade">
+                    <option value="1_general">الصف الأول (عام)</option>
+                    <option value="2_scientific">الصف الثاني (علمي)</option>
+                    <option value="2_literary">الصف الثاني (أدبي)</option>
                 </select>
-                <button onclick="exportExcel()" class="btn" style="background:#27ae60; width:100%; margin-top:15px;">تصدير Excel</button>
+                <textarea id="namesInput" placeholder="انسخ الأسماء من الملف النصي هنا..."></textarea>
+                <button onclick="importStudents()" class="btn btn-save" style="width:100%">تثبيت القائمة بالترتيب</button>
+            </div>
+
+            <div style="border:1px solid #eee; padding:10px;">
+                <label><b>3. متابعة تقدم المعلمين:</b></label>
+                <select id="teacherSelect" onchange="monitorTeacherProgess()"></select>
+                <div id="progressResult" style="margin-top:10px;"></div>
             </div>
         </div>
     </div>
 
     <div class="card">
-        <div class="grid" style="grid-template-columns: 1fr 1fr 1fr; align-items: end;">
+        <div class="grid">
             <div>
-                <label>الصف:</label>
-                <select id="v-grade" onchange="toggleBranch('v-branch-div', this.value); fetchStudents()">
-                    <option value="1">الأول الثانوي</option>
-                    <option value="2">الثاني الثانوي</option>
+                <label>الصف والشعبة:</label>
+                <select id="viewGrade" onchange="loadTable()">
+                    <option value="1_general">الأول الثانوي</option>
+                    <option value="2_scientific">الثاني الثانوي (علمي)</option>
+                    <option value="2_literary">الثاني الثانوي (أدبي)</option>
                 </select>
             </div>
-            <div id="v-branch-div" class="hidden"><select id="v-branch" onchange="fetchStudents()"><option value="scientific">علمي</option><option value="literary">أدبي</option></select></div>
-            <div><label>الأسبوع:</label><select id="v-week" onchange="loadGrades()"></select></div>
+            <div>
+                <label>الأسبوع:</label>
+                <select id="viewWeek" onchange="loadTable()"></select>
+            </div>
+            <div style="text-align: left;">
+                <button onclick="forceSaveBatch()" class="btn" style="background:var(--accent)">💾 حفظ التعديلات الآن</button>
+            </div>
         </div>
 
-        <div id="sync-status" style="margin-top:15px; font-size:14px; color:#666;">حالة المزامنة: مستقر</div>
-
-        <div style="margin-top:15px; display:flex; gap:10px;">
-            <button onclick="applyAll('t', 15)" class="btn btn-teacher">تطبيق درجة للكل (تقييم)</button>
-            <button onclick="applyAll('v', 15)" class="btn btn-teacher">تطبيق درجة للكل (حصة)</button>
-        </div>
-
-        <div style="overflow-x:auto;">
+        <div id="tableContainer">
             <table>
                 <thead>
-                    <tr><th>م</th><th style="text-align:right">الاسم</th><th>تقييم (15)</th><th class="extra">حصة (15)</th><th class="extra">سلوك (10)</th></tr>
+                    <tr>
+                        <th>م</th>
+                        <th style="text-align:right">اسم الطالب</th>
+                        <th>التقييم (15)</th>
+                        <th>الحصة (15)</th>
+                        <th>السلوك (10)</th>
+                    </tr>
                 </thead>
-                <tbody id="s-body"></tbody>
+                <tbody id="mainTbody"></tbody>
             </table>
         </div>
     </div>
@@ -118,140 +103,146 @@
 
     const isAdmin = sessionStorage.getItem('isAdmin') === 'true';
     const userEmail = sessionStorage.getItem('userEmail');
-    const userName = sessionStorage.getItem('userName');
+    let pendingChanges = {};
 
-    // --- نظام الذاكرة المؤقتة (Buffer) ---
-    let pendingChanges = {}; // لتخزين التعديلات قبل الحفظ
-    let changeCount = 0;
-    let autoSaveTimer = null;
-
-    const WEEKS = [
-        {id:'w1', n:'الأسبوع 1'}, {id:'w2', n:'الأسبوع 2'}, {id:'w3', n:'الأسبوع 3'}, {id:'w4', n:'الأسبوع 4'}, {id:'w5', n:'الأسبوع 5'}, {id:'w6', n:'الأسبوع 6'},
-        {id:'ex1', n:'اختبار 1', isEx:true},
-        {id:'w7', n:'الأسبوع 7'}, {id:'w8', n:'الأسبوع 8'}, {id:'w9', n:'الأسبوع 9'}, {id:'w10', n:'الأسبوع 10'},
-        {id:'ex2', n:'اختبار 2', isEx:true},
-        {id:'w11', n:'الأسبوع 11'}, {id:'w12', n:'الأسبوع 12'}, {id:'w13', n:'الأسبوع 13'}, {id:'w14', n:'الأسبوع 14'}
-    ];
+    const WEEKS = Array.from({length: 14}, (_, i) => ({id:`w${i+1}`, n:`الأسبوع ${i+1}`}));
 
     window.onload = () => {
-        if(!userName) { window.location.href="index.html"; return; }
-        document.getElementById('u-name').innerText = userName;
-        document.getElementById('u-role').innerText = isAdmin ? "(مدير)" : "(معلم)";
-        if(isAdmin) document.getElementById('admin-panel').style.display = 'block';
-        document.getElementById('v-week').innerHTML = WEEKS.map(w => `<option value="${w.id}">${w.n}</option>`).join('');
-        fetchStudents();
-        startAutoSaveTimer();
+        if(!userEmail) window.location.href="index.html";
+        if(isAdmin) {
+            document.getElementById('adminPanel').classList.remove('hidden');
+            loadTeachersList();
+        }
+        document.getElementById('viewWeek').innerHTML = WEEKS.map(w => `<option value="${w.id}">${w.n}</option>`).join('');
+        loadTable();
     };
 
-    function toggleBranch(id, v) { document.getElementById(id).className = (v==="2") ? "" : "hidden"; }
+    // --- وظائف المدير: المسح والاستيراد ---
 
-    async function fetchStudents() {
-        const g = document.getElementById('v-grade').value.toString();
-        const b = (g === "1") ? "general" : document.getElementById('v-branch').value;
-        const snap = await db.collection('students').where('grade', '==', g).where('branch', '==', b).get();
-        const tbody = document.getElementById('s-body');
+    async function clearAllData() {
+        if(!confirm("هل أنت متأكد من حذف كل شيء؟ لا يمكن التراجع!")) return;
+        const collections = ['students', 'grades'];
+        for(const col of collections) {
+            const snap = await db.collection(col).get();
+            const batch = db.batch();
+            snap.forEach(doc => batch.delete(doc.ref));
+            await batch.commit();
+        }
+        alert("تم تصفير المنظومة بنجاح ✅");
+        location.reload();
+    }
+
+    async function importStudents() {
+        const raw = document.getElementById('namesInput').value.split('\n').filter(n => n.trim() !== "");
+        const target = document.getElementById('targetGrade').value.split('_');
+        if(raw.length === 0) return alert("الرجاء لصق الأسماء");
+
+        const batch = db.batch();
+        raw.forEach((name, index) => {
+            const ref = db.collection('students').doc();
+            batch.set(ref, {
+                name: name.trim(),
+                grade: target[0],
+                branch: target[1],
+                sortOrder: index // تثبيت الترتيب الأصلي للملف
+            });
+        });
+        await batch.commit();
+        alert(`تم استيراد ${raw.length} طالب بنجاح ✅`);
+        document.getElementById('namesInput').value = "";
+        loadTable();
+    }
+
+    // --- وظائف الرصد والمتابعة ---
+
+    async function loadTable() {
+        const [g, b] = document.getElementById('viewGrade').value.split('_');
+        const snap = await db.collection('students')
+                       .where('grade', '==', g)
+                       .where('branch', '==', b)
+                       .orderBy('sortOrder') // الترتيب كما في الملف النصي
+                       .get();
+
+        const tbody = document.getElementById('mainTbody');
         tbody.innerHTML = '';
         let i = 1;
         snap.forEach(doc => {
             const s = doc.data();
-            tbody.innerHTML += `<tr>
-                <td>${i++}</td>
-                <td style="text-align:right">${s.name}</td>
-                <td><input type="number" class="score-input" oninput="queueChange('${doc.id}','t',this,15)" data-sid="${doc.id}" data-type="t"></td>
-                <td class="extra"><input type="number" class="score-input" oninput="queueChange('${doc.id}','v',this,15)" data-sid="${doc.id}" data-type="v"></td>
-                <td class="extra"><input type="number" class="score-input" oninput="queueChange('${doc.id}','s',this,10)" data-sid="${doc.id}" data-type="s"></td>
-            </tr>`;
+            tbody.innerHTML += `
+                <tr>
+                    <td>${i++}</td>
+                    <td style="text-align:right">${s.name}</td>
+                    <td><input type="number" class="in-score" oninput="addToBatch('${doc.id}','t',this,15)" data-sid="${doc.id}" data-type="t"></td>
+                    <td><input type="number" class="in-score" oninput="addToBatch('${doc.id}','v',this,15)" data-sid="${doc.id}" data-type="v"></td>
+                    <td><input type="number" class="in-score" oninput="addToBatch('${doc.id}','s',this,10)" data-sid="${doc.id}" data-type="s"></td>
+                </tr>`;
         });
-        loadGrades();
+        loadExistingGrades();
     }
 
-    // إضافة التغيير للطابور
-    function queueChange(sid, type, input, max) {
-        let val = parseFloat(input.value);
-        if(val > max) { alert("تجاوزت الحد الأقصى!"); input.value = ""; return; }
-        
-        const week = document.getElementById('v-week').value;
-        const key = `${sid}_${week}_${type}`;
-        
-        pendingChanges[key] = { sid, week, type, score: val, lastUpdate: new Date() };
-        input.classList.add('pending-save');
-        
-        changeCount = Object.keys(pendingChanges).length;
-        document.getElementById('manualSaveBtn').innerText = `حفظ التغييرات الآن (${changeCount})`;
-
-        if(changeCount >= 20) forceSave();
+    function addToBatch(sid, type, input, max) {
+        if(parseFloat(input.value) > max) { input.value = ""; return alert(`الحد الأقصى ${max}`); }
+        const week = document.getElementById('viewWeek').value;
+        pendingChanges[`${sid}_${week}_${type}`] = { sid, week, type, score: parseFloat(input.value), lastUpdate: new Date() };
+        input.style.background = "#fff3cd";
     }
 
-    // محرك الحفظ التلقائي (كل 20 ثانية)
-    function startAutoSaveTimer() {
-        autoSaveTimer = setInterval(() => {
-            if(changeCount > 0) {
-                console.log("حفظ تلقائي دوري...");
-                forceSave();
-            }
-        }, 20000);
-    }
-
-    async function forceSave() {
-        if(changeCount === 0) return;
-        
-        const btn = document.getElementById('manualSaveBtn');
-        btn.innerText = "جاري الحفظ بالسحابة...";
-        btn.disabled = true;
-
+    async function forceSaveBatch() {
         const batch = db.batch();
-        for (const key in pendingChanges) {
-            const ref = db.collection('grades').doc(key);
-            batch.set(ref, pendingChanges[key], {merge:true});
-        }
+        const keys = Object.keys(pendingChanges);
+        if(keys.length === 0) return;
 
-        try {
-            await batch.commit();
-            document.querySelectorAll('.pending-save').forEach(el => el.classList.remove('pending-save'));
-            pendingChanges = {};
-            changeCount = 0;
-            btn.innerText = `حفظ التغييرات الآن (0)`;
-            btn.disabled = false;
-            document.getElementById('sync-status').innerText = "تمت المزامنة بنجاح ✅ " + new Date().toLocaleTimeString();
-        } catch(e) {
-            alert("خطأ في الاتصال بالسحابة!");
-            btn.disabled = false;
-        }
+        keys.forEach(k => batch.set(db.collection('grades').doc(k), pendingChanges[k], {merge:true}));
+        await batch.commit();
+        pendingChanges = {};
+        alert("تم الحفظ السحابي بنجاح ✅");
+        loadTable();
     }
 
-    async function loadGrades() {
-        const week = document.getElementById('v-week').value;
-        const isEx = WEEKS.find(w => w.id === week).isEx;
-        document.querySelectorAll('.extra').forEach(e => e.style.display = isEx ? 'none' : 'table-cell');
+    async function loadExistingGrades() {
+        const week = document.getElementById('viewWeek').value;
         const snap = await db.collection('grades').where('week', '==', week).get();
-        document.querySelectorAll('.score-input').forEach(i => i.value = '');
         snap.forEach(doc => {
             const g = doc.data();
             const input = document.querySelector(`input[data-sid="${g.sid}"][data-type="${g.type}"]`);
-            if(input) { input.value = g.score; input.classList.remove('pending-save'); }
+            if(input) { input.value = g.score; input.style.background = "white"; }
         });
     }
 
-    async function applyAll(type, max) {
-        const val = prompt(`درجة موحدة لـ ${type === 't' ? 'التقييم' : 'الحصة'} (بحد أقصى ${max}):`);
-        if(!val || parseFloat(val) > max) return;
-        const inputs = document.querySelectorAll(`input[data-type="${type}"]`);
-        inputs.forEach(i => {
-            i.value = val;
-            queueChange(i.getAttribute('data-sid'), type, i, max);
-        });
+    // --- نظام مراقبة المعلمين ---
+
+    async function loadTeachersList() {
+        const snap = await db.collection('teachers').get();
+        const select = document.getElementById('teacherSelect');
+        select.innerHTML = '<option>اختر المعلم للمتابعة...</option>';
+        snap.forEach(doc => select.innerHTML += `<option value="${doc.id}">${doc.data().name} (${doc.data().subject})</option>`);
     }
 
-    // وظائف المدير الأساسية (رفع وأدوات)
-    async function uploadAction() {
-        const names = document.getElementById('up-names').value.split('\n').filter(n => n.trim() !== "");
-        const g = document.getElementById('up-grade').value.toString();
-        const b = (g === "1") ? "general" : document.getElementById('up-branch').value;
-        const batch = db.batch();
-        names.forEach(n => { const ref = db.collection('students').doc(); batch.set(ref, {name:n.trim(), grade:g, branch:b}); });
-        await batch.commit();
-        alert("تم الحفظ ✅");
-        fetchStudents();
+    async function monitorTeacherProgess() {
+        const tEmail = document.getElementById('teacherSelect').value;
+        const [g, b] = document.getElementById('viewGrade').value.split('_');
+        
+        // جلب إجمالي طلاب الفصل المختار
+        const studentsSnap = await db.collection('students').where('grade','==',g).where('branch','==',b).get();
+        const totalStudents = studentsSnap.size;
+        
+        // جلب ما رصده هذا المعلم لهذا الفصل
+        const gradesSnap = await db.collection('grades')
+                                   .where('teacher','==',tEmail)
+                                   .where('week','==',document.getElementById('viewWeek').value)
+                                   .get();
+        
+        // حساب النسبة (تبسيط: نسبة الطلاب الذين رصد لهم خانة واحدة على الأقل)
+        const uniqueStudentsRashed = new Set();
+        gradesSnap.forEach(d => uniqueStudentsRashed.add(d.data().sid));
+        
+        const percent = totalStudents > 0 ? Math.round((uniqueStudentsRashed.size / totalStudents) * 100) : 0;
+        
+        document.getElementById('progressResult').innerHTML = `
+            <b>نسبة الإنجاز لهذا الفصل:</b>
+            <div class="progress-container"><div class="progress-bar" style="width:${percent}%">${percent}%</div></div>
+            <p style="font-size:12px">تم رصد ${uniqueStudentsRashed.size} طالب من إجمالي ${totalStudents}</p>
+        `;
     }
 
     function logout() { sessionStorage.clear(); window.location.href="index.html"; }

@@ -12,33 +12,22 @@
             --c1: #4f46e5; --c2: #0891b2; --c3: #059669; --c4: #d97706; --c5: #e11d48; --c6: #7c3aed; --c7: #2563eb;
         }
         body { font-family: 'Segoe UI', sans-serif; background: var(--bg); margin: 0; display: flex; flex-direction: column; height: 100vh; overflow: hidden; }
-        
-        /* هيدر المنصة */
         header { background: var(--sidebar); color: white; padding: 15px 25px; display: flex; justify-content: space-between; align-items: center; box-shadow: 0 2px 10px rgba(0,0,0,0.2); }
-        
-        /* شريط التبويبات */
         .tabs-nav { display: flex; background: white; padding: 5px; gap: 5px; overflow-x: auto; border-bottom: 1px solid #e2e8f0; scrollbar-width: none; }
         .tab-btn { padding: 12px 20px; border: none; border-radius: 10px; cursor: pointer; font-weight: bold; white-space: nowrap; transition: 0.3s; color: #64748b; background: #f1f5f9; }
         .tab-btn.active { color: white; transform: translateY(-2px); }
-
-        /* منطقة المحتوى */
         .content-area { flex: 1; overflow-y: auto; padding: 20px; }
         .tab-panel { display: none; max-width: 1000px; margin: auto; animation: slideUp 0.4s ease-out; }
         .tab-panel.active { display: block; }
-
-        /* الكروت */
         .card { background: white; border-radius: 15px; padding: 20px; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1); margin-bottom: 20px; border-top: 5px solid; }
         .grid-stats { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px; }
         .stat-box { padding: 20px; border-radius: 15px; text-align: center; background: #fff; border: 1px solid #e2e8f0; }
         .stat-box b { font-size: 28px; display: block; color: var(--sidebar); }
-
-        /* الجداول والمدخلات */
         input, select, textarea { width: 100%; padding: 12px; margin: 8px 0; border-radius: 10px; border: 1px solid #cbd5e1; font-size: 14px; }
         .btn-save { background: var(--sidebar); color: white; border: none; padding: 12px 25px; border-radius: 10px; cursor: pointer; width: 100%; font-weight: bold; }
         table { width: 100%; border-collapse: collapse; margin-top: 15px; background: white; border-radius: 10px; overflow: hidden; }
         th { background: #f1f5f9; padding: 12px; text-align: right; font-size: 13px; color: #475569; }
         td { padding: 12px; border-bottom: 1px solid #f1f5f9; font-size: 14px; }
-
         @keyframes slideUp { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
     </style>
 </head>
@@ -46,7 +35,7 @@
 
 <header>
     <div><strong>نظام إدارة الرصد الذكي</strong> | م. محمود عادل</div>
-    <div id="schoolNameDisplay" style="font-size: 14px; color: #94a3b8;">إحصائيات فورية</div>
+    <div id="schoolNameDisplay" style="font-size: 14px; color: #94a3b8;">جاري تحميل البيانات...</div>
 </header>
 
 <div class="tabs-nav">
@@ -67,7 +56,7 @@
                 <div class="stat-box">إجمالي المعلمين<b id="countT">0</b></div>
                 <div class="stat-box">إجمالي الطلاب<b id="countS">0</b></div>
                 <div class="stat-box">فصول مفعلة<b>3</b></div>
-                <div class="stat-box">حالة النظام<b id="sysStatus" style="color:green">مفتوح</b></div>
+                <div class="stat-box">حالة النظام<b id="sysStatus">نشط</b></div>
             </div>
         </div>
     </div>
@@ -77,20 +66,21 @@
             <h2 style="color:var(--c1)">تسجيل معلم جديد</h2>
             <input type="text" id="tName" placeholder="الاسم الكامل">
             <input type="text" id="tSub" placeholder="المادة الدراسية">
-            <input type="text" id="tUser" placeholder="اسم المستخدم">
+            <input type="text" id="tUser" placeholder="اسم المستخدم (الإيميل)">
             <input type="text" id="tPass" placeholder="كلمة المرور">
-            <p>الفصول المتاحة:</p>
-            <label><input type="checkbox" class="t-cls" value="1_general"> 1 ثانوي</label>
-            <label><input type="checkbox" class="t-cls" value="2_scientific"> 2 علمي</label>
-            <label><input type="checkbox" class="t-cls" value="2_literary"> 2 أدبي</label>
-            <button class="btn-save" style="background:var(--c1); margin-top:15px" onclick="saveTeacher()">حفظ المعلم</button>
+            <div style="margin:10px 0">
+                <label><input type="checkbox" class="t-cls" value="1_general"> 1 ثانوي</label>
+                <label><input type="checkbox" class="t-cls" value="2_scientific"> 2 علمي</label>
+                <label><input type="checkbox" class="t-cls" value="2_literary"> 2 أدبي</label>
+            </div>
+            <button class="btn-save" style="background:var(--c1)" onclick="saveTeacher()">حفظ المعلم</button>
         </div>
     </div>
 
     <div id="p3" class="tab-panel">
         <div class="card" style="border-color: var(--c2)">
-            <h2 style="color:var(--c2)">قائمة المعلمين</h2>
-            <table>
+            <h2 style="color:var(--c2)">إدارة بيانات المعلمين الحالية</h2>
+            <table id="mainTable">
                 <thead><tr><th>المعلم</th><th>المادة</th><th>الفصول</th><th>إجراء</th></tr></thead>
                 <tbody id="teachersTable"></tbody>
             </table>
@@ -113,13 +103,13 @@
     <div id="p5" class="tab-panel">
         <div class="card" style="border-color: var(--c4)">
             <h2 style="color:var(--c4)">رادار الرصد</h2>
-            <div style="display:flex; gap:10px">
+            <div style="display:grid; grid-template-columns: 1fr 1fr 1fr; gap:10px">
                 <select id="monT" onchange="updateMonClasses()"><option value="">اختر المعلم</option></select>
                 <select id="monC"><option value="">الفصل</option></select>
                 <select id="monW"><option value="">الأسبوع</option></select>
             </div>
-            <button class="btn-save" style="background:var(--c4)" onclick="fetchMonitoring()">عرض كشف الرصد</button>
-            <div id="monResult"></div>
+            <button class="btn-save" style="background:var(--c4); margin-top:10px" onclick="fetchMonitoring()">عرض كشف الرصد</button>
+            <div id="monResult" style="margin-top:15px"></div>
         </div>
     </div>
 
@@ -135,12 +125,15 @@
             <h2 style="color:var(--c6)">جدولة الرصد الآلية</h2>
             <label>تاريخ بداية أول سبت دراسي:</label>
             <input type="date" id="startD" onchange="saveAutoSettings()">
-            <label><input type="checkbox" id="sysActive" onchange="saveAutoSettings()"> تفعيل المنظومة للمعلمين</label>
+            <label style="margin-top:10px; display:block">
+                <input type="checkbox" id="sysActive" onchange="saveAutoSettings()"> تفعيل المنظومة للمعلمين
+            </label>
         </div>
     </div>
 </div>
 
 <script>
+    // الإعدادات الخاصة بمشروعك (نفس التي تستخدمها في صفحة المعلم)
     const firebaseConfig = { apiKey: "AIzaSyBePGZiqMPmZQdg36jZ4Rkdtd7OISxmob8", projectId: "rasd-tools" };
     firebase.initializeApp(firebaseConfig);
     const db = firebase.firestore();
@@ -150,56 +143,90 @@
     // تبديل التبويبات
     function openTab(evt, tabId) {
         document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
-        document.querySelectorAll('.tab-btn').forEach(b => { b.classList.remove('active'); b.style.background = "#f1f5f9"; });
+        document.querySelectorAll('.tab-btn').forEach(b => { 
+            b.classList.remove('active'); 
+            b.style.background = "#f1f5f9"; 
+            b.style.color = "#64748b";
+        });
         document.getElementById(tabId).classList.add('active');
         evt.currentTarget.classList.add('active');
-        evt.currentTarget.style.background = evt.currentTarget.style.getPropertyValue('--bg-act');
+        const color = evt.currentTarget.style.getPropertyValue('--bg-act');
+        evt.currentTarget.style.background = color;
+        evt.currentTarget.style.color = "white";
     }
 
     window.onload = async () => {
-        // تهيئة الأسابيع
+        // تهيئة الأسابيع في الأقفال والمراقبة
         const lg = document.getElementById('lockGrid');
         const mw = document.getElementById('monW');
+        lg.innerHTML = ''; mw.innerHTML = '<option value="">الأسبوع</option>';
         for(let i=1; i<=14; i++) {
-            lg.innerHTML += `<label style="padding:10px; background:#fef2f2; border-radius:10px; text-align:center; font-size:12px">
+            lg.innerHTML += `<label style="padding:10px; background:#fef2f2; border-radius:10px; text-align:center; font-size:11px">
                 أسبوع ${i}<br><input type="checkbox" class="w-lock" value="w${i}" onchange="saveManualLocks()">
             </label>`;
             mw.innerHTML += `<option value="w${i}">أسبوع ${i}</option>`;
         }
-        await loadData();
+        await loadAllData();
     };
 
-    async function loadData() {
-        const tSnap = await db.collection('teachers').get();
-        teachers = tSnap.docs.map(doc => ({id: doc.id, ...doc.data()}));
-        const sSnap = await db.collection('students').get();
-        students = sSnap.docs.map(doc => doc.data());
+    async function loadAllData() {
+        document.getElementById('schoolNameDisplay').innerText = "جاري مزامنة البيانات...";
         
+        // جلب الإعدادات
         const setDoc = await db.collection('settings').doc('global').get();
         if(setDoc.exists) {
             settings = setDoc.data();
-            document.getElementById('startD').value = settings.startDate;
+            document.getElementById('startD').value = settings.startDate || '';
             document.getElementById('sysActive').checked = settings.systemActive;
             settings.lockedWeeks.forEach(w => {
                 const cb = document.querySelector(`.w-lock[value="${w}"]`);
                 if(cb) cb.checked = true;
             });
         }
-        renderDashboard();
-    }
 
-    function renderDashboard() {
+        // جلب المعلمين والطلاب
+        const tSnap = await db.collection('teachers').get();
+        teachers = tSnap.docs.map(doc => ({id: doc.id, ...doc.data()}));
+        
+        const sSnap = await db.collection('students').get();
+        students = sSnap.docs.map(doc => doc.data());
+
         document.getElementById('countT').innerText = teachers.length;
         document.getElementById('countS').innerText = students.length;
-        
-        const tTable = document.getElementById('teachersTable');
-        const monT = document.getElementById('monT');
-        tTable.innerHTML = ''; monT.innerHTML = '<option value="">اختر المعلم</option>';
+        document.getElementById('schoolNameDisplay').innerText = "تم تحديث البيانات بنجاح";
 
+        renderTeachersTable();
+        populateMonTeachers();
+    }
+
+    function renderTeachersTable() {
+        const tbody = document.getElementById('teachersTable');
+        tbody.innerHTML = '';
         teachers.forEach(t => {
-            tTable.innerHTML += `<tr><td>${t.name}</td><td>${t.subject}</td><td>${t.classes.join(', ')}</td><td><button onclick="deleteT('${t.id}')" style="color:red; border:none; background:none; cursor:pointer">حذف</button></td></tr>`;
+            tbody.innerHTML += `<tr>
+                <td>${t.name}</td>
+                <td>${t.subject}</td>
+                <td>${t.classes ? t.classes.join(', ') : 'لا يوجد'}</td>
+                <td><button onclick="deleteT('${t.id}')" style="color:red; border:none; cursor:pointer">حذف</button></td>
+            </tr>`;
+        });
+    }
+
+    function populateMonTeachers() {
+        const monT = document.getElementById('monT');
+        monT.innerHTML = '<option value="">اختر المعلم</option>';
+        teachers.forEach(t => {
             monT.innerHTML += `<option value="${t.id}">${t.name}</option>`;
         });
+    }
+
+    function updateMonClasses() {
+        const t = teachers.find(x => x.id === document.getElementById('monT').value);
+        const mc = document.getElementById('monC');
+        mc.innerHTML = '<option value="">الفصل</option>';
+        if(t && t.classes) {
+            t.classes.forEach(c => mc.innerHTML += `<option value="${c}">${c}</option>`);
+        }
     }
 
     async function saveTeacher() {
@@ -210,30 +237,32 @@
             pass: document.getElementById('tPass').value,
             classes: Array.from(document.querySelectorAll('.t-cls:checked')).map(c => c.value)
         };
+        if(!id || !data.name) return alert("أكمل البيانات");
         await db.collection('teachers').doc(id).set(data);
-        alert("تم الحفظ ✅"); loadData();
+        alert("تم حفظ المعلم بنجاح ✅"); loadAllData();
     }
 
     async function uploadStudents() {
         const names = document.getElementById('sNames').value.split('\n').filter(n => n.trim());
-        const [g, b] = document.getElementById('sGrade').value.split('_');
+        const gradeVal = document.getElementById('sGrade').value;
+        if(!gradeVal || names.length === 0) return alert("أدخل الأسماء واختر الصف");
+        const [g, b] = gradeVal.split('_');
         const batch = db.batch();
         names.forEach((n, i) => batch.set(db.collection('students').doc(), {name: n.trim(), grade: g, branch: b, sortOrder: i}));
         await batch.commit();
-        alert("تم رفع الطلاب ✅"); loadData();
-    }
-
-    function updateMonClasses() {
-        const t = teachers.find(x => x.id === document.getElementById('monT').value);
-        const mc = document.getElementById('monC');
-        mc.innerHTML = t ? t.classes.map(c => `<option value="${c}">${c}</option>`).join('') : '';
+        alert("تم رفع الطلاب ✅"); loadAllData();
     }
 
     async function fetchMonitoring() {
         const tId = document.getElementById('monT').value;
         const week = document.getElementById('monW').value;
-        const [g, b] = document.getElementById('monC').value.split('_');
-        
+        const classVal = document.getElementById('monC').value;
+        if(!tId || !week || !classVal) return alert("أكمل اختيارات المراقبة");
+
+        const [g, b] = classVal.split('_');
+        const resDiv = document.getElementById('monResult');
+        resDiv.innerHTML = "جاري جلب بيانات الرصد...";
+
         const gSnap = await db.collection('grades').where('teacher','==',tId).where('week','==',week).get();
         const sSnap = await db.collection('students').where('grade','==',g).where('branch','==',b).get();
         
@@ -247,10 +276,10 @@
         let html = '<table><thead><tr><th>الطالب</th><th>تقييم</th><th>حصة</th><th>سلوك</th></tr></thead><tbody>';
         sSnap.forEach(doc => {
             const s = doc.data();
-            const sc = grades[doc.id] || {t:'-', v:'-', s:'-'};
+            const sc = grades[doc.id] || {};
             html += `<tr><td>${s.name}</td><td>${sc.t||'-'}</td><td>${sc.v||'-'}</td><td>${sc.s||'-'}</td></tr>`;
         });
-        document.getElementById('monResult').innerHTML = html + '</tbody></table>';
+        resDiv.innerHTML = html + '</tbody></table>';
     }
 
     async function saveManualLocks() {
@@ -264,116 +293,13 @@
         await db.collection('settings').doc('global').set(settings, {merge: true});
         alert("تم تحديث الضبط ✅");
     }
+
+    async function deleteT(id) {
+        if(confirm("هل أنت متأكد من حذف هذا المعلم؟")) {
+            await db.collection('teachers').doc(id).delete();
+            loadAllData();
+        }
+    }
 </script>
-// 1. جلب البيانات الأساسية فور تحميل الصفحة
-window.onload = async () => {
-    await loadGlobalSettings(); // جلب الإعدادات والأقفال
-    await fetchStats();         // تحديث أرقام الإحصائيات فوراً
-    setupManualLockGrid();     // رسم شبكة الأقفال
-};
-
-// 2. تحديث الإحصائيات من بياناتك الحقيقية
-async function fetchStats() {
-    const tSnap = await db.collection('teachers').get();
-    const sSnap = await db.collection('students').get();
-    
-    document.getElementById('countT').innerText = tSnap.size; // عدد المعلمين الحقيقي
-    document.getElementById('countS').innerText = sSnap.size; // عدد الطلاب الحقيقي
-    
-    // حفظ المعلمين في متغير عام لاستخدامه في التبويبات الأخرى دون إعادة تحميل
-    teachers = tSnap.docs.map(doc => ({id: doc.id, ...doc.data()}));
-    renderTeachersTable(); // تعبئة جدول التعديل
-    populateMonTeachers(); // تعبئة قائمة المراقبة
-}
-
-// 3. ربط تبويب "المراقبة" بالبيانات
-function populateMonTeachers() {
-    const select = document.getElementById('monT');
-    select.innerHTML = '<option value="">اختر المعلم للمراقبة</option>';
-    teachers.forEach(t => {
-        select.innerHTML += `<option value="${t.id}">${t.name} (${t.subject})</option>`;
-    });
-}
-
-// تحديث الفصول بناءً على المعلم المختار في المراقبة
-function updateMonClasses() {
-    const tId = document.getElementById('monT').value;
-    const teacher = teachers.find(t => t.id === tId);
-    const clsSelect = document.getElementById('monC');
-    
-    clsSelect.innerHTML = '<option value="">اختر الفصل</option>';
-    if(teacher && teacher.classes) {
-        teacher.classes.forEach(c => {
-            clsSelect.innerHTML += `<option value="${c}">${c}</option>`;
-        });
-    }
-}
-
-// 4. تشغيل "رادار الرصد" (جلب الدرجات الحقيقية)
-async function fetchMonitoring() {
-    const tId = document.getElementById('monT').value;
-    const week = document.getElementById('monW').value;
-    const classVal = document.getElementById('monC').value;
-    
-    if(!tId || !week || !classVal) return alert("اكمل اختيارات المراقبة");
-
-    const [grade, branch] = classVal.split('_');
-    const resDiv = document.getElementById('monResult');
-    resDiv.innerHTML = "جاري استخراج البيانات من فايربيز...";
-
-    try {
-        // جلب طلاب هذا الفصل
-        const sSnap = await db.collection('students')
-            .where('grade', '==', grade)
-            .where('branch', '==', branch)
-            .get();
-
-        // جلب درجات هذا المعلم في هذا الأسبوع
-        const gSnap = await db.collection('grades')
-            .where('teacher', '==', tId)
-            .where('week', '==', week)
-            .get();
-
-        const gradesMap = {};
-        gSnap.forEach(doc => {
-            const d = doc.data();
-            if(!gradesMap[d.sid]) gradesMap[d.sid] = {};
-            gradesMap[d.sid][d.type] = d.score;
-        });
-
-        let html = `<table><thead><tr><th>الطالب</th><th>تقييم</th><th>حصة</th><th>سلوك</th></tr></thead><tbody>`;
-        sSnap.forEach(doc => {
-            const s = doc.data();
-            const sc = gradesMap[doc.id] || {};
-            html += `<tr>
-                <td>${s.name}</td>
-                <td style="color:${sc.t ? 'green':'red'}">${sc.t || '-'}</td>
-                <td style="color:${sc.v ? 'green':'red'}">${sc.v || '-'}</td>
-                <td style="color:${sc.s ? 'green':'red'}">${sc.s || '-'}</td>
-            </tr>`;
-        });
-        resDiv.innerHTML = html + '</tbody></table>';
-    } catch (e) {
-        resDiv.innerHTML = "خطأ في جلب البيانات: " + e.message;
-    }
-}
-
-// 5. ربط تبويب التعديل
-function renderTeachersTable() {
-    const tbody = document.getElementById('teachersTable');
-    tbody.innerHTML = '';
-    teachers.forEach(t => {
-        tbody.innerHTML += `<tr>
-            <td>${t.name}</td>
-            <td>${t.subject}</td>
-            <td>${t.classes ? t.classes.join(' - ') : ''}</td>
-            <td>
-                <button onclick="editTeacherData('${t.id}')" style="background:#3b82f6; color:white; border:none; padding:5px 10px; border-radius:5px">تعديل</button>
-            </td>
-        </tr>`;
-    });
-}
-
-
 </body>
 </html>

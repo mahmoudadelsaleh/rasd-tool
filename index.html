@@ -3,90 +3,70 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>منظومة الرصد 2026 | تسجيل الدخول</title>
+    <title>تسجيل دخول المنظومة</title>
     <script src="https://www.gstatic.com/firebasejs/9.0.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.0.0/firebase-firestore-compat.js"></script>
     <style>
-        body { font-family: 'Segoe UI', Tahoma, sans-serif; background: linear-gradient(135deg, #1e293b 0%, #334155 100%); margin: 0; display: flex; align-items: center; justify-content: center; height: 100vh; color: white; }
-        .login-card { background: white; color: #1e293b; padding: 40px; border-radius: 25px; box-shadow: 0 15px 35px rgba(0,0,0,0.3); width: 100%; max-width: 400px; text-align: center; }
-        .logo { font-size: 50px; margin-bottom: 10px; }
-        h2 { margin-bottom: 30px; color: #1e293b; font-size: 24px; }
-        input { width: 100%; padding: 15px; margin-bottom: 15px; border: 2px solid #e2e8f0; border-radius: 12px; font-size: 16px; box-sizing: border-box; transition: 0.3s; }
-        input:focus { border-color: #3b82f6; outline: none; }
-        .btn-login { width: 100%; padding: 15px; background: #3b82f6; color: white; border: none; border-radius: 12px; font-size: 18px; font-weight: bold; cursor: pointer; transition: 0.3s; }
-        .btn-login:hover { background: #2563eb; transform: translateY(-2px); }
-        .error-msg { color: #e11d48; font-size: 14px; margin-top: 10px; display: none; }
-        .footer { margin-top: 20px; font-size: 12px; color: #64748b; }
+        body { font-family: 'Segoe UI', sans-serif; background: #1e293b; display: flex; align-items: center; justify-content: center; height: 100vh; margin: 0; }
+        .login-card { background: white; padding: 40px; border-radius: 20px; box-shadow: 0 10px 25px rgba(0,0,0,0.2); width: 100%; max-width: 350px; text-align: center; }
+        input { width: 100%; padding: 12px; margin: 10px 0; border: 1px solid #ddd; border-radius: 8px; box-sizing: border-box; }
+        button { width: 100%; padding: 12px; background: #3b82f6; color: white; border: none; border-radius: 8px; cursor: pointer; font-weight: bold; }
+        button:hover { background: #2563eb; }
+        .error { color: #e11d48; font-size: 13px; margin-top: 10px; display: none; }
     </style>
 </head>
 <body>
 
 <div class="login-card">
-    <div class="logo">💎</div>
-    <h2>تسجيل دخول المنظومة</h2>
-    
-    <input type="text" id="userEmail" placeholder="اسم المستخدم أو البريد">
-    <input type="password" id="userPass" placeholder="كلمة المرور">
-    
-    <button class="btn-login" onclick="handleLogin()">دخول النظام</button>
-    
-    <div id="errorBox" class="error-msg">خطأ في اسم المستخدم أو كلمة المرور</div>
-    
-    <div class="footer">حقوق النشر محفوظة © 2026 - م. محمود عادل</div>
+    <h2>تسجيل الدخول</h2>
+    <input type="text" id="user" placeholder="اسم المستخدم">
+    <input type="password" id="pass" placeholder="كلمة المرور">
+    <button onclick="handleLogin()">دخول</button>
+    <div id="err" class="error">بيانات الدخول غير صحيحة</div>
 </div>
 
 <script>
-    // نفس إعدادات الفايربيز الخاصة بك
     const firebaseConfig = { apiKey: "AIzaSyBePGZiqMPmZQdg36jZ4Rkdtd7OISxmob8", projectId: "rasd-tools" };
     firebase.initializeApp(firebaseConfig);
     const db = firebase.firestore();
 
     async function handleLogin() {
-        const user = document.getElementById('userEmail').value.trim();
-        const pass = document.getElementById('userPass').value.trim();
-        const errorBox = document.getElementById('errorBox');
+        const u = document.getElementById('user').value.trim();
+        const p = document.getElementById('pass').value.trim();
+        const err = document.getElementById('err');
         
-        if (!user || !pass) {
-            showError("يرجى إدخال كافة البيانات");
-            return;
-        }
+        err.style.display = "none";
 
-        // 1. التحقق إذا كان المدير
-        // ملاحظة: يمكنك تغيير admin إلى أي اسم مستخدم تفضله
-        if (user === "admin" && pass === "123456") {
+        // 1. الدخول المباشر للمدير (أنت)
+        if (u === "admin" && p === "790707071") {
             sessionStorage.setItem('userEmail', 'admin');
             sessionStorage.setItem('isAdmin', 'true');
-            window.location.href = "admin.html";
+            window.location.href = "admin.html"; // تأكد أن ملف صفحة الأدمن بهذا الاسم
             return;
         }
 
-        // 2. التحقق إذا كان معلماً من قاعدة البيانات
+        // 2. إذا لم يكن المدير، ابحث في قاعدة بيانات المعلمين
         try {
-            const tDoc = await db.collection('teachers').doc(user).get();
-            
+            const tDoc = await db.collection('teachers').doc(u).get();
             if (tDoc.exists) {
                 const data = tDoc.data();
-                if (data.pass === pass) {
-                    sessionStorage.setItem('userEmail', user);
+                if (data.pass === p) {
+                    sessionStorage.setItem('userEmail', u);
                     sessionStorage.setItem('isAdmin', 'false');
                     window.location.href = "teacher.html";
                 } else {
-                    showError("كلمة المرور غير صحيحة");
+                    err.innerText = "كلمة المرور غير صحيحة";
+                    err.style.display = "block";
                 }
             } else {
-                showError("اسم المستخدم غير موجود");
+                err.innerText = "اسم المستخدم غير موجود";
+                err.style.display = "block";
             }
         } catch (e) {
-            showError("حدث خطأ في الاتصال بالسيرفر");
+            err.innerText = "خطأ في الاتصال بالخادم";
+            err.style.display = "block";
         }
     }
-
-    function showError(msg) {
-        const errorBox = document.getElementById('errorBox');
-        errorBox.innerText = msg;
-        errorBox.style.display = "block";
-    }
 </script>
-
 </body>
 </html>

@@ -2,98 +2,82 @@
 <html lang="ar" dir="rtl">
 <head>
     <meta charset="UTF-8">
-    <title>منظومة محمود عادل | الإصدار الذكي المتكامل</title>
+    <title>منظومة محمود عادل | النسخة المستقرة 2026</title>
     <script src="https://www.gstatic.com/firebasejs/9.0.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.0.0/firebase-firestore-compat.js"></script>
     <style>
-        :root { --admin: #2c3e50; --primary: #27ae60; --accent: #e67e22; --danger: #e74c3c; --info: #3498db; }
-        body { font-family: 'Segoe UI', Tahoma, sans-serif; background: #f4f7f6; margin: 0; direction: rtl; }
-        .nav { background: var(--admin); color: white; padding: 15px; display: flex; justify-content: space-between; align-items: center; position: sticky; top: 0; z-index: 1000; }
-        .container { padding: 20px; max-width: 1500px; margin: auto; }
-        .card { background: white; border-radius: 15px; padding: 20px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); margin-bottom: 20px; }
-        .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(350px, 1fr)); gap: 20px; }
+        :root { --admin: #2c3e50; --primary: #27ae60; --accent: #e67e22; --danger: #e74c3c; }
+        body { font-family: 'Segoe UI', sans-serif; background: #f4f7f6; margin: 0; direction: rtl; }
+        .nav { background: var(--admin); color: white; padding: 15px; display: flex; justify-content: space-between; align-items: center; }
+        .container { padding: 20px; max-width: 1400px; margin: auto; }
+        .card { background: white; border-radius: 12px; padding: 20px; box-shadow: 0 4px 10px rgba(0,0,0,0.1); margin-bottom: 20px; }
+        .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 20px; }
         
-        /* ضبط الجدول والخانات */
-        table { width: 100%; border-collapse: collapse; margin-top: 10px; background: white; }
-        th, td { padding: 12px; border: 1px solid #eee; text-align: center; vertical-align: middle; }
-        th { background: #f8f9fa; position: sticky; top: 60px; z-index: 10; }
-        .in-score { width: 70px; padding: 8px; border: 2px solid #ddd; border-radius: 6px; text-align: center; font-weight: bold; }
+        /* تنسيق مربعات اختيار الأسابيع */
+        .week-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 5px; margin-top: 10px; }
+        .week-item { background: #eee; padding: 5px; border-radius: 5px; text-align: center; font-size: 12px; }
+
+        table { width: 100%; border-collapse: collapse; margin-top: 20px; }
+        th, td { border: 1px solid #ddd; padding: 12px; text-align: center; }
+        th { background: #f8f9fa; position: sticky; top: 0; z-index: 100; }
+        .in-score { width: 60px; padding: 8px; border: 2px solid #ccc; border-radius: 6px; text-align: center; }
         
-        /* لوحة التحكم */
-        .week-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 5px; background: #f9f9f9; padding: 10px; border-radius: 10px; }
-        .week-item { font-size: 11px; text-align: center; border: 1px solid #ddd; padding: 5px; border-radius: 5px; }
-        .smart-box { background: #eef2f7; padding: 15px; border-radius: 10px; border-right: 5px solid var(--info); }
-        
-        .btn { padding: 10px 15px; border: none; border-radius: 8px; cursor: pointer; color: white; font-weight: bold; transition: 0.3s; }
+        .btn { padding: 10px 15px; border: none; border-radius: 8px; cursor: pointer; color: white; font-weight: bold; }
         .btn-save { background: var(--primary); }
         .btn-del { background: var(--danger); }
-        .hidden { display: none; }
-        .lock-banner { background: #fee2e2; color: #b91c1c; padding: 10px; border-radius: 8px; margin-bottom: 10px; font-weight: bold; text-align: center; }
+        .hidden { display: none !important; }
+        .lock-banner { background: #ffebeb; color: #d63031; padding: 10px; border-radius: 8px; text-align: center; margin-bottom: 10px; border: 1px solid #fab1a0; }
     </style>
 </head>
 <body>
 
 <div class="nav">
-    <div><b>منظومة أ/ محمود عادل | <span id="displayUserName">...</span></b></div>
+    <div><b>منظومة الرصد | <span id="displayUserName">...</span></b></div>
     <button onclick="logout()" class="btn btn-del">خروج</button>
 </div>
 
 <div class="container">
     
     <div id="adminPanel" class="card hidden">
-        <h3>🛠 الإدارة الذكية والتحكم في الزمن</h3>
+        <h3 style="color:var(--accent)">🛠 إعدادات الإدارة</h3>
         <div class="grid">
-            
-            <div class="smart-box">
-                <h4>📅 غلق الأسابيع وتحديد الاختبارات</h4>
-                <div class="week-grid" id="weekLocksContainer">
-                    </div>
-                <div style="margin-top:10px;">
-                    <label>تحويل أسبوع إلى اختبار:</label>
-                    <select id="examWeekSelect" onchange="updateExamSettings()">
-                        <option value="none">لا يوجد اختبار حالياً</option>
-                    </select>
-                </div>
-            </div>
-
-            <div class="smart-box">
-                <h4>🤖 نظام الجدولة الذكي</h4>
-                <label><input type="checkbox" id="smartTimerToggle" onchange="updateSmartSettings()"> تفعيل "عدم استباق الأحداث"</label>
-                <div id="smartTimerOptions" style="margin-top:10px;" class="hidden">
-                    <label>تاريخ بداية المنظومة:</label>
-                    <input type="date" id="startDate" onchange="updateSmartSettings()">
-                    <p style="font-size: 11px; color: #666;">* سيتم فتح أسبوع جديد تلقائياً كل 7 أيام من هذا التاريخ.</p>
-                </div>
-            </div>
-
-            <div class="smart-box">
-                <h4>👥 المعلمون والبيانات</h4>
-                <input type="text" id="t-id" placeholder="كود المعلم">
-                <input type="text" id="t-name" placeholder="اسم المعلم">
-                <button onclick="addTeacher()" class="btn btn-save" style="width:100%; margin-top:5px;">إضافة معلم</button>
+            <div style="border-left: 2px solid #eee; padding-left: 10px;">
+                <h4>📅 قفل الأسابيع يدوياً</h4>
+                <div class="week-grid" id="weekLocksContainer"></div>
                 <hr>
-                <textarea id="namesInput" placeholder="الصق أسماء الطلاب للرفع..." style="height: 50px;"></textarea>
-                <button onclick="importStudents()" class="btn" style="background:var(--accent); width:100%">تثبيت القائمة</button>
+                <h4>🏆 تعيين أسبوع كاختبار</h4>
+                <select id="examWeekSelect" onchange="updateSettings()"><option value="none">لا يوجد</option></select>
+            </div>
+            
+            <div style="border-left: 2px solid #eee; padding-left: 10px;">
+                <h4>🤖 الجدولة الذكية (اختياري)</h4>
+                <label><input type="checkbox" id="smartActive" onchange="updateSettings()"> تفعيل التوقيت التلقائي</label>
+                <input type="date" id="startDate" onchange="updateSettings()" style="width: 100%; padding: 8px; margin-top: 10px;">
+                <p style="font-size: 11px;">* سيفتح أسبوع جديد كل 7 أيام من التاريخ المحدد.</p>
             </div>
 
+            <div>
+                <h4>📥 رفع الطلاب والمعلمين</h4>
+                <input type="text" id="t-id" placeholder="كود المعلم" style="width:48%">
+                <input type="text" id="t-name" placeholder="اسم المعلم" style="width:48%">
+                <button onclick="addTeacher()" class="btn btn-save" style="width:100%; margin-top:5px;">إضافة معلم</button>
+                <textarea id="namesInput" placeholder="الصق الأسماء هنا..." style="width:100%; height:60px; margin-top:10px;"></textarea>
+                <button onclick="importStudents()" class="btn" style="background:var(--accent); width:100%">رفع الطلاب</button>
+            </div>
         </div>
     </div>
 
     <div class="card">
-        <div id="statusBanner" class="lock-banner hidden">🔒 الرصد مغلق لهذا الأسبوع بقرار إداري أو زمني</div>
-        
+        <div id="lockBanner" class="lock-banner hidden">🔒 الرصد مغلق حالياً لهذا الأسبوع</div>
         <div class="grid" style="grid-template-columns: 2fr 1fr 1fr; align-items: end;">
             <div><label>الصف:</label><select id="viewGrade" onchange="loadTable()"></select></div>
             <div><label>الأسبوع:</label><select id="viewWeek" onchange="loadTable()"></select></div>
-            <button id="saveBtn" onclick="saveAll()" class="btn btn-save" style="width:100%">💾 حفظ (0)</button>
+            <button id="saveBtn" onclick="saveData()" class="btn btn-save" style="width:100%">💾 حفظ (0)</button>
         </div>
 
-        <div style="overflow-x: auto; padding-top: 10px;">
+        <div style="overflow-x: auto;">
             <table>
-                <thead>
-                    <tr id="tableHeader">
-                        </tr>
-                </thead>
+                <thead id="tableHeader"></thead>
                 <tbody id="mainTbody"></tbody>
             </table>
         </div>
@@ -101,6 +85,7 @@
 </div>
 
 <script>
+    // تهيئة Firebase (تأكد من صحة الـ Config)
     const firebaseConfig = { apiKey: "AIzaSyBePGZiqMPmZQdg36jZ4Rkdtd7OISxmob8", projectId: "rasd-tools" };
     firebase.initializeApp(firebaseConfig);
     const db = firebase.firestore();
@@ -111,102 +96,96 @@
     let pending = {};
 
     window.onload = async () => {
-        if(!userEmail) window.location.href="index.html";
-        document.getElementById('displayUserName').innerText = sessionStorage.getItem('userName');
+        if(!userEmail) { window.location.href="index.html"; return; }
+        document.getElementById('displayUserName').innerText = sessionStorage.getItem('userName') || "مستخدم";
         
-        initWeekControls();
-        await fetchSettings();
+        // 1. إنشاء عناصر الأسابيع
+        const vWeek = document.getElementById('viewWeek');
+        const eWeek = document.getElementById('examWeekSelect');
+        const lContainer = document.getElementById('weekLocksContainer');
         
+        for(let i=1; i<=14; i++) {
+            let wid = `w${i}`;
+            vWeek.innerHTML += `<option value="${wid}">الأسبوع ${i}</option>`;
+            if(isAdmin) {
+                eWeek.innerHTML += `<option value="${wid}">الأسبوع ${i} (اختبار)</option>`;
+                lContainer.innerHTML += `<div class="week-item"><input type="checkbox" class="w-chk" value="${wid}" onchange="updateSettings()"> الأسبوع ${i}</div>`;
+            }
+        }
+
+        // 2. جلب الإعدادات
+        try {
+            const doc = await db.collection('settings').doc('global').get();
+            if(doc.exists) {
+                sysData = doc.data();
+                if(isAdmin) {
+                    document.getElementById('smartActive').checked = sysData.smartActive || false;
+                    document.getElementById('startDate').value = sysData.startDate || "";
+                    document.getElementById('examWeekSelect').value = sysData.exams[0] || "none";
+                    sysData.lockedWeeks.forEach(w => {
+                        let c = document.querySelector(`.w-chk[value="${w}"]`);
+                        if(c) c.checked = true;
+                    });
+                }
+            }
+        } catch(e) { console.log("First time setup"); }
+
+        // 3. تحديد الواجهة
         if(isAdmin) {
             document.getElementById('adminPanel').classList.remove('hidden');
             document.getElementById('viewGrade').innerHTML = `<option value="1_general">1ث</option><option value="2_scientific">2ث علمي</option><option value="2_literary">2ث أدبي</option>`;
         } else {
-            await loadTeacherClasses();
+            await loadTeacherInfo();
         }
         loadTable();
     };
 
-    function initWeekControls() {
-        let html = '';
-        let opt = '<option value="none">لا يوجد اختبار</option>';
-        for(let i=1; i<=14; i++) {
-            html += `<div class="week-item"><input type="checkbox" class="week-lock-check" value="w${i}" onchange="updateLocks()"> <br> أ ${i}</div>`;
-            opt += `<option value="w${i}">الأسبوع ${i} (اختبار)</option>`;
-            document.getElementById('viewWeek').innerHTML += `<option value="w${i}">الأسبوع ${i}</option>`;
-        }
-        document.getElementById('weekLocksContainer').innerHTML = html;
-        document.getElementById('examWeekSelect').innerHTML = opt;
-    }
-
-    async function fetchSettings() {
-        const doc = await db.collection('settings').doc('global').get();
+    async function loadTeacherInfo() {
+        const doc = await db.collection('teachers').doc(userEmail).get();
         if(doc.exists) {
-            sysData = doc.data();
-            // تحديث واجهة المدير
-            sysData.lockedWeeks.forEach(w => {
-                const chk = document.querySelector(`.week-lock-check[value="${w}"]`);
-                if(chk) chk.checked = true;
-            });
-            document.getElementById('examWeekSelect').value = sysData.exams[0] || 'none';
-            document.getElementById('smartTimerToggle').checked = sysData.smartActive;
-            document.getElementById('startDate').value = sysData.startDate;
-            if(sysData.smartActive) document.getElementById('smartTimerOptions').classList.remove('hidden');
+            const classes = doc.data().classes || [];
+            document.getElementById('viewGrade').innerHTML = classes.map(c => `<option value="${c}">${c}</option>`).join('');
         }
     }
 
-    async function updateLocks() {
-        sysData.lockedWeeks = Array.from(document.querySelectorAll('.week-lock-check:checked')).map(c => c.value);
-        saveSettings();
-    }
-
-    async function updateExamSettings() {
-        const val = document.getElementById('examWeekSelect').value;
-        sysData.exams = val === 'none' ? [] : [val];
-        saveSettings();
-    }
-
-    async function updateSmartSettings() {
-        sysData.smartActive = document.getElementById('smartTimerToggle').checked;
+    async function updateSettings() {
+        if(!isAdmin) return;
+        sysData.smartActive = document.getElementById('smartActive').checked;
         sysData.startDate = document.getElementById('startDate').value;
-        document.getElementById('smartTimerOptions').classList.toggle('hidden', !sysData.smartActive);
-        saveSettings();
-    }
-
-    async function saveSettings() {
-        await db.collection('settings').doc('global').set(sysData, {merge:true});
+        sysData.exams = document.getElementById('examWeekSelect').value !== "none" ? [document.getElementById('examWeekSelect').value] : [];
+        sysData.lockedWeeks = Array.from(document.querySelectorAll('.w-chk:checked')).map(c => c.value);
+        
+        await db.collection('settings').doc('global').set(sysData);
         loadTable();
     }
 
-    // --- منطق الجدولة الذكية ---
-    function isWeekAutoLocked(weekId) {
+    function isAutoLocked(weekId) {
         if(!sysData.smartActive || !sysData.startDate) return false;
-        const weekNum = parseInt(weekId.replace('w',''));
-        const start = new Date(sysData.startDate);
-        const today = new Date();
-        const diffDays = Math.floor((today - start) / (1000 * 60 * 60 * 24));
-        const currentAllowedWeek = Math.floor(diffDays / 7) + 1;
-        return weekNum > currentAllowedWeek;
+        const wNum = parseInt(weekId.replace('w',''));
+        const diff = Math.floor((new Date() - new Date(sysData.startDate)) / (1000*60*60*24*7)) + 1;
+        return wNum > diff;
     }
 
     async function loadTable() {
         const week = document.getElementById('viewWeek').value;
+        const gradeVal = document.getElementById('viewGrade').value;
+        if(!gradeVal) return;
+
+        const isLocked = !isAdmin && (sysData.lockedWeeks.includes(week) || isAutoLocked(week));
         const isExam = sysData.exams.includes(week);
-        const isLocked = !isAdmin && (sysData.lockedWeeks.includes(week) || isWeekAutoLocked(week));
         
-        document.getElementById('statusBanner').classList.toggle('hidden', !isLocked);
+        document.getElementById('lockBanner').classList.toggle('hidden', !isLocked);
 
-        // تحديث الهيدر
+        // تعديل الهيدر
         const header = document.getElementById('tableHeader');
-        if(isExam) {
-            header.innerHTML = `<th>م</th><th style="text-align:right">اسم الطالب</th><th colspan="3">درجة الاختبار الشامل</th>`;
-        } else {
-            header.innerHTML = `<th>م</th><th style="text-align:right">اسم الطالب</th><th>تقييم (15)</th><th>حصة (15)</th><th>سلوك (10)</th>`;
-        }
+        header.innerHTML = isExam ? 
+            `<tr><th>م</th><th style="text-align:right">الاسم</th><th colspan="3">درجة الاختبار الشامل (100)</th></tr>` :
+            `<tr><th>م</th><th style="text-align:right">الاسم</th><th>تقييم</th><th>حصة</th><th>سلوك</th></tr>`;
 
-        const [g, b] = document.getElementById('viewGrade').value.split('_');
+        const [g, b] = gradeVal.split('_');
         const snap = await db.collection('students').where('grade','==',g).where('branch','==',b).get();
-        let students = [];
-        snap.forEach(d => students.push({id:d.id, ...d.data()}));
+        const students = [];
+        snap.forEach(d => students.push({id: d.id, ...d.data()}));
         students.sort((a,b) => (a.sortOrder || 0) - (b.sortOrder || 0));
 
         const tbody = document.getElementById('mainTbody');
@@ -214,7 +193,7 @@
         students.forEach((s, i) => {
             let row = `<td>${i+1}</td><td style="text-align:right">${s.name}</td>`;
             if(isExam) {
-                row += `<td colspan="3"><input type="number" class="in-score" style="width:200px" oninput="queue('${s.id}','ex',this,100)" data-sid="${s.id}" data-type="ex" ${isLocked ? 'disabled' : ''}></td>`;
+                row += `<td colspan="3"><input type="number" class="in-score" style="width:150px" oninput="queue('${s.id}','ex',this,100)" data-sid="${s.id}" data-type="ex" ${isLocked ? 'disabled' : ''}></td>`;
             } else {
                 row += `<td><input type="number" class="in-score" oninput="queue('${s.id}','t',this,15)" data-sid="${s.id}" data-type="t" ${isLocked ? 'disabled' : ''}></td>
                         <td><input type="number" class="in-score" oninput="queue('${s.id}','v',this,15)" data-sid="${s.id}" data-type="v" ${isLocked ? 'disabled' : ''}></td>
@@ -222,19 +201,19 @@
             }
             tbody.innerHTML += `<tr>${row}</tr>`;
         });
-        fillSaved();
+        loadSavedGrades();
     }
 
     function queue(sid, type, input, max) {
         let v = parseFloat(input.value);
-        if(v > max) { alert(`الأقصى ${max}`); input.value=""; return; }
+        if(v > max) { alert("تجاوزت الحد!"); input.value = ""; return; }
         const week = document.getElementById('viewWeek').value;
         pending[`${sid}_${week}_${type}`] = { sid, week, type, score: v, teacher: userEmail };
         input.style.borderColor = "var(--accent)";
         document.getElementById('saveBtn').innerText = `💾 حفظ (${Object.keys(pending).length})`;
     }
 
-    async function saveAll() {
+    async function saveData() {
         const batch = db.batch();
         for(let k in pending) batch.set(db.collection('grades').doc(k), pending[k], {merge:true});
         await batch.commit();
@@ -243,28 +222,30 @@
         alert("تم الحفظ بنجاح ✅"); loadTable();
     }
 
-    async function fillSaved() {
+    async function loadSavedGrades() {
         const week = document.getElementById('viewWeek').value;
         const snap = await db.collection('grades').where('week','==',week).get();
         snap.forEach(doc => {
             const d = doc.data();
             const input = document.querySelector(`input[data-sid="${d.sid}"][data-type="${d.type}"]`);
-            if(input) { input.value = d.score; input.style.borderColor = "#ddd"; }
+            if(input) { input.value = d.score; input.style.borderColor = "#ccc"; }
         });
     }
 
-    // وظائف إضافية
     async function importStudents() {
         const names = document.getElementById('namesInput').value.split('\n').filter(n => n.trim() !== "");
         const [g, b] = document.getElementById('viewGrade').value.split('_');
         const batch = db.batch();
-        names.forEach((n, i) => batch.set(db.collection('students').doc(), {name:n.trim(), grade:g, branch:b, sortOrder:i}));
-        await batch.commit(); alert("تم الرفع"); loadTable();
+        names.forEach((n, i) => batch.set(db.collection('students').doc(), { name: n.trim(), grade: g, branch: b, sortOrder: i }));
+        await batch.commit(); alert("تم الرفع ✅"); loadTable();
     }
 
-    async function loadTeacherClasses() {
-        const doc = await db.collection('teachers').doc(userEmail).get();
-        if(doc.exists) document.getElementById('viewGrade').innerHTML = doc.data().classes.map(c => `<option value="${c}">${c}</option>`).join('');
+    async function addTeacher() {
+        const id = document.getElementById('t-id').value;
+        const name = document.getElementById('t-name').value;
+        const classes = [document.getElementById('viewGrade').value];
+        await db.collection('teachers').doc(id).set({ name, pass: "123", classes });
+        alert("تم إضافة المعلم (كلمة السر الافتراضية 123) ✅");
     }
 
     function logout() { sessionStorage.clear(); window.location.href="index.html"; }

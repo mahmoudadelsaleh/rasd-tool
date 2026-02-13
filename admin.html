@@ -3,34 +3,49 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>نظام الرصد - الماستر النهائي</title>
+    <title>نظام الرصد - الماستر العربي الثابت</title>
     <script src="https://www.gstatic.com/firebasejs/9.0.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.0.0/firebase-firestore-compat.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
     <style>
-        :root { --sidebar: #0f172a; --accent: #3b82f6; --danger: #ef4444; --success: #10b981; }
-        body { font-family: 'Segoe UI', Tahoma, sans-serif; background: #f1f5f9; margin: 0; display: flex; flex-direction: column; align-items: center; }
-        .app-container { width: 100%; max-width: 500px; min-height: 100vh; background: #f1f5f9; box-shadow: 0 0 20px rgba(0,0,0,0.1); }
-        header { background: var(--sidebar); color: white; padding: 15px; text-align: center; width: 100%; box-sizing: border-box; }
+        :root { --primary: #0f172a; --accent: #3b82f6; --danger: #ef4444; --success: #10b981; --bg: #f1f5f9; }
+        body { font-family: 'Segoe UI', Tahoma, sans-serif; background: var(--bg); margin: 0; display: flex; flex-direction: column; align-items: center; }
+        .app-container { width: 100%; max-width: 500px; min-height: 100vh; background: var(--bg); box-shadow: 0 0 20px rgba(0,0,0,0.1); }
+        header { background: var(--primary); color: white; padding: 15px; text-align: center; width: 100%; box-sizing: border-box; }
+        
+        /* التبويبات سطرين */
         .tabs-nav { display: grid; grid-template-columns: repeat(3, 1fr); background: white; border-bottom: 2px solid #e2e8f0; position: sticky; top: 0; z-index: 1000; }
         .tab-btn { padding: 12px 5px; border: none; background: none; cursor: pointer; font-weight: bold; font-size: 11px; color: #64748b; border-bottom: 2px solid transparent; }
         .tab-btn.active { color: var(--accent); border-bottom-color: var(--accent); background: #f0f7ff; }
+        
         .content-area { padding: 15px; width: 100%; box-sizing: border-box; }
         .tab-panel { display: none; }
         .tab-panel.active { display: block; animation: fadeIn 0.3s; }
+        
         .card { background: white; border-radius: 15px; padding: 15px; margin-bottom: 15px; box-shadow: 0 2px 5px rgba(0,0,0,0.05); }
-        .grid-checks { display: flex; flex-wrap: wrap; gap: 8px; margin: 10px 0; background: #f8fafc; padding: 10px; border-radius: 10px; }
-        .check-item { background: white; border: 1px solid #e2e8f0; padding: 5px 10px; border-radius: 20px; font-size: 11px; display: flex; align-items: center; gap: 5px; }
+        .stat-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+        .stat-box { background: white; padding: 12px; border-radius: 12px; text-align: center; border: 1px solid #e2e8f0; }
+        .stat-val { display: block; font-size: 22px; font-weight: bold; color: var(--accent); }
+        .stat-label { font-size: 11px; color: #64748b; margin-top: 4px; display: block; }
+
+        .teacher-card { background: white; border-radius: 12px; padding: 15px; margin-bottom: 12px; border-right: 5px solid var(--accent); box-shadow: 0 2px 4px rgba(0,0,0,0.05); }
+        .badge { background: #e0f2fe; color: #0369a1; padding: 2px 8px; border-radius: 6px; font-size: 10px; font-weight: bold; margin-left: 4px; display: inline-block; margin-top: 5px; }
+        
         .btn-main { width: 100%; padding: 12px; border-radius: 10px; border: none; font-weight: bold; cursor: pointer; color: white; margin-bottom: 8px; }
-        input, select, textarea { width: 100%; padding: 12px; margin: 5px 0 10px; border-radius: 10px; border: 1px solid #cbd5e1; box-sizing: border-box; }
-        .teacher-card { background: white; border-radius: 12px; padding: 12px; margin-bottom: 12px; border-right: 5px solid var(--accent); position: relative; }
+        input, select, textarea { width: 100%; padding: 12px; margin: 5px 0 10px; border-radius: 10px; border: 1px solid #cbd5e1; box-sizing: border-box; font-family: inherit; }
+        .grid-checks { display: flex; flex-wrap: wrap; gap: 8px; margin: 10px 0; background: #f8fafc; padding: 10px; border-radius: 10px; }
+        .check-item { background: white; border: 1px solid #e2e8f0; padding: 6px 12px; border-radius: 20px; font-size: 12px; display: flex; align-items: center; gap: 6px; cursor: pointer; }
+        
         @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
     </style>
 </head>
 <body>
 
 <div class="app-container">
-    <header><b>الماستر | لوحة التحكم v2026</b></header>
+    <header>
+        <b>لوحة تحكم الماستر v2026</b>
+        <div id="status" style="font-size: 10px; color: #94a3b8; margin-top: 4px;">جاري المزامنة...</div>
+    </header>
 
     <div class="tabs-nav">
         <button class="tab-btn active" onclick="openTab(event, 'stats')">📊 الإحصائيات</button>
@@ -43,141 +58,176 @@
 
     <div class="content-area">
         <div id="stats" class="tab-panel active">
-            <div class="card" id="statsSummary">جاري الحساب...</div>
+            <div class="stat-grid" id="statsContainer">
+                <div class="stat-box"><span class="stat-val" id="s-t">0</span><span class="stat-label">المعلمين</span></div>
+                <div class="stat-box"><span class="stat-val" id="s-s">0</span><span class="stat-label">إجمالي الطلاب</span></div>
+                <div class="stat-box"><span class="stat-val" id="s-g1">0</span><span class="stat-label">أولى ثانوي</span></div>
+                <div class="stat-box"><span class="stat-val" id="s-g2">0</span><span class="stat-label">ثانية ثانوي</span></div>
+                <div class="stat-box"><span class="stat-val" id="s-m1">0</span><span class="stat-label">مواد أولى</span></div>
+                <div class="stat-box"><span class="stat-val" id="s-m2">0</span><span class="stat-label">مواد ثانية</span></div>
+            </div>
+            <div class="card" style="margin-top:15px;">
+                <h4 style="margin:0 0 10px">🏆 أداء الرصد</h4>
+                <div style="font-size:13px; color: #475569;">
+                    الأكثر رصداً: <b id="topT" style="color:var(--success)">-</b><br>
+                    الأقل رصداً: <b id="lowT" style="color:var(--danger)">-</b>
+                </div>
+            </div>
         </div>
 
         <div id="teachers" class="tab-panel">
             <div class="card">
-                <h4 id="tTitle">إضافة معلم</h4>
-                <input type="text" id="tName" placeholder="الاسم">
-                <input type="text" id="tSub" placeholder="المادة">
-                <input type="text" id="tUser" placeholder="اليوزر (ID)">
+                <h4 id="tFormTitle">إضافة معلم جديد</h4>
+                <input type="text" id="tName" placeholder="اسم المعلم الرباعي">
+                <input type="text" id="tSub" placeholder="المادة الدراسية">
+                <input type="text" id="tUser" placeholder="اسم المستخدم (اليوزر)">
                 <input type="text" id="tPass" placeholder="كلمة المرور">
+                <label style="font-size:12px; font-weight:bold;">تحديد الصفوف المسندة:</label>
                 <div class="grid-checks">
-                    <label class="check-item"><input type="checkbox" name="tCls" value="1_general"> 1ث</label>
-                    <label class="check-item"><input type="checkbox" name="tCls" value="2_scientific"> 2ث علمي</label>
-                    <label class="check-item"><input type="checkbox" name="tCls" value="2_literary"> 2ث أدبي</label>
+                    <label class="check-item"><input type="checkbox" name="tCls" value="1_general"> أولى ثانوي</label>
+                    <label class="check-item"><input type="checkbox" name="tCls" value="2_scientific"> ثانية علمي</label>
+                    <label class="check-item"><input type="checkbox" name="tCls" value="2_literary"> ثانية أدبي</label>
                 </div>
-                <button class="btn-main" id="btnSaveT" style="background:var(--accent)" onclick="saveTeacher()">حفظ المعلم</button>
-                <button class="btn-main" id="btnCancelT" style="background:#64748b; display:none;" onclick="resetTForm()">إلغاء</button>
+                <button class="btn-main" id="btnSaveT" style="background:var(--accent)" onclick="saveTeacher()">حفظ بيانات المعلم</button>
+                <button class="btn-main" id="btnCancelT" style="background:#64748b; display:none;" onclick="resetTeacherForm()">إلغاء التعديل</button>
             </div>
-            <div id="teacherCards"></div>
+            <div id="teacherCardsContainer"></div>
         </div>
 
         <div id="control" class="tab-panel">
             <div class="card">
-                <h4>📅 إعدادات الفترات</h4>
+                <h4>📅 جدولة الاختبارات</h4>
                 <label>أسبوع الاختبار الأول:</label>
-                <select id="ex1W" onchange="updateConfig()"></select>
+                <select id="ex1W" onchange="updateSystemConfig()"></select>
                 <label>أسبوع الاختبار الثاني:</label>
-                <select id="ex2W" onchange="updateConfig()"></select>
+                <select id="ex2W" onchange="updateSystemConfig()"></select>
             </div>
             <div class="card">
-                <h4>🔓 الأسابيع المفتوحة</h4>
-                <div id="weeksLock" class="grid-checks"></div>
+                <h4>🔓 التحكم في فتح الأسابيع</h4>
+                <div id="weeksLockGrid" class="grid-checks"></div>
             </div>
         </div>
 
         <div id="reset" class="tab-panel">
-            <div class="card">
-                <h4>🧹 تصفير بيانات محددة</h4>
-                <select id="resT" onchange="loadResOptions()"></select>
-                <div id="resCBox" class="grid-checks"></div>
-                <div id="resWBox" class="grid-checks"></div>
-                <button class="btn-main" style="background:var(--danger)" onclick="bulkReset()">تصفير الآن نهائياً</button>
+            <div class="card" style="border-right: 5px solid var(--danger);">
+                <h4>🧹 تنظيف البيانات (تصفير)</h4>
+                <select id="resTSelect" onchange="refreshResetOptions()"></select>
+                <div id="resClsOptions" class="grid-checks"></div>
+                <div id="resWkOptions" class="grid-checks"></div>
+                <button class="btn-main" style="background:var(--danger)" onclick="executeBulkReset()">حذف البيانات المختارة نهائياً</button>
             </div>
         </div>
 
         <div id="export" class="tab-panel">
             <div class="card">
-                <h4>📥 تقارير Excel المتقدمة</h4>
+                <h4>📥 تصدير التقارير (Excel)</h4>
                 <select id="expGrade">
                     <option value="1_general">أولى ثانوي</option>
-                    <option value="2_scientific">ثانية علمي</option>
-                    <option value="2_literary">ثانية أدبي</option>
+                    <option value="2_scientific">ثانية ثانوي علمي</option>
+                    <option value="2_literary">ثانية ثانوي أدبي</option>
                 </select>
-                <button class="btn-main" style="background:#3b82f6" onclick="exportPeriod(1)">الفترة الأولى (40+30)</button>
-                <button class="btn-main" style="background:#1d4ed8" onclick="exportPeriod(2)">الفترة الثانية (40+30)</button>
-                <button class="btn-main" style="background:var(--success)" onclick="exportFull()">تقرير المعلم (14 أسبوع)</button>
-                <button class="btn-main" style="background:#8b5cf6" onclick="exportFinalConsolidated()">التقرير الختامي (70 درجة)</button>
+                <button class="btn-main" style="background:#3b82f6" onclick="runExport(1)">تقرير الفترة الأولى (40+30)</button>
+                <button class="btn-main" style="background:#1d4ed8" onclick="runExport(2)">تقرير الفترة الثانية (40+30)</button>
+                <button class="btn-main" style="background:var(--success)" onclick="exportComprehensive()">سجل المعلم الشامل (14 أسبوع)</button>
             </div>
         </div>
 
         <div id="students" class="tab-panel">
             <div class="card">
-                <h4>رفع الطلاب</h4>
+                <h4>رفع قوائم الطلاب</h4>
                 <select id="sGrade">
-                    <option value="1_general">1ث</option>
-                    <option value="2_scientific">2ث علمي</option>
-                    <option value="2_literary">2ث أدبي</option>
+                    <option value="1_general">أولى ثانوي</option>
+                    <option value="2_scientific">ثانية علمي</option>
+                    <option value="2_literary">ثانية أدبي</option>
                 </select>
-                <textarea id="sNames" rows="5" placeholder="الأسماء..."></textarea>
-                <button class="btn-main" style="background:var(--sidebar)" onclick="uploadStudents()">رفع</button>
+                <textarea id="sNames" rows="6" placeholder="الصق الأسماء هنا..."></textarea>
+                <button class="btn-main" style="background:var(--primary)" onclick="processStudentUpload()">تحديث قاعدة بيانات الطلاب</button>
             </div>
         </div>
     </div>
 </div>
 
 <script>
+    // --- الربط مع قاعدة البيانات ---
     const firebaseConfig = { apiKey: "AIzaSyBePGZiqMPmZQdg36jZ4Rkdtd7OISxmob8", projectId: "rasd-tools" };
     firebase.initializeApp(firebaseConfig);
     const db = firebase.firestore();
 
     let teachers = [], students = [], grades = [], config = { openWeeks: [], ex1W: 'w6', ex2W: 'w12' };
 
-    async function init() {
+    // مسميات الصفوف بالعربي
+    const classNames = {
+        '1_general': 'أولى ثانوي',
+        '2_scientific': 'ثانية علمي',
+        '2_literary': 'ثانية أدبي'
+    };
+
+    async function startMaster() {
+        document.getElementById('status').innerText = "⏳ جاري تحديث البيانات...";
         const [tS, sS, gS, cS] = await Promise.all([
             db.collection('teachers').get(),
             db.collection('students').get(),
             db.collection('grades').get(),
             db.collection('system').doc('config').get()
         ]);
+
         teachers = tS.docs.map(d => ({id: d.id, ...d.data()}));
         students = sS.docs.map(d => ({id: d.id, ...d.data()}));
         grades = gS.docs.map(d => d.data());
         if(cS.exists) config = cS.data();
 
-        renderUI();
+        renderAll();
+        document.getElementById('status').innerText = "✅ النظام جاهز";
     }
 
-    function renderUI() {
-        // الإحصائيات
-        document.getElementById('statsSummary').innerHTML = `معلمون: ${teachers.length} | طلاب: ${students.length}`;
-        
-        // بطاقات المعلمين
-        const container = document.getElementById('teacherCards');
-        container.innerHTML = '';
+    function renderAll() {
+        // 1. الإحصائيات
+        document.getElementById('s-t').innerText = teachers.length;
+        document.getElementById('s-s').innerText = students.length;
+        document.getElementById('s-g1').innerText = students.filter(s => s.grade === '1').length;
+        document.getElementById('s-g2').innerText = students.filter(s => s.grade === '2').length;
+        document.getElementById('s-m1').innerText = [...new Set(teachers.filter(t => t.classes.includes('1_general')).map(t => t.subject))].length;
+        document.getElementById('s-m2').innerText = [...new Set(teachers.filter(t => (t.classes.includes('2_scientific') || t.classes.includes('2_literary'))).map(t => t.subject))].length;
+
+        // 2. بطاقات المعلمين (مع تعريب الصفوف)
+        const tContainer = document.getElementById('teacherCardsContainer');
+        tContainer.innerHTML = '';
         teachers.forEach(t => {
-            container.innerHTML += `<div class="teacher-card">
-                <b>${t.name}</b> - ${t.subject}<br>
-                <small>${t.classes.join(', ')}</small>
-                <div style="margin-top:5px">
-                    <button onclick="editT('${t.id}')" style="background:#e0f2fe; border:none; border-radius:5px; padding:4px 8px">تعديل</button>
-                    <button onclick="deleteDoc('teachers','${t.id}')" style="background:#fee2e2; border:none; border-radius:5px; padding:4px 8px">حذف</button>
-                </div>
-            </div>`;
+            const clsBadges = t.classes.map(c => `<span class="badge">${classNames[c] || c}</span>`).join('');
+            tContainer.innerHTML += `
+                <div class="teacher-card">
+                    <div style="display:flex; justify-content:space-between; font-weight:bold; color:var(--primary);">
+                        <span>${t.name}</span> <span style="color:var(--accent)">${t.subject}</span>
+                    </div>
+                    <div>${clsBadges}</div>
+                    <div style="font-size:11px; color:#94a3b8; margin-top:8px;">مستخدم: ${t.id} | كلمة سر: ${t.pass}</div>
+                    <div style="margin-top:10px; display:flex; gap:10px;">
+                        <button onclick="fillEditForm('${t.id}')" style="flex:1; background:#f0f9ff; color:var(--accent); border:1px solid #bae6fd; padding:6px; border-radius:6px; font-weight:bold;">تعديل</button>
+                        <button onclick="deleteObject('teachers','${t.id}')" style="flex:1; background:#fef2f2; color:var(--danger); border:1px solid #fecaca; padding:6px; border-radius:6px; font-weight:bold;">حذف</button>
+                    </div>
+                </div>`;
         });
 
-        // الأقفال
-        const wLock = document.getElementById('weeksLock');
+        // 3. قوائم التصفير والأقفال
         const ex1 = document.getElementById('ex1W');
         const ex2 = document.getElementById('ex2W');
-        wLock.innerHTML = ''; ex1.innerHTML = ''; ex2.innerHTML = '';
+        const lockGrid = document.getElementById('weeksLockGrid');
+        const resT = document.getElementById('resTSelect');
+        
+        ex1.innerHTML = ''; ex2.innerHTML = ''; lockGrid.innerHTML = '';
+        resT.innerHTML = '<option value="">اختر المعلم للبدء...</option>';
+
         for(let i=1; i<=14; i++) {
             let w = 'w'+i;
-            ex1.innerHTML += `<option value="${w}" ${config.ex1W==w?'selected':''}>أ${i}</option>`;
-            ex2.innerHTML += `<option value="${w}" ${config.ex2W==w?'selected':''}>أ${i}</option>`;
-            wLock.innerHTML += `<label class="check-item"><input type="checkbox" ${config.openWeeks.includes(w)?'checked':''} onchange="toggleW('${w}',this.checked)"> أ${i}</label>`;
+            ex1.innerHTML += `<option value="${w}" ${config.ex1W==w?'selected':''}>أسبوع ${i}</option>`;
+            ex2.innerHTML += `<option value="${w}" ${config.ex2W==w?'selected':''}>أسبوع ${i}</option>`;
+            lockGrid.innerHTML += `<label class="check-item"><input type="checkbox" ${config.openWeeks.includes(w)?'checked':''} onchange="toggleWeekLock('${w}',this.checked)"> أ${i}</label>`;
         }
-
-        // قوائم التصفير
-        const resT = document.getElementById('resT');
-        resT.innerHTML = '<option value="">اختر معلم</option>';
         teachers.forEach(t => resT.innerHTML += `<option value="${t.id}">${t.name}</option>`);
     }
 
-    // تعديل معلم
-    function editT(id) {
+    // --- وظائف المعلمين ---
+    function fillEditForm(id) {
         const t = teachers.find(x => x.id === id);
         document.getElementById('tName').value = t.name;
         document.getElementById('tSub').value = t.subject;
@@ -185,65 +235,49 @@
         document.getElementById('tUser').readOnly = true;
         document.getElementById('tPass').value = t.pass;
         document.querySelectorAll('input[name="tCls"]').forEach(cb => cb.checked = t.classes.includes(cb.value));
-        document.getElementById('btnSaveT').innerText = "تحديث المعلم";
+        document.getElementById('btnSaveT').innerText = "تحديث البيانات الآن";
         document.getElementById('btnCancelT').style.display = "block";
-        document.getElementById('tTitle').innerText = "تعديل بيانات المعلم";
+        document.getElementById('tFormTitle').innerText = "تعديل معلم: " + t.name;
+        window.scrollTo({top: 0, behavior: 'smooth'});
     }
 
     async function saveTeacher() {
         const id = document.getElementById('tUser').value;
         const cls = Array.from(document.querySelectorAll('input[name="tCls"]:checked')).map(c => c.value);
+        if(!id || !cls.length) return alert("اكمل البيانات واختبر صفاً واحداً على الأقل");
+        
         await db.collection('teachers').doc(id).set({
             name: document.getElementById('tName').value,
             subject: document.getElementById('tSub').value,
             pass: document.getElementById('tPass').value,
             classes: cls
         }, {merge:true});
-        resetTForm(); init();
+        
+        resetTeacherForm();
+        startMaster();
     }
 
-    function resetTForm() {
+    function resetTeacherForm() {
         document.getElementById('tUser').readOnly = false;
-        document.getElementById('btnSaveT').innerText = "حفظ المعلم";
+        document.getElementById('btnSaveT').innerText = "حفظ بيانات المعلم";
         document.getElementById('btnCancelT').style.display = "none";
-        document.getElementById('tTitle').innerText = "إضافة معلم";
-        ['tName','tSub','tUser','tPass'].forEach(i => document.getElementById(i).value = '');
+        document.getElementById('tFormTitle').innerText = "إضافة معلم جديد";
+        ['tName','tSub','tUser','tPass'].forEach(f => document.getElementById(f).value = '');
         document.querySelectorAll('input[name="tCls"]').forEach(cb => cb.checked = false);
     }
 
-    async function updateConfig() {
-        config.ex1W = document.getElementById('ex1W').value;
-        config.ex2W = document.getElementById('ex2W').value;
-        await db.collection('system').doc('config').set(config);
-    }
-
-    async function toggleW(w, s) {
-        if(s) config.openWeeks.push(w); else config.openWeeks = config.openWeeks.filter(x => x !== w);
-        await db.collection('system').doc('config').set(config);
-    }
-
-    // التصفير
-    function loadResOptions() {
-        const t = teachers.find(x => x.id === document.getElementById('resT').value);
-        const cBox = document.getElementById('resCBox');
-        const wBox = document.getElementById('resWBox');
+    // --- وظائف التصفير ---
+    function refreshResetOptions() {
+        const t = teachers.find(x => x.id === document.getElementById('resTSelect').value);
+        const cBox = document.getElementById('resClsOptions');
+        const wBox = document.getElementById('resWkOptions');
         cBox.innerHTML = ''; wBox.innerHTML = '';
         if(!t) return;
-        t.classes.forEach(c => cBox.innerHTML += `<label class="check-item"><input type="checkbox" name="rc" value="${c}"> ${c}</label>`);
+        t.classes.forEach(c => cBox.innerHTML += `<label class="check-item"><input type="checkbox" name="rc" value="${c}"> ${classNames[c]}</label>`);
         for(let i=1; i<=14; i++) wBox.innerHTML += `<label class="check-item"><input type="checkbox" name="rw" value="w${i}"> أ${i}</label>`;
     }
 
-    async function bulkReset() {
-        const tId = document.getElementById('resT').value;
-        const selW = Array.from(document.querySelectorAll('input[name="rw"]:checked')).map(e => e.value);
-        if(!tId || !confirm("حذف نهائي؟")) return;
-        const snap = await db.collection('grades').where('teacher','==',tId).where('week','in',selW).get();
-        const batch = db.batch();
-        snap.forEach(d => batch.delete(d.ref));
-        await batch.commit();
-        alert("تم التصفير ✅"); init();
-    }
-
+    // --- الوظائف العامة ---
     function openTab(evt, tabId) {
         document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
         document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
@@ -251,7 +285,20 @@
         evt.currentTarget.classList.add('active');
     }
 
-    window.onload = init;
+    async function updateSystemConfig() {
+        config.ex1W = document.getElementById('ex1W').value;
+        config.ex2W = document.getElementById('ex2W').value;
+        await db.collection('system').doc('config').set(config);
+    }
+
+    async function toggleWeekLock(w, s) {
+        if(s) config.openWeeks.push(w); else config.openWeeks = config.openWeeks.filter(x => x !== w);
+        await db.collection('system').doc('config').set(config);
+    }
+
+    async function deleteObject(col, id) { if(confirm("حذف نهائي؟ لا يمكن التراجع!")) { await db.collection(col).doc(id).delete(); startMaster(); } }
+
+    window.onload = startMaster;
 </script>
 </body>
 </html>

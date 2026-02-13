@@ -3,70 +3,63 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>نظام الرصد الذكي v2026 - الاحترافي</title>
+    <title>نظام الرصد الذكي v2026 - الإدخال الموحد</title>
     <script src="https://www.gstatic.com/firebasejs/9.0.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.0.0/firebase-firestore-compat.js"></script>
     <style>
         :root { --primary: #3b82f6; --success: #10b981; --sidebar: #1e293b; --exam-bg: #fef3c7; --exam-border: #d97706; }
-        body { font-family: 'Segoe UI', Tahoma, sans-serif; background: #f1f5f9; margin: 0; padding-bottom: 220px; transition: padding 0.3s; }
-        
-        /* تقليص الهيدر عند الرصد */
-        header { background: var(--sidebar); color: white; padding: 10px; display: flex; justify-content: space-between; transition: 0.3s; }
-        .hide-on-pad { display: none !important; }
-
+        body { font-family: 'Segoe UI', Tahoma, sans-serif; background: #f1f5f9; margin: 0; padding-bottom: 250px; }
+        header { background: var(--sidebar); color: white; padding: 12px; display: flex; justify-content: space-between; align-items: center; }
         .container { padding: 8px; max-width: 800px; margin: auto; }
-        .card { background: white; border-radius: 10px; padding: 10px; margin-bottom: 6px; border: 1px solid #e2e8f0; transition: 0.3s; }
-        .active-row { border: 2px solid var(--primary); box-shadow: 0 0 15px rgba(59,130,246,0.2); transform: scale(1.02); z-index: 10; position: relative; }
-
-        /* لوحة مفاتيح ذكية منخفضة الارتفاع */
+        .card { background: white; border-radius: 10px; padding: 10px; margin-bottom: 6px; border: 1px solid #e2e8f0; position: relative; }
+        .active-row { border: 2px solid var(--primary); background: #f8fafc; }
+        
+        /* لوحة المفاتيح المطورة */
         .smart-keyboard { 
             position: fixed; bottom: 0; left: 0; right: 0; 
-            background: #d1d5db; padding: 4px; display: none; 
-            gap: 4px; z-index: 2000; height: 210px; /* تم تقليل الارتفاع */
+            background: #d1d5db; padding: 5px; display: none; 
+            gap: 4px; z-index: 2000; height: 230px;
             grid-template-columns: repeat(5, 1fr);
             box-shadow: 0 -5px 20px rgba(0,0,0,0.2);
         }
         .key-btn { 
-            background: white; border-radius: 5px; font-weight: bold; cursor: pointer; 
+            background: white; border-radius: 6px; font-weight: bold; cursor: pointer; 
             display: flex; align-items: center; justify-content: center; 
-            font-size: 16px; border: 1px solid #94a3b8; height: 45px;
+            font-size: 16px; border: 1px solid #94a3b8; height: 42px;
         }
         .key-btn:active { background: var(--primary); color: white; }
-        .key-fn { background: #64748b; color: white; grid-column: span 1; font-size: 12px; }
-        .key-done { background: var(--success); color: white; grid-column: span 1; }
+        
+        /* أزرار الوظائف الخاصة */
+        .key-all { background: #8b5cf6; color: white; font-size: 11px; grid-column: span 1; } /* زر الإدخال الموحد */
+        .key-fn { background: #64748b; color: white; font-size: 11px; }
+        .key-done { background: var(--success); color: white; grid-column: span 2; }
 
-        /* تنسيق الأسطر */
-        .student-row { display: flex; justify-content: space-between; align-items: center; gap: 5px; }
+        .student-row { display: flex; justify-content: space-between; align-items: center; }
         .score-sel { 
             width: 42px; height: 38px; font-weight: bold; text-align: center; 
             border-radius: 6px; border: 1px solid #cbd5e1; background: #fff; font-size: 15px; 
         }
-        .score-sel.active-input { border: 2px solid var(--primary); background: #eff6ff; animation: pulse 1s infinite; }
+        .score-sel.active-input { border: 2.5px solid var(--primary); background: #eff6ff; }
         .score-sel.saved { border-color: var(--success); background: #f0fdf4; }
         .score-sel.locked-exam { background: var(--exam-bg); border: 1px dashed var(--exam-border); }
         
-        @keyframes pulse { 0% { box-shadow: 0 0 0 0 rgba(59,130,246,0.4); } 70% { box-shadow: 0 0 0 6px rgba(59,130,246,0); } 100% { box-shadow: 0 0 0 0 rgba(59,130,246,0); } }
-
         .sync-status { position: fixed; top: 5px; left: 5px; font-size: 10px; background: #fff; padding: 2px 8px; border-radius: 10px; z-index: 2005; border: 1px solid #ddd; }
-        select { width: 100%; padding: 8px; border-radius: 6px; margin-bottom: 5px; border: 1px solid #cbd5e1; font-size: 13px; }
+        .hide-on-pad { display: none !important; }
     </style>
 </head>
 <body>
 
 <div class="sync-status" id="syncStat">متصل ✅</div>
 
-<header id="mainHeader">
-    <div>أهلاً: <b id="tName">...</b></div>
-    <button onclick="closePad()" id="closeBtn" style="display:none; background:none; border:1px solid white; color:white; border-radius:5px; padding:2px 10px;">إنهاء الرصد</button>
+<header>
+    <div id="header-text">أهلاً: <b id="tName">...</b></div>
+    <button id="closeBtn" onclick="closePad()" style="display:none; background:white; color:black; border:none; padding:4px 10px; border-radius:5px; font-size:12px; font-weight:bold;">إغلاق X</button>
 </header>
 
 <div class="container">
-    <div class="card" id="settingsCard">
-        <select id="vGrade" onchange="loadList()"><option value="">اختر الفصل</option></select>
-        <select id="vWeek" onchange="loadList()"></select>
-        <div id="examConfig" style="display:none; font-size: 11px; color: #64748b; margin-top:5px;">
-            مواعيد الاختبارات مرتبطة بضبط الإدارة.
-        </div>
+    <div class="card" id="configCard">
+        <select id="vGrade" onchange="loadList()" style="width:100%; padding:8px; margin-bottom:5px; border-radius:5px;"></select>
+        <select id="vWeek" onchange="loadList()" style="width:100%; padding:8px; border-radius:5px;"></select>
     </div>
     <div id="list"></div>
 </div>
@@ -79,7 +72,7 @@
     const db = firebase.firestore();
     const tId = sessionStorage.getItem('userEmail');
 
-    let currentStudents = [], activeInputId = null, pendingUpdates = {}, updateCount = 0;
+    let currentStudents = [], activeInputId = null, pendingUpdates = {};
     let exam1Week = "w6", exam2Week = "w10";
 
     window.onload = async () => {
@@ -99,7 +92,6 @@
     async function loadList() {
         const gV = document.getElementById('vGrade').value, wV = document.getElementById('vWeek').value;
         if(!gV || !wV) return;
-        
         const [g, b] = gV.split('_');
         const sSnap = await db.collection('students').where('grade','==',g).where('branch','==',b).get();
         currentStudents = sSnap.docs.map(doc => ({id: doc.id, ...doc.data()})).sort((a,b)=>a.sortOrder-b.sortOrder);
@@ -111,7 +103,6 @@
             if(!grades[d.sid][d.week]) grades[d.sid][d.week] = {};
             grades[d.sid][d.week][d.type] = d.score;
         });
-
         renderList(grades, wV);
     }
 
@@ -121,14 +112,11 @@
             const sc = grades[s.id] || {};
             const weekGrades = sc[wV] || {};
             const isExPage = wV.startsWith('ex');
-
-            h += `<div class="card" id="row_${s.id}">
-                <div class="student-row">
-                    <span style="width:40%; font-size:13px;"><b>${idx+1}.</b> ${s.name}</span>
-                    <div style="display:flex; gap:4px;">`;
-
+            h += `<div class="card" id="row_${s.id}"><div class="student-row">
+                <span style="width:40%; font-size:12px;"><b>${idx+1}.</b> ${s.name}</span>
+                <div style="display:flex; gap:4px;">`;
             if(isExPage) {
-                h += drawInp(s.id, 'exam', 30, weekGrades.exam, 'اختبـار');
+                h += drawInp(s.id, 'exam', 30, weekGrades.exam, 'اختبار');
             } else {
                 let tScore = weekGrades.t, tClass = "", tReadonly = false;
                 if(wV === exam1Week || wV === exam2Week) {
@@ -155,58 +143,62 @@
 
     function openPad(sid, type, max) {
         activeInputId = {sid, type, max};
-        
-        // إخفاء العناصر المشتتة وتصغير الهيدر
-        document.getElementById('settingsCard').classList.add('hide-on-pad');
+        document.getElementById('configCard').classList.add('hide-on-pad');
         document.getElementById('closeBtn').style.display = 'block';
-        
-        // تمييز السطر الحالي
         document.querySelectorAll('.card').forEach(c => c.classList.remove('active-row'));
         document.getElementById(`row_${sid}`).classList.add('active-row');
-
-        // تمييز الخانة النشطة
         document.querySelectorAll('.score-sel').forEach(el => el.classList.remove('active-input'));
         document.getElementById(`inp_${sid}_${type}`).classList.add('active-input');
 
-        // إظهار الكيبورد
         const pad = document.getElementById('numPad');
         pad.style.display = 'grid';
-        
         let html = '';
-        const limit = max === 30 ? 30 : max;
-        for(let i=1; i<=limit; i++) html += `<div class="key-btn" onclick="press(${i})">${i}</div>`;
-        html += `<div class="key-btn" style="background:#f1f5f9" onclick="press(0)">0</div>`;
-        html += `<div class="key-btn key-fn" onclick="next()">⏭️ التالي</div>`;
-        html += `<div class="key-btn key-done" onclick="closePad()">تم ✅</div>`;
+        for(let i=1; i<=max; i++) html += `<div class="key-btn" onclick="press(${i})">${i}</div>`;
+        html += `<div class="key-btn" style="background:#fef3c7" onclick="press(0)">0</div>`;
+        html += `<div class="key-btn key-all" onclick="applyToAll()">للـكل 👥</div>`;
+        html += `<div class="key-btn key-fn" onclick="next()">التالي ⏭️</div>`;
+        html += `<div class="key-btn key-done" onclick="closePad()">إنهاء ✅</div>`;
         pad.innerHTML = html;
-
-        // تمرير ذكي: وضع الطالب في الجزء العلوي ليبقى الطالب السابق والتالي ظاهراً
-        const target = document.getElementById(`row_${sid}`);
-        const offset = target.offsetTop - 80;
-        window.scrollTo({top: offset, behavior: 'smooth'});
+        document.getElementById(`row_${sid}`).scrollIntoView({behavior:'smooth', block:'start'});
     }
 
     function press(val) {
         if(!activeInputId) return;
         const {sid, type} = activeInputId;
         const inp = document.getElementById(`inp_${sid}_${type}`);
-        inp.value = val;
-        inp.classList.add('saved');
-
+        inp.value = val; inp.classList.add('saved');
         const wV = document.getElementById('vWeek').value;
         pendingUpdates[`${sid}_${wV}_${type}`] = { sid, type, score: val, week: wV, teacher: tId };
-        updateCount++;
-        
-        // قفزة ذكية: الانتقال التلقائي للخانة التالية
         next();
     }
 
-    function next() {
+    // الدالة السحرية للإدخال الموحد
+    function applyToAll() {
         if(!activeInputId) return;
-        const wV = document.getElementById('vWeek').value;
-        const isLocked = (wV === exam1Week || wV === exam2Week);
-        const types = wV.startsWith('ex') ? ['exam'] : (isLocked ? ['v', 's'] : ['t', 'v', 's']);
+        const {type} = activeInputId;
+        const val = document.getElementById(`inp_${activeInputId.sid}_${type}`).value;
+        if(val === "" || val === undefined) return alert("ضع درجة أولاً لتطبيقها على الكل");
         
+        if(!confirm(`هل تريد رصد درجة (${val}) لجميع الطلاب في خانة (${type})؟`)) return;
+
+        const wV = document.getElementById('vWeek').value;
+        currentStudents.forEach(s => {
+            // التحديث البصري
+            const targetInp = document.getElementById(`inp_${s.id}_${type}`);
+            if(targetInp && !targetInp.classList.contains('locked-exam')) {
+                targetInp.value = val;
+                targetInp.classList.add('saved');
+                // إضافة لقائمة التحديث
+                pendingUpdates[`${s.id}_${wV}_${type}`] = { sid: s.id, type, score: parseInt(val), week: wV, teacher: tId };
+            }
+        });
+        forceSync();
+        alert("تم التطبيق على الجميع بنجاح");
+    }
+
+    function next() {
+        const wV = document.getElementById('vWeek').value;
+        const types = wV.startsWith('ex') ? ['exam'] : ((wV===exam1Week||wV===exam2Week)?['v','s']:['t','v','s']);
         let nIdx = types.indexOf(activeInputId.type) + 1;
         if(nIdx < types.length) {
             openPad(activeInputId.sid, types[nIdx], types[nIdx]==='s'?10:15);
@@ -215,34 +207,30 @@
             if(curIdx < currentStudents.length - 1) {
                 const nxt = currentStudents[curIdx+1];
                 openPad(nxt.id, types[0], types[0]==='exam'?30:15);
-            } else {
-                closePad();
-            }
+            } else { closePad(); }
         }
     }
 
     function closePad() {
         document.getElementById('numPad').style.display = 'none';
-        document.getElementById('settingsCard').classList.remove('hide-on-pad');
+        document.getElementById('configCard').classList.remove('hide-on-pad');
         document.getElementById('closeBtn').style.display = 'none';
-        document.querySelectorAll('.card').forEach(c => c.classList.remove('active-row'));
-        document.querySelectorAll('.score-sel').forEach(el => el.classList.remove('active-input'));
         forceSync();
     }
 
     async function forceSync() {
         if(Object.keys(pendingUpdates).length === 0) return;
-        document.getElementById('syncStat').innerText = "⏳ مزامنة...";
+        document.getElementById('syncStat').innerText = "⏳ جاري الحفظ...";
         const batch = db.batch();
         for (const k in pendingUpdates) {
             const docId = `${pendingUpdates[k].sid}_${pendingUpdates[k].week}_${pendingUpdates[k].type}_${tId}`;
             batch.set(db.collection('grades').doc(docId), pendingUpdates[k], {merge:true});
         }
         await batch.commit();
-        pendingUpdates = {}; updateCount = 0;
+        pendingUpdates = {};
         document.getElementById('syncStat').innerText = "✅ تم الحفظ";
     }
-    setInterval(forceSync, 20000);
+    setInterval(forceSync, 30000);
 </script>
 </body>
 </html>

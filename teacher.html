@@ -7,220 +7,218 @@
     <script src="https://www.gstatic.com/firebasejs/9.0.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.0.0/firebase-firestore-compat.js"></script>
     <style>
-        :root { --primary: #3b82f6; --success: #10b981; --sidebar: #1e293b; --exam-bg: #fef3c7; --exam-border: #d97706; --locked: #94a3b8; }
-        body { font-family: 'Segoe UI', Tahoma, sans-serif; background: #f1f5f9; margin: 0; padding-bottom: 250px; }
-        
-        /* رسالة الإدارة */
-        #adminNotice { background: #fffbeb; border-bottom: 2px solid #fde68a; padding: 10px; font-size: 13px; color: #92400e; display: none; text-align: center; font-weight: bold; }
-        
-        header { background: var(--sidebar); color: white; padding: 12px; display: flex; justify-content: space-between; align-items: center; box-shadow: 0 2px 8px rgba(0,0,0,0.1); }
-        .container { padding: 10px; max-width: 800px; margin: auto; }
-        
-        .card { background: white; border-radius: 12px; padding: 12px; margin-bottom: 8px; border: 1px solid #e2e8f0; position: relative; }
-        .active-row { border: 2px solid var(--primary); background: #f8fafc; }
+        :root { --primary: #3b82f6; --success: #10b981; --sidebar: #1e293b; --exam-bg: #fff7ed; --locked: #cbd5e1; }
+        body { font-family: 'Segoe UI', Tahoma, sans-serif; background: #f1f5f9; margin: 0; padding-bottom: 300px; }
 
-        .smart-keyboard { position: fixed; bottom: 0; left: 0; right: 0; background: #cbd5e1; padding: 6px; display: none; gap: 5px; z-index: 2000; height: 235px; grid-template-columns: repeat(5, 1fr); border-top: 1px solid #94a3b8; }
-        .key-btn { background: white; border-radius: 8px; font-weight: bold; cursor: pointer; display: flex; align-items: center; justify-content: center; font-size: 17px; border: 1px solid #94a3b8; height: 44px; }
-        .key-btn:active { background: var(--primary); color: white; }
-        .key-all { background: #8b5cf6; color: white; font-size: 11px; }
-        .key-done { background: var(--success); color: white; grid-column: span 2; font-size: 14px; }
+        header { background: var(--sidebar); color: white; padding: 15px; display: flex; justify-content: space-between; align-items: center; position: sticky; top: 0; z-index: 1000; }
+        .container { padding: 12px; max-width: 600px; margin: auto; }
 
-        .score-sel { width: 44px; height: 40px; font-weight: bold; text-align: center; border-radius: 8px; border: 1px solid #cbd5e1; background: #fff; font-size: 16px; }
-        .score-sel.active-input { border: 3px solid var(--primary); background: #eff6ff; }
+        .card { background: white; border-radius: 12px; padding: 12px; margin-bottom: 10px; border: 1px solid #e2e8f0; }
+        .active-row { border: 2px solid var(--primary); background: #eff6ff; }
+
+        /* لوحة المفاتيح المطورة */
+        .smart-keyboard { position: fixed; bottom: 20px; left: 10px; right: 10px; background: #e2e8f0; padding: 10px; display: none; gap: 6px; z-index: 2000; border-radius: 15px; box-shadow: 0 -5px 15px rgba(0,0,0,0.2); border: 2px solid #94a3b8; }
+        .key-btn { background: white; border-radius: 8px; font-weight: bold; cursor: pointer; display: flex; align-items: center; justify-content: center; font-size: 16px; border: 1px solid #94a3b8; height: 45px; transition: 0.1s; }
+        .key-btn:active { background: var(--primary); color: white; transform: scale(0.95); }
+        .key-all { background: #8b5cf6; color: white; font-size: 12px; }
+        .key-done { background: var(--success); color: white; font-size: 14px; }
+        
+        /* تنسيق الأعمدة حسب الدرجة */
+        .kb-max-30 { grid-template-columns: repeat(8, 1fr); }
+        .kb-max-15 { grid-template-columns: repeat(5, 1fr); }
+
+        .score-sel { width: 42px; height: 38px; font-weight: bold; text-align: center; border-radius: 8px; border: 1px solid #cbd5e1; background: #fff; font-size: 15px; cursor: pointer; }
+        .score-sel.active-input { border: 3px solid var(--primary); background: #fff; box-shadow: 0 0 10px rgba(59,130,246,0.3); }
         .score-sel.saved { border-color: var(--success); background: #f0fdf4; color: #15803d; }
-        .score-sel.locked-item { background: #e2e8f0; cursor: not-allowed; opacity: 0.6; }
-        .score-sel.locked-exam { background: var(--exam-bg); border: 1px dashed var(--exam-border); }
-        
-        .sync-status { position: fixed; top: 5px; left: 5px; font-size: 10px; background: #fff; padding: 3px 10px; border-radius: 20px; z-index: 2005; border: 1px solid #ddd; }
-        select { width: 100%; padding: 10px; border-radius: 8px; border: 1px solid #cbd5e1; font-weight: bold; }
+        .score-sel.locked-item { background: #f1f5f9; cursor: not-allowed; opacity: 0.5; border-style: dashed; }
+
+        .student-name { font-size: 13px; font-weight: 600; color: #334155; }
+        .sync-status { position: fixed; bottom: 5px; right: 10px; font-size: 10px; color: #64748b; }
+        select { width: 100%; padding: 12px; border-radius: 10px; border: 1px solid #cbd5e1; font-weight: bold; margin-bottom: 10px; }
     </style>
 </head>
 <body>
 
-<div id="adminNotice"></div>
-<div class="sync-status" id="syncStat">متصل ✅</div>
-
 <header>
-    <div>أهلاً: <b id="tName">...</b></div>
-    <button id="closeBtn" onclick="closePad()" style="display:none; background:none; color:white; border:1px solid white; padding:4px 10px; border-radius:8px;">إغلاق X</button>
+    <div>👨‍🏫 <b id="tName">...</b></div>
+    <button id="closeBtn" onclick="closePad()" style="display:none; background:var(--danger); color:white; border:none; padding:6px 15px; border-radius:8px; font-weight:bold;">إنهاء الرصد</button>
 </header>
 
 <div class="container">
-    <div class="card" id="configCard">
-        <select id="vGrade" onchange="loadList()" style="margin-bottom:8px;"><option value="">اختر الفصل</option></select>
-        <select id="vWeek" onchange="loadList()"></select>
+    <div id="setupArea">
+        <select id="vGrade" onchange="loadStudentsData()"><option value="">اختر الصف...</option></select>
+        <select id="vWeek" onchange="loadStudentsData()"></select>
     </div>
-    <div id="list"></div>
+    <div id="studentList"></div>
 </div>
 
 <div class="smart-keyboard" id="numPad"></div>
+<div class="sync-status" id="syncStat">جاري الاتصال...</div>
 
 <script>
     const firebaseConfig = { apiKey: "AIzaSyBePGZiqMPmZQdg36jZ4Rkdtd7OISxmob8", projectId: "rasd-tools" };
     firebase.initializeApp(firebaseConfig);
     const db = firebase.firestore();
-    const tId = sessionStorage.getItem('userEmail');
+    const tId = sessionStorage.getItem('userEmail'); // اليوزر ID
 
-    let currentStudents = [], activeInputId = null, pendingUpdates = {};
-    let openWeeks = [], adminMsg = "";
+    let currentStudents = [], activeInput = null, pendingData = {}, sysConfig = {};
+    const classAr = { '1_general': 'أولى ثانوي', '2_scientific': 'ثانية علمي', '2_literary': 'ثانية أدبي' };
 
     window.onload = async () => {
         if(!tId) return location.href="index.html";
         
-        // جلب إعدادات الإدارة (الرسائل والأسابيع المفتوحة)
-        const sysDoc = await db.collection('system').doc('config').get();
-        if(sysDoc.exists) {
-            const sys = sysDoc.data();
-            openWeeks = sys.openWeeks || [];
-            if(sys.message) {
-                document.getElementById('adminNotice').innerText = "📢 " + sys.message;
-                document.getElementById('adminNotice').style.display = 'block';
-            }
-        }
+        // 1. جلب إعدادات الإدارة (الأقفال وأسابيع الاختبار)
+        const confDoc = await db.collection('system').doc('config').get();
+        sysConfig = confDoc.exists ? confDoc.data() : { openWeeks: [], ex1W: 'w6', ex2W: 'w12' };
 
+        // 2. جلب بيانات المعلم
         const tDoc = await db.collection('teachers').doc(tId).get();
         if(tDoc.exists) {
             const d = tDoc.data();
             document.getElementById('tName').innerText = d.name;
-            d.classes.forEach(c => document.getElementById('vGrade').innerHTML += `<option value="${c}">${c}</option>`);
+            d.classes.forEach(c => document.getElementById('vGrade').innerHTML += `<option value="${c}">${classAr[c] || c}</option>`);
         }
-        
+
+        // 3. بناء قائمة الأسابيع
         const weekSel = document.getElementById('vWeek');
-        for(let i=1; i<=14; i++) weekSel.innerHTML += `<option value="w${i}">الأسبوع ${i}</option>`;
-        weekSel.innerHTML += `<option value="ex1">📝 اختبار 1</option><option value="ex2">📝 اختبار 2</option>`;
+        for(let i=1; i<=14; i++) weekSel.innerHTML += `<option value="w${i}">الأسبوع ${i} ${sysConfig.ex1W=='w'+i || sysConfig.ex2W=='w'+i ? '(اختبار)' : ''}</option>`;
+        weekSel.innerHTML += `<option value="ex1">📝 اختبار الفترة 1</option><option value="ex2">📝 اختبار الفترة 2</option>`;
+        
+        document.getElementById('syncStat').innerText = "✅ متصل";
     };
 
-    async function loadList() {
+    async function loadStudentsData() {
         const gV = document.getElementById('vGrade').value, wV = document.getElementById('vWeek').value;
         if(!gV || !wV) return;
-        
+
         const [g, b] = gV.split('_');
         const sSnap = await db.collection('students').where('grade','==',g).where('branch','==',b).get();
-        currentStudents = sSnap.docs.map(doc => ({id: doc.id, ...doc.data()})).sort((a,b)=>a.sortOrder-b.sortOrder);
+        currentStudents = sSnap.docs.map(doc => ({id: doc.id, ...doc.data()})).sort((a,b)=>a.sortOrder - b.sortOrder);
+
+        const gSnap = await db.collection('grades').where('teacher','==',tId).where('week','==',wV).get();
+        const scores = {};
+        gSnap.forEach(d => { const data = d.data(); if(!scores[data.sid]) scores[data.sid] = {}; scores[data.sid][data.type] = data.score; });
         
-        const gSnap = await db.collection('grades').where('teacher','==',tId).get();
-        const grades = {};
-        gSnap.forEach(doc => { 
-            const d = doc.data(); if(!grades[d.sid]) grades[d.sid] = {}; 
-            if(!grades[d.sid][d.week]) grades[d.sid][d.week] = {};
-            grades[d.sid][d.week][d.type] = d.score;
-        });
-        renderList(grades, wV);
+        renderList(scores, wV);
     }
 
-    function renderList(grades, wV) {
-        let h = '';
-        const isLocked = !openWeeks.includes(wV) && !wV.startsWith('ex');
+    function renderList(scores, wV) {
+        let html = '';
+        const isExamWeek = (wV === sysConfig.ex1W || wV === sysConfig.ex2W);
+        const isGeneralLocked = !sysConfig.openWeeks.includes(wV) && !wV.startsWith('ex');
 
         currentStudents.forEach((s, idx) => {
-            const sc = grades[s.id] || {};
-            const weekGrades = sc[wV] || {};
-            h += `<div class="card" id="row_${s.id}"><div class="student-row">
-                <span style="width:40%; font-size:13px;"><b>${idx+1}.</b> ${s.name}</span>
-                <div style="display:flex; gap:6px;">`;
-            
+            const sc = scores[s.id] || {};
+            html += `<div class="card" id="row_${s.id}">
+                <div style="display:flex; justify-content:space-between; align-items:center;">
+                    <span class="student-name">${idx+1}. ${s.name}</span>
+                    <div style="display:flex; gap:5px;">`;
+
             if(wV.startsWith('ex')) {
-                h += drawInp(s.id, 'exam', 30, weekGrades.exam, 'اختبار', false);
+                html += drawInp(s.id, 'exam', 30, sc.exam, 'درجة الاختبار', false);
             } else {
-                h += drawInp(s.id, 't', 15, weekGrades.t, 'تقييم', isLocked);
-                h += drawInp(s.id, 'v', 15, weekGrades.v, 'حصة', isLocked);
-                h += drawInp(s.id, 's', 10, weekGrades.s, 'سلوك', isLocked);
+                // إذا كان أسبوع اختبار، نقفل خانة التقييم (t)
+                html += drawInp(s.id, 't', 15, sc.t, 'تقييم', isExamWeek || isGeneralLocked);
+                html += drawInp(s.id, 'v', 15, sc.v, 'واجب', isGeneralLocked);
+                html += drawInp(s.id, 's', 10, sc.s, 'سلوك', isGeneralLocked);
             }
-            h += `</div></div></div>`;
+            html += `</div></div></div>`;
         });
-        document.getElementById('list').innerHTML = h;
+        document.getElementById('studentList').innerHTML = html;
     }
 
     function drawInp(sid, type, max, cur, label, isLocked) {
-        const val = cur !== undefined ? cur : '';
-        const lockedClass = isLocked ? 'locked-item' : '';
-        const icon = isLocked ? '🔒' : '';
-        return `<div style="text-align:center"><small style="font-size:8px;display:block">${label} ${icon}</small>
-                <input type="text" readonly class="score-sel ${lockedClass} ${val!==''?'saved':''}" 
-                id="inp_${sid}_${type}" ${isLocked ? '' : `onclick="openPad('${sid}','${type}',${max})"`} value="${val}"></div>`;
+        return `<div style="text-align:center">
+                    <small style="font-size:8px; display:block; color:#64748b">${label}</small>
+                    <input type="text" readonly class="score-sel ${isLocked?'locked-item':''} ${cur!==undefined?'saved':''}" 
+                    id="inp_${sid}_${type}" value="${cur!==undefined?cur:''}" 
+                    ${isLocked ? '' : `onclick="openPad('${sid}','${type}',${max})"`}>
+                </div>`;
     }
 
     function openPad(sid, type, max) {
-        activeInputId = {sid, type, max};
-        document.getElementById('configCard').style.display = 'none';
-        document.getElementById('closeBtn').style.display = 'block';
+        activeInput = {sid, type, max};
         document.querySelectorAll('.card').forEach(c => c.classList.remove('active-row'));
         document.getElementById(`row_${sid}`).classList.add('active-row');
-        document.querySelectorAll('.score-sel').forEach(el => el.classList.remove('active-input'));
+        document.querySelectorAll('.score-sel').forEach(i => i.classList.remove('active-input'));
         document.getElementById(`inp_${sid}_${type}`).classList.add('active-input');
+
+        document.getElementById('setupArea').style.display = 'none';
+        document.getElementById('closeBtn').style.display = 'block';
 
         const pad = document.getElementById('numPad');
         pad.style.display = 'grid';
-        let html = '';
-        for(let i=1; i<=max; i++) html += `<div class="key-btn" onclick="press(${i})">${i}</div>`;
-        html += `<div class="key-btn" style="background:#f1f5f9" onclick="press(0)">0</div>`;
-        html += `<div class="key-btn key-all" onclick="applyToAll()">للـكل 👥</div>`;
-        html += `<div class="key-btn key-done" onclick="closePad()">تم ✅</div>`;
-        pad.innerHTML = html;
-        window.scrollTo({ top: document.getElementById(`row_${sid}`).offsetTop - 80, behavior: 'smooth' });
+        pad.className = `smart-keyboard ${max > 15 ? 'kb-max-30' : 'kb-max-15'}`;
+        
+        let keys = '';
+        for(let i=1; i<=max; i++) keys += `<div class="key-btn" onclick="inputValue(${i})">${i}</div>`;
+        keys += `<div class="key-btn" style="background:#f1f5f9" onclick="inputValue(0)">0</div>`;
+        keys += `<div class="key-btn key-all" onclick="fillAllColumn()">للـكل 👥</div>`;
+        keys += `<div class="key-btn key-done" style="grid-column: span 2" onclick="closePad()">تم ✅</div>`;
+        pad.innerHTML = keys;
+        
+        window.scrollTo({ top: document.getElementById(`row_${sid}`).offsetTop - 100, behavior: 'smooth' });
     }
 
-    function press(val) {
-        if(!activeInputId) return;
-        const {sid, type} = activeInputId;
+    function inputValue(val) {
+        if(!activeInput) return;
+        const {sid, type} = activeInput;
         const inp = document.getElementById(`inp_${sid}_${type}`);
         inp.value = val; inp.classList.add('saved');
+        
         const wV = document.getElementById('vWeek').value;
-        pendingUpdates[`${sid}_${wV}_${type}`] = { sid, type, score: val, week: wV, teacher: tId };
-        next();
+        saveToFirebase(sid, wV, type, val);
+        autoNext();
     }
 
-    function applyToAll() {
-        if(!activeInputId) return;
-        const {type} = activeInputId;
-        const val = document.getElementById(`inp_${activeInputId.sid}_${type}`).value;
-        if(val === "") return alert("اختر درجة أولاً");
+    function fillAllColumn() {
+        if(!activeInput) return;
+        const val = document.getElementById(`inp_${activeInput.sid}_${activeInput.type}`).value;
+        if(val === "") return;
+        const {type} = activeInput;
         const wV = document.getElementById('vWeek').value;
+
         currentStudents.forEach(s => {
-            const targetInp = document.getElementById(`inp_${s.id}_${type}`);
-            if(targetInp && !targetInp.classList.contains('locked-item')) {
-                targetInp.value = val;
-                targetInp.classList.add('saved');
-                pendingUpdates[`${s.id}_${wV}_${type}`] = { sid: s.id, type, score: parseInt(val), week: wV, teacher: tId };
+            const target = document.getElementById(`inp_${s.id}_${type}`);
+            if(target && !target.classList.contains('locked-item')) {
+                target.value = val;
+                target.classList.add('saved');
+                saveToFirebase(s.id, wV, type, val);
             }
         });
-        forceSync();
+        document.getElementById('syncStat').innerText = "⏳ جاري حفظ الكل...";
     }
 
-    function next() {
+    function autoNext() {
         const wV = document.getElementById('vWeek').value;
-        const types = wV.startsWith('ex') ? ['exam'] : ['t','v','s'];
-        let nIdx = types.indexOf(activeInputId.type) + 1;
+        const isExamWeek = (wV === sysConfig.ex1W || wV === sysConfig.ex2W);
+        const types = wV.startsWith('ex') ? ['exam'] : (isExamWeek ? ['v','s'] : ['t','v','s']);
+        
+        let nIdx = types.indexOf(activeInput.type) + 1;
         if(nIdx < types.length) {
-            openPad(activeInputId.sid, types[nIdx], types[nIdx]==='s'?10:15);
+            openPad(activeInput.sid, types[nIdx], types[nIdx]=='s'?10:15);
         } else {
-            const curIdx = currentStudents.findIndex(s => s.id === activeInputId.sid);
+            const curIdx = currentStudents.findIndex(s => s.id === activeInput.sid);
             if(curIdx < currentStudents.length - 1) {
-                openPad(currentStudents[curIdx+1].id, types[0], types[0]==='exam'?30:15);
+                openPad(currentStudents[curIdx+1].id, types[0], types[0]=='exam'?30:15);
             } else { closePad(); }
         }
     }
 
-    function closePad() {
-        document.getElementById('numPad').style.display = 'none';
-        document.getElementById('configCard').style.display = 'block';
-        document.getElementById('closeBtn').style.display = 'none';
-        forceSync();
-    }
-
-    async function forceSync() {
-        if(Object.keys(pendingUpdates).length === 0) return;
-        document.getElementById('syncStat').innerText = "⏳ مزامنة...";
-        const batch = db.batch();
-        for (const k in pendingUpdates) {
-            const docId = `${pendingUpdates[k].sid}_${pendingUpdates[k].week}_${pendingUpdates[k].type}_${tId}`;
-            batch.set(db.collection('grades').doc(docId), pendingUpdates[k], {merge:true});
-        }
-        await batch.commit();
-        pendingUpdates = {};
+    async function saveToFirebase(sid, week, type, score) {
+        const docId = `${sid}_${week}_${type}_${tId}`;
+        await db.collection('grades').doc(docId).set({
+            sid, week, type, score: parseInt(score), teacher: tId, timestamp: Date.now()
+        }, {merge:true});
         document.getElementById('syncStat').innerText = "✅ تم الحفظ";
     }
-    setInterval(forceSync, 20000);
+
+    function closePad() {
+        document.getElementById('numPad').style.display = 'none';
+        document.getElementById('setupArea').style.display = 'block';
+        document.getElementById('closeBtn').style.display = 'none';
+        document.querySelectorAll('.card').forEach(c => c.classList.remove('active-row'));
+    }
 </script>
 </body>
 </html>

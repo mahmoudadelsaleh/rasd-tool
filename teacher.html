@@ -14,7 +14,9 @@
 
     <script src="https://www.gstatic.com/firebasejs/9.0.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.0.0/firebase-firestore-compat.js"></script>
-    
+
+    <script src="firebase-config.js"></script>
+
     <style>
         :root { --primary: #3b82f6; --success: #10b981; --sidebar: #1e293b; --exam-bg: #fff7ed; --locked: #cbd5e1; --danger: #ef4444; }
         body { 
@@ -22,7 +24,6 @@
             background: #f1f5f9; 
             margin: 0; 
             padding-bottom: 300px; 
-            /* منع سحب الصفحة للتحديث لضمان عدم ضياع البيانات */
             overscroll-behavior-y: contain; 
         }
 
@@ -32,7 +33,6 @@
         .card { background: white; border-radius: 12px; padding: 12px; margin-bottom: 10px; border: 1px solid #e2e8f0; transition: 0.3s; }
         .active-row { border: 2px solid var(--primary); background: #eff6ff; transform: scale(1.02); }
 
-        /* لوحة المفاتيح المطورة */
         .smart-keyboard { position: fixed; bottom: 20px; left: 10px; right: 10px; background: #e2e8f0; padding: 10px; display: none; gap: 6px; z-index: 2000; border-radius: 15px; box-shadow: 0 -5px 15px rgba(0,0,0,0.2); border: 2px solid #94a3b8; }
         .key-btn { background: white; border-radius: 8px; font-weight: bold; cursor: pointer; display: flex; align-items: center; justify-content: center; font-size: 16px; border: 1px solid #94a3b8; height: 45px; transition: 0.1s; user-select: none; }
         .key-btn:active { background: var(--primary); color: white; transform: scale(0.95); }
@@ -71,7 +71,6 @@
 <div class="sync-status" id="syncStat">جاري الاتصال...</div>
 
 <script>
-    // تسجيل الـ Service Worker للعمل أوفلاين
     if ('serviceWorker' in navigator) {
         window.addEventListener('load', () => {
             navigator.serviceWorker.register('./sw.js').then(reg => {
@@ -80,18 +79,20 @@
         });
     }
 
-    const firebaseConfig = { apiKey: "AIzaSyBePGZiqMPmZQdg36jZ4Rkdtd7OISxmob8", projectId: "rasd-tools" };
-    firebase.initializeApp(firebaseConfig);
-    
-    // تفعيل ميزة التخزين الأوفلاين في فايربيز (الرصد يصل فور توفر النت)
+    // تهيئة Firebase من الملف الخارجي
+    if (typeof firebaseConfig !== 'undefined') {
+        firebase.initializeApp(firebaseConfig);
+    } else {
+        alert("خطأ: ملف firebase-config.js غير موجود!");
+    }
+
     const db = firebase.firestore();
     db.enablePersistence().catch((err) => {
-        if (err.code == 'failed-precondition') { console.log('Multiple tabs open, persistence can only be enabled in one tab at a time.'); }
-        else if (err.code == 'unimplemented') { console.log('The current browser does not support all of the features needed to enable persistence'); }
+        if (err.code == 'failed-precondition') { console.log('Multiple tabs open'); }
+        else if (err.code == 'unimplemented') { console.log('Browser not supported'); }
     });
 
     const tId = sessionStorage.getItem('userEmail');
-
     let currentStudents = [], activeInput = null, sysConfig = {};
     const classAr = { '1_general': 'أولى ثانوي', '2_scientific': 'ثانية علمي', '2_literary': 'ثانية أدبي' };
 
@@ -267,4 +268,3 @@
 </script>
 </body>
 </html>
-

@@ -14,7 +14,7 @@
         .card { background: white; border-radius: 12px; padding: 10px; margin-bottom: 8px; border: 1px solid #e2e8f0; }
         
         /* شريط المراقبة المثبت */
-        #fixed-monitor { position: fixed; bottom: 260px; left: 0; right: 0; background: #fff; padding: 12px; display: none; z-index: 2001; border-top: 3px solid var(--primary); box-shadow: 0 -5px 15px rgba(0,0,0,0.1); }
+        #fixed-monitor { position: fixed; bottom: 260px; left: 0; right: 0; background: #fff; padding: 12px; display: none; z-index: 2001; border-top: 3px solid var(--primary); box-shadow: 0 -5px 15px rgba(0,0,0,0.2); }
         
         /* لوحة المفاتيح */
         .smart-keyboard { position: fixed; bottom: 0; left: 0; right: 0; background: #cbd5e1; padding: 6px; display: none; gap: 4px; z-index: 2000; height: 260px; grid-template-columns: repeat(4, 1fr); }
@@ -24,8 +24,8 @@
         .key-fn { background: #64748b; color: white; grid-column: span 2; }
 
         .student-row { display: flex; justify-content: space-between; align-items: center; }
-        .score-sel { width: 45px; height: 40px; font-weight: bold; text-align: center; border-radius: 8px; border: 1px solid #cbd5e1; background: #fff; font-size: 16px; }
-        .score-sel.active-input { border: 3px solid var(--primary); background: #eff6ff; }
+        .score-sel { width: 45px; height: 40px; font-weight: bold; text-align: center; border-radius: 8px; border: 1px solid #cbd5e1; background: #fff; font-size: 16px; transition: all 0.2s; }
+        .score-sel.active-input { border: 3px solid var(--primary); background: #eff6ff; box-shadow: 0 0 10px rgba(59,130,246,0.3); }
         .score-sel.saved { border-color: var(--success); background: #f0fdf4; }
         .score-sel.locked-exam { background: var(--exam-bg); border: 2px dashed var(--exam-border); color: #92400e; }
         
@@ -38,7 +38,10 @@
 
 <div class="sync-status" id="syncStat">المزامنة متصلة ✅</div>
 
-<div id="fixed-monitor"><div class="student-row" id="monitor-content"></div></div>
+<div id="fixed-monitor">
+    <div id="monitor-title" style="font-size: 11px; margin-bottom: 5px; color: var(--primary); font-weight: bold;">جاري رصد:</div>
+    <div class="student-row" id="monitor-content"></div>
+</div>
 
 <header>
     <div>أهلاً: <b id="tName">...</b></div>
@@ -114,16 +117,18 @@
         currentStudents.forEach((s, idx) => {
             const sc = grades[s.id] || {};
             const weekGrades = sc[wV] || {};
-            h += `<div class="card" id="row_${s.id}">${getRowContent(s, idx, weekGrades, sc, wV)}</div>`;
+            h += `<div class="card" id="row_${s.id}">${getRowContent(s, idx, weekGrades, sc, wV, false)}</div>`;
         });
         document.getElementById('list').innerHTML = h;
     }
 
-    function getRowContent(s, idx, weekGrades, sc, wV) {
+    function getRowContent(s, idx, weekGrades, sc, wV, isMonitor) {
         const isExPage = wV.startsWith('ex');
+        const prefix = isMonitor ? "mon_" : "inp_";
         let html = `<div class="student-row"><span style="width:35%; font-weight:bold;">${idx+1}. ${s.name}</span><div style="display:flex; gap:5px;">`;
+        
         if(isExPage) {
-            html += drawInp(s.id, 'exam', 30, weekGrades.exam, 'اختبار');
+            html += drawInp(s.id, 'exam', 30, weekGrades.exam, 'اختبار', prefix);
         } else {
             let tScore = weekGrades.t, tClass = "", tReadonly = false;
             if(wV === exam1Week || wV === exam2Week) {
@@ -133,33 +138,37 @@
             }
             html += `<div style="text-align:center"><small style="display:block;font-size:8px">تقييم</small>
                     <input type="text" readonly class="score-sel ${tClass} ${tScore?'saved':''}" 
-                    id="inp_${s.id}_t" ${tReadonly ? '' : `onclick="openPad('${s.id}','t',15)"`} value="${tScore}"></div>`;
-            html += drawInp(s.id, 'v', 15, weekGrades.v, 'حصة');
-            html += drawInp(s.id, 's', 10, weekGrades.s, 'سلوك');
+                    id="${prefix}${s.id}_t" ${tReadonly ? '' : `onclick="openPad('${s.id}','t',15)"`} value="${tScore}"></div>`;
+            html += drawInp(s.id, 'v', 15, weekGrades.v, 'حصة', prefix);
+            html += drawInp(s.id, 's', 10, weekGrades.s, 'سلوك', prefix);
         }
         return html + `</div></div>`;
     }
 
-    function drawInp(sid, type, max, cur, label) {
+    function drawInp(sid, type, max, cur, label, prefix) {
         return `<div style="text-align:center"><small style="display:block;font-size:8px">${label}</small>
                 <input type="text" readonly class="score-sel ${cur?'saved':''}" 
-                id="inp_${sid}_${type}" onclick="openPad('${sid}','${type}',${max})" value="${cur||''}"></div>`;
+                id="${prefix}${sid}_${type}" onclick="openPad('${sid}','${type}',${max})" value="${cur||''}"></div>`;
     }
 
     function openPad(sid, type, max) {
         activeInputId = {sid, type, max};
-        
-        // تحديث شريط المراقبة المثبت
-        document.getElementById('monitor-content').innerHTML = document.getElementById(`row_${sid}`).innerHTML;
+        const wV = document.getElementById('vWeek').value;
+
+        // تحديث محتوى الشريط المثبت (ننسخ السطر لكن بـ IDs مختلفة لمنع التعارض)
+        const studentIdx = currentStudents.findIndex(s => s.id === sid);
+        const s = currentStudents[studentIdx];
+        document.getElementById('monitor-content').innerHTML = getRowContent(s, studentIdx, {}, {}, wV, true);
         document.getElementById('fixed-monitor').style.display = 'block';
 
-        // تلوين الخانة النشطة في كل مكان
+        // تلوين الخانات النشطة (في الجدول وفي الشريط)
         document.querySelectorAll('.score-sel').forEach(el => el.classList.remove('active-input'));
-        document.getElementById(`inp_${sid}_${type}`).classList.add('active-input');
-        const monInp = document.querySelector(`#monitor-content #inp_${sid}_${type}`);
+        const mainInp = document.getElementById(`inp_${sid}_${type}`);
+        const monInp = document.getElementById(`mon_${sid}_${type}`);
+        if(mainInp) mainInp.classList.add('active-input');
         if(monInp) monInp.classList.add('active-input');
 
-        // بناء لوحة المفاتيح
+        // بناء اللوحة
         const pad = document.getElementById('numPad');
         pad.style.display = 'grid';
         let html = '';
@@ -169,7 +178,7 @@
         html += `<div class="key-btn key-save" onclick="closePad()">إغلاق وحفظ</div>`;
         pad.innerHTML = html;
 
-        document.getElementById(`row_${sid}`).scrollIntoView({behavior:'smooth', block:'start'});
+        mainInp.scrollIntoView({behavior:'smooth', block:'center'});
     }
 
     function press(val) {
@@ -177,15 +186,17 @@
         const {sid, type} = activeInputId;
         const wV = document.getElementById('vWeek').value;
 
-        // 1. تحديث الواجهة (الأصلي والمثبت)
-        const inputs = [document.getElementById(`inp_${sid}_${type}`), document.querySelector(`#monitor-content #inp_${sid}_${type}`)];
-        inputs.forEach(inp => { if(inp) { inp.value = val; inp.classList.add('saved'); }});
+        // التحديث اللحظي للواجهة (الجدول والشريط معاً)
+        const mainInp = document.getElementById(`inp_${sid}_${type}`);
+        const monInp = document.getElementById(`mon_${sid}_${type}`);
+        
+        if(mainInp) { mainInp.value = val; mainInp.classList.add('saved'); }
+        if(monInp) { monInp.value = val; monInp.classList.add('saved'); }
 
-        // 2. التخزين في الذاكرة المؤقتة
+        // التخزين المؤقت
         pendingUpdates[`${sid}_${wV}_${type}`] = { sid, type, score: val, week: wV, teacher: tId };
         updateCount++;
         
-        // 3. التنقل التلقائي
         next();
     }
 
@@ -225,7 +236,7 @@
         pendingUpdates = {}; updateCount = 0;
         document.getElementById('syncStat').innerText = "✅ تم الحفظ";
     }
-    setInterval(forceSync, 20000);
+    setInterval(forceSync, 15000);
 </script>
 </body>
 </html>

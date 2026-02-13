@@ -3,64 +3,55 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>نظام الرصد المتطور v2026</title>
+    <title>نظام الرصد الذكي v2026</title>
     <script src="https://www.gstatic.com/firebasejs/9.0.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.0.0/firebase-firestore-compat.js"></script>
     <style>
         :root { --primary: #3b82f6; --success: #10b981; --sidebar: #1e293b; --exam-bg: #fef3c7; --exam-border: #d97706; }
-        body { font-family: 'Segoe UI', Tahoma, sans-serif; background: #f1f5f9; margin: 0; padding-bottom: 380px; color: #1e293b; overflow-x: hidden; }
-        header { background: var(--sidebar); color: white; padding: 12px; display: flex; justify-content: space-between; align-items: center; box-shadow: 0 2px 8px rgba(0,0,0,0.2); }
+        body { font-family: 'Segoe UI', Tahoma, sans-serif; background: #f1f5f9; margin: 0; padding-bottom: 350px; color: #1e293b; }
+        header { background: var(--sidebar); color: white; padding: 12px; display: flex; justify-content: space-between; align-items: center; }
         .container { padding: 10px; max-width: 800px; margin: auto; }
-        .card { background: white; border-radius: 12px; padding: 10px; margin-bottom: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.05); border: 1px solid #e2e8f0; }
+        .card { background: white; border-radius: 12px; padding: 10px; margin-bottom: 8px; border: 1px solid #e2e8f0; }
         
-        /* شريط الرصد المثبت فوق اللوحة */
-        #fixed-monitor { position: fixed; bottom: 260px; left: 0; right: 0; background: #fff; padding: 12px; display: none; z-index: 2001; box-shadow: 0 -5px 15px rgba(0,0,0,0.15); border-top: 3px solid var(--primary); border-radius: 15px 15px 0 0; }
+        /* شريط المراقبة المثبت */
+        #fixed-monitor { position: fixed; bottom: 260px; left: 0; right: 0; background: #fff; padding: 12px; display: none; z-index: 2001; border-top: 3px solid var(--primary); box-shadow: 0 -5px 15px rgba(0,0,0,0.1); }
         
-        /* لوحة المفاتيح المضغوطة */
-        .smart-keyboard { position: fixed; bottom: 0; left: 0; right: 0; background: #cbd5e1; padding: 6px; display: none; gap: 4px; z-index: 2000; border-top: 1px solid #94a3b8; height: 260px; grid-auto-rows: 1fr; }
-        .key-btn { background: white; border-radius: 6px; font-weight: bold; cursor: pointer; display: flex; align-items: center; justify-content: center; font-size: 16px; border: 1px solid #94a3b8; box-shadow: 0 1px 2px rgba(0,0,0,0.1); }
-        .key-btn:active { background: var(--primary); color: white; transform: scale(0.95); }
-        .key-save { background: #059669; color: white; font-size: 14px; }
-        .key-fn { background: #64748b; color: white; }
+        /* لوحة المفاتيح */
+        .smart-keyboard { position: fixed; bottom: 0; left: 0; right: 0; background: #cbd5e1; padding: 6px; display: none; gap: 4px; z-index: 2000; height: 260px; grid-template-columns: repeat(4, 1fr); }
+        .key-btn { background: white; border-radius: 6px; font-weight: bold; cursor: pointer; display: flex; align-items: center; justify-content: center; font-size: 18px; border: 1px solid #94a3b8; }
+        .key-btn:active { background: var(--primary); color: white; }
+        .key-save { background: #059669; color: white; grid-column: span 2; }
+        .key-fn { background: #64748b; color: white; grid-column: span 2; }
 
-        /* تنسيق الخانات */
-        .student-row { display: flex; justify-content: space-between; align-items: center; gap: 8px; }
-        .score-sel { width: 42px; height: 38px; font-weight: bold; text-align: center; border-radius: 8px; border: 1px solid #cbd5e1; background: #fff; font-size: 15px; }
-        .score-sel.active-input { border: 3px solid var(--primary); background: #eff6ff; box-shadow: 0 0 8px rgba(59,130,246,0.5); }
+        .student-row { display: flex; justify-content: space-between; align-items: center; }
+        .score-sel { width: 45px; height: 40px; font-weight: bold; text-align: center; border-radius: 8px; border: 1px solid #cbd5e1; background: #fff; font-size: 16px; }
+        .score-sel.active-input { border: 3px solid var(--primary); background: #eff6ff; }
         .score-sel.saved { border-color: var(--success); background: #f0fdf4; }
-        .score-sel.locked-exam { background: var(--exam-bg); border: 2px dashed var(--exam-border); color: #92400e; cursor: not-allowed; }
+        .score-sel.locked-exam { background: var(--exam-bg); border: 2px dashed var(--exam-border); color: #92400e; }
         
         .sync-status { position: fixed; top: 5px; left: 5px; font-size: 10px; background: #fff; padding: 3px 8px; border-radius: 20px; z-index: 2005; border: 1px solid #ddd; }
         select { width: 100%; padding: 10px; border-radius: 8px; margin-bottom: 8px; border: 1px solid #cbd5e1; font-weight: bold; }
-        .config-box { background: #fffbeb; border: 1px solid #fde68a; padding: 10px; border-radius: 8px; margin-bottom: 10px; }
+        .config-box { background: #fffbeb; border: 1px solid #fde68a; padding: 10px; border-radius: 8px; margin-bottom: 10px; font-size: 12px; }
     </style>
 </head>
 <body>
 
 <div class="sync-status" id="syncStat">المزامنة متصلة ✅</div>
 
-<div id="fixed-monitor">
-    <div class="student-row" id="monitor-content">
-        </div>
-</div>
+<div id="fixed-monitor"><div class="student-row" id="monitor-content"></div></div>
 
 <header>
     <div>أهلاً: <b id="tName">...</b></div>
-    <div style="font-size: 11px;" id="tDetails">جاري التحميل...</div>
 </header>
 
 <div class="container">
     <div class="card">
         <select id="vGrade" onchange="loadList()"><option value="">اختر الفصل</option></select>
         <select id="vWeek" onchange="loadList()"></select>
-        
         <div class="config-box" id="examConfig" style="display:none;">
             <div style="display:grid; grid-template-columns: 1fr 1fr; gap:10px;">
-                <div><small>أسبوع اختبار 1:</small><select id="setEx1" onchange="changeExamWeek(1, this.value)"></select></div>
-                <div><small>أسبوع اختبار 2:</small><select id="setEx2" onchange="changeExamWeek(2, this.value)"></select></div>
-            </div>
-            <div id="examWeightBox" style="margin-top:5px; display:none;">
-                <select id="examMax" onchange="loadList()"><option value="30">30 درجة</option><option value="15">15 درجة</option></select>
+                <div>أسبوع اختبار 1: <select id="setEx1" onchange="changeExamWeek(1, this.value)"></select></div>
+                <div>أسبوع اختبار 2: <select id="setEx2" onchange="changeExamWeek(2, this.value)"></select></div>
             </div>
         </div>
     </div>
@@ -84,17 +75,15 @@
         if(tDoc.exists) {
             const d = tDoc.data();
             document.getElementById('tName').innerText = d.name;
-            document.getElementById('tDetails').innerText = d.subject;
             d.classes.forEach(c => document.getElementById('vGrade').innerHTML += `<option value="${c}">${c}</option>`);
-            if(d.exam1Week) exam1Week = d.exam1Week;
-            if(d.exam2Week) exam2Week = d.exam2Week;
+            exam1Week = d.exam1Week || "w6"; exam2Week = d.exam2Week || "w10";
         }
         const weekSel = document.getElementById('vWeek'), sEx1 = document.getElementById('setEx1'), sEx2 = document.getElementById('setEx2');
         for(let i=1; i<=14; i++) {
-            weekSel.innerHTML += `<option value="w${i}">الأسبوع ${i}</option>`;
-            sEx1.innerHTML += `<option value="w${i}" ${exam1Week==='w'+i?'selected':''}>الأسبوع ${i}</option>`;
-            sEx2.innerHTML += `<option value="w${i}" ${exam2Week==='w'+i?'selected':''}>الأسبوع ${i}</option>`;
+            const opt = `<option value="w${i}">الأسبوع ${i}</option>`;
+            weekSel.innerHTML += opt; sEx1.innerHTML += opt; sEx2.innerHTML += opt;
         }
+        sEx1.value = exam1Week; sEx2.value = exam2Week;
         weekSel.innerHTML += `<option value="ex1">📝 اختبار شهري 1</option><option value="ex2">📝 اختبار شهري 2</option>`;
     };
 
@@ -107,9 +96,7 @@
     async function loadList() {
         const gV = document.getElementById('vGrade').value, wV = document.getElementById('vWeek').value;
         if(!gV || !wV) return;
-        const isExPage = wV.startsWith('ex');
         document.getElementById('examConfig').style.display = 'block';
-        document.getElementById('examWeightBox').style.display = isExPage ? 'block' : 'none';
 
         const [g, b] = gV.split('_');
         const sSnap = await db.collection('students').where('grade','==',g).where('branch','==',b).get();
@@ -123,114 +110,99 @@
             grades[d.sid][d.week][d.type] = d.score;
         });
 
-        renderList(grades);
-    }
-
-    function renderList(grades) {
-        const wV = document.getElementById('vWeek').value;
-        const isExPage = wV.startsWith('ex');
         let h = '';
         currentStudents.forEach((s, idx) => {
             const sc = grades[s.id] || {};
             const weekGrades = sc[wV] || {};
-            h += `<div class="card" id="row_${s.id}">${getRowHTML(s, idx, weekGrades, sc, wV)}</div>`;
+            h += `<div class="card" id="row_${s.id}">${getRowContent(s, idx, weekGrades, sc, wV)}</div>`;
         });
         document.getElementById('list').innerHTML = h;
     }
 
-    function getRowHTML(s, idx, weekGrades, sc, wV) {
+    function getRowContent(s, idx, weekGrades, sc, wV) {
         const isExPage = wV.startsWith('ex');
-        let html = `<div class="student-row"><span style="font-size:12px; font-weight:bold; width:35%">${idx+1}. ${s.name}</span><div style="display:flex; gap:6px;">`;
-        
+        let html = `<div class="student-row"><span style="width:35%; font-weight:bold;">${idx+1}. ${s.name}</span><div style="display:flex; gap:5px;">`;
         if(isExPage) {
-            html += drawInp(s.id, 'exam', parseInt(document.getElementById('examMax').value), weekGrades.exam, 'اختبار');
+            html += drawInp(s.id, 'exam', 30, weekGrades.exam, 'اختبار');
         } else {
             let tScore = weekGrades.t, tClass = "", tReadonly = false;
             if(wV === exam1Week || wV === exam2Week) {
                 const exKey = (wV === exam1Week) ? 'ex1' : 'ex2';
-                tScore = (sc[exKey] && sc[exKey].exam !== undefined) ? sc[exKey].exam : "";
+                tScore = (sc[exKey] && sc[exKey].exam) ? sc[exKey].exam : "";
                 tClass = "locked-exam"; tReadonly = true;
             }
             html += `<div style="text-align:center"><small style="display:block;font-size:8px">تقييم</small>
-                    <input type="text" readonly class="score-sel ${tClass} ${tScore!==''?'saved':''}" 
-                    id="inp_${s.id}_t" ${tReadonly ? '' : `onclick="initPad('${s.id}','t',15)"`} value="${tScore}"></div>`;
+                    <input type="text" readonly class="score-sel ${tClass} ${tScore?'saved':''}" 
+                    id="inp_${s.id}_t" ${tReadonly ? '' : `onclick="openPad('${s.id}','t',15)"`} value="${tScore}"></div>`;
             html += drawInp(s.id, 'v', 15, weekGrades.v, 'حصة');
             html += drawInp(s.id, 's', 10, weekGrades.s, 'سلوك');
         }
-        html += `</div></div>`;
-        return html;
+        return html + `</div></div>`;
     }
 
     function drawInp(sid, type, max, cur, label) {
         return `<div style="text-align:center"><small style="display:block;font-size:8px">${label}</small>
-                <input type="text" readonly class="score-sel ${cur!==undefined?'saved':''}" 
-                id="inp_${sid}_${type}" onclick="initPad('${sid}','${type}',${max})" value="${cur!==undefined?cur:''}"></div>`;
+                <input type="text" readonly class="score-sel ${cur?'saved':''}" 
+                id="inp_${sid}_${type}" onclick="openPad('${sid}','${type}',${max})" value="${cur||''}"></div>`;
     }
 
-    function initPad(sid, type, max) {
-        const wV = document.getElementById('vWeek').value;
-        if((wV === exam1Week || wV === exam2Week) && type === 't') return;
-
+    function openPad(sid, type, max) {
         activeInputId = {sid, type, max};
         
-        // تثبيت السطر في شريط المراقبة العلوي
-        const originalRow = document.getElementById(`row_${sid}`).innerHTML;
-        document.getElementById('monitor-content').innerHTML = originalRow;
+        // تحديث شريط المراقبة المثبت
+        document.getElementById('monitor-content').innerHTML = document.getElementById(`row_${sid}`).innerHTML;
         document.getElementById('fixed-monitor').style.display = 'block';
 
+        // تلوين الخانة النشطة في كل مكان
         document.querySelectorAll('.score-sel').forEach(el => el.classList.remove('active-input'));
-        // تفعيل الإدخال في السطر الأصلي والسطر المثبت
         document.getElementById(`inp_${sid}_${type}`).classList.add('active-input');
-        
+        const monInp = document.querySelector(`#monitor-content #inp_${sid}_${type}`);
+        if(monInp) monInp.classList.add('active-input');
+
+        // بناء لوحة المفاتيح
         const pad = document.getElementById('numPad');
         pad.style.display = 'grid';
         let html = '';
-        if (max === 30) {
-            pad.style.gridTemplateColumns = 'repeat(6, 1fr)';
-            for(let i=1; i<=30; i++) html += `<div class="key-btn" onclick="press(${i})">${i}</div>`;
-            html += `<div class="key-btn" style="background:#f1f5f9" onclick="press(0)">0</div>`;
-            html += `<div class="key-btn key-save" style="grid-column: span 5" onclick="closePad()">تم والحفظ</div>`;
-        } else {
-            pad.style.gridTemplateColumns = 'repeat(4, 1fr)';
-            for(let i=1; i<=max; i++) html += `<div class="key-btn" onclick="press(${i})">${i}</div>`;
-            html += `<div class="key-btn" style="background:#f1f5f9" onclick="press(0)">0</div>`;
-            html += `<div class="key-btn key-fn" style="grid-column: span 3" onclick="next()">الطالب التالي ⏭️</div>`;
-        }
+        for(let i=1; i<=max; i++) html += `<div class="key-btn" onclick="press(${i})">${i}</div>`;
+        html += `<div class="key-btn" style="background:#f1f5f9" onclick="press(0)">0</div>`;
+        html += `<div class="key-btn key-fn" onclick="next()">التالي ⏭️</div>`;
+        html += `<div class="key-btn key-save" onclick="closePad()">إغلاق وحفظ</div>`;
         pad.innerHTML = html;
+
         document.getElementById(`row_${sid}`).scrollIntoView({behavior:'smooth', block:'start'});
     }
 
     function press(val) {
         if(!activeInputId) return;
-        const sid = activeInputId.sid, type = activeInputId.type;
-        const el = document.getElementById(`inp_${sid}_${type}`);
-        el.value = val; el.classList.add('saved');
-        
-        // تحديث السطر المثبت أيضاً للرؤية
-        const monitorInp = document.querySelector(`#monitor-content #inp_${sid}_${type}`);
-        if(monitorInp) { monitorInp.value = val; monitorInp.classList.add('saved'); }
-
+        const {sid, type} = activeInputId;
         const wV = document.getElementById('vWeek').value;
-        pendingUpdates[`${sid}_${wV}_${type}_${tId}`] = { sid, type, score: val, week: wV, teacher: tId, maxSet: activeInputId.max };
+
+        // 1. تحديث الواجهة (الأصلي والمثبت)
+        const inputs = [document.getElementById(`inp_${sid}_${type}`), document.querySelector(`#monitor-content #inp_${sid}_${type}`)];
+        inputs.forEach(inp => { if(inp) { inp.value = val; inp.classList.add('saved'); }});
+
+        // 2. التخزين في الذاكرة المؤقتة
+        pendingUpdates[`${sid}_${wV}_${type}`] = { sid, type, score: val, week: wV, teacher: tId };
         updateCount++;
-        if(updateCount >= 10) forceSync();
+        
+        // 3. التنقل التلقائي
         next();
     }
 
     function next() {
         if(!activeInputId) return;
         const wV = document.getElementById('vWeek').value;
-        const isExPage = wV.startsWith('ex'), isLockedWeek = (wV === exam1Week || wV === exam2Week);
-        let types = isExPage ? ['exam'] : (isLockedWeek ? ['v', 's'] : ['t', 'v', 's']);
-        let nIdx = types.indexOf(activeInputId.type) + 1;
+        const isLocked = (wV === exam1Week || wV === exam2Week);
+        const types = wV.startsWith('ex') ? ['exam'] : (isLocked ? ['v', 's'] : ['t', 'v', 's']);
         
+        let nIdx = types.indexOf(activeInputId.type) + 1;
         if(nIdx < types.length) {
-            initPad(activeInputId.sid, types[nIdx], types[nIdx]==='s'?10:15);
+            openPad(activeInputId.sid, types[nIdx], types[nIdx]==='s'?10:15);
         } else {
             const curIdx = currentStudents.findIndex(s => s.id === activeInputId.sid);
             if(curIdx < currentStudents.length - 1) {
                 const nxt = currentStudents[curIdx+1];
-                initPad(nxt.id, types[0], types[0]==='exam' ? parseInt(document.getElementById('examMax').value) : 15);
+                openPad(nxt.id, types[0], types[0]==='exam'?30:15);
             } else { closePad(); }
         }
     }
@@ -243,15 +215,17 @@
 
     async function forceSync() {
         if(Object.keys(pendingUpdates).length === 0) return;
-        document.getElementById('syncStat').innerText = "⏳ حفظ...";
+        document.getElementById('syncStat').innerText = "⏳ مزامنة...";
         const batch = db.batch();
-        for (const k in pendingUpdates) batch.set(db.collection('grades').doc(k), pendingUpdates[k], {merge:true});
+        for (const k in pendingUpdates) {
+            const ref = db.collection('grades').doc(`${pendingUpdates[k].sid}_${pendingUpdates[k].week}_${pendingUpdates[k].type}_${tId}`);
+            batch.set(ref, pendingUpdates[k], {merge:true});
+        }
         await batch.commit();
         pendingUpdates = {}; updateCount = 0;
-        document.getElementById('syncStat').innerText = "✅ تم";
-        setTimeout(()=> document.getElementById('syncStat').innerText = "✅ متصل", 2000);
+        document.getElementById('syncStat').innerText = "✅ تم الحفظ";
     }
-    setInterval(forceSync, 30000);
+    setInterval(forceSync, 20000);
 </script>
 </body>
 </html>

@@ -3,131 +3,97 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>واجهة المعلم الذكية v2026</title>
+    <title>واجهة المعلم الاحترافية v2026</title>
     <script src="https://www.gstatic.com/firebasejs/9.0.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.0.0/firebase-firestore-compat.js"></script>
     <style>
-        :root { --primary: #3b82f6; --success: #10b981; --danger: #ef4444; }
-        body { font-family: 'Segoe UI', sans-serif; background: #f1f5f9; margin: 0; padding-bottom: 300px; }
-        header { background: #1e293b; color: white; padding: 15px; box-shadow: 0 2px 5px rgba(0,0,0,0.1); }
+        :root { --primary: #3b82f6; --success: #10b981; --danger: #ef4444; --sidebar: #1e293b; }
+        body { font-family: 'Segoe UI', sans-serif; background: #f1f5f9; margin: 0; padding-bottom: 350px; }
+        header { background: var(--sidebar); color: white; padding: 15px; box-shadow: 0 2px 5px rgba(0,0,0,0.1); }
         .welcome-msg { font-size: 18px; font-weight: bold; margin-bottom: 5px; color: #60a5fa; }
         .t-info { font-size: 12px; color: #cbd5e1; }
-        .container { padding: 10px; max-width: 600px; margin: auto; }
+        .container { padding: 10px; max-width: 800px; margin: auto; }
         .card { background: white; border-radius: 12px; padding: 15px; margin-bottom: 10px; box-shadow: 0 2px 4px rgba(0,0,0,0.05); }
-        select { width: 100%; padding: 12px; border-radius: 8px; border: 1px solid #ddd; margin-bottom: 8px; font-size: 14px; }
-        .student-row { display: flex; justify-content: space-between; align-items: center; padding: 10px 0; border-bottom: 1px solid #eee; }
-        .student-row.active-row { background: #eff6ff; border-right: 4px solid var(--primary); padding-right: 5px; }
-        .inputs { display: flex; gap: 5px; }
-        .score-sel { width: 55px; height: 40px; font-weight: bold; text-align: center; border-radius: 8px; border: 1px solid #cbd5e1; }
-        .score-sel.active-input { border: 2px solid var(--primary); background: #fff; box-shadow: 0 0 5px rgba(59,130,246,0.5); }
-        .score-sel.saved { background: #f0fdf4; border-color: var(--success); }
         
-        .smart-keyboard { position: fixed; bottom: 0; left: 0; right: 0; background: #f8fafc; padding: 10px; border-top: 2px solid #ddd; display: none; grid-template-columns: repeat(4, 1fr); gap: 5px; z-index: 1000; box-shadow: 0 -5px 15px rgba(0,0,0,0.1); }
-        .key-btn { padding: 15px 5px; background: white; border: 1px solid #cbd5e1; border-radius: 8px; font-weight: bold; cursor: pointer; text-align: center; }
-        .key-btn:active { background: #e2e8f0; }
-        .key-btn.voice { background: var(--danger); color: white; }
+        /* تصميم لوحة المفاتيح الذكية */
+        .smart-keyboard { position: fixed; bottom: 0; left: 0; right: 0; background: #e2e8f0; padding: 10px; border-top: 3px solid #cbd5e1; display: none; gap: 5px; z-index: 2000; box-shadow: 0 -5px 20px rgba(0,0,0,0.2); }
+        .key-btn { background: white; border: 1px solid #94a3b8; border-radius: 8px; font-weight: bold; cursor: pointer; display: flex; align-items: center; justify-content: center; font-size: 16px; transition: 0.1s; min-height: 50px; }
+        .key-btn:active { background: var(--primary); color: white; }
+        .key-fn { background: #64748b; color: white; } /* أزرار الوظائف */
+        .key-save { background: #059669; color: white; font-size: 14px; }
+        .key-zero { background: #f1f5f9; }
+
+        /* تنسيقات الجداول والخانات */
+        .student-row { display: flex; justify-content: space-between; align-items: center; padding: 8px 0; border-bottom: 1px solid #eee; }
+        .score-sel { width: 50px; height: 40px; font-weight: bold; text-align: center; border-radius: 8px; border: 1px solid #cbd5e1; background: #fff; cursor: pointer; }
+        .score-sel.active-input { border: 3px solid var(--primary); box-shadow: 0 0 8px rgba(59,130,246,0.5); }
+        .score-sel.saved { background: #dcfce7; border-color: var(--success); }
         
-        .bulk-bar { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 5px; margin-bottom: 10px; }
-        .btn-bulk { padding: 10px; font-size: 12px; cursor: pointer; border-radius: 8px; border: none; background: #e2e8f0; font-weight: bold; }
-        .mode-toggle { display: flex; gap: 5px; margin-bottom: 10px; }
-        .mode-btn { flex: 1; padding: 8px; font-size: 11px; border-radius: 20px; border: 1px solid #ddd; background: #fff; cursor: pointer; }
-        .mode-btn.active { background: var(--primary); color: white; border-color: var(--primary); }
-        .exam-badge { background: #7c3aed; color: white; padding: 2px 8px; border-radius: 5px; font-size: 10px; margin-right: 5px; }
+        .sync-status { position: fixed; top: 10px; left: 10px; font-size: 10px; color: #10b981; background: #fff; padding: 4px 8px; border-radius: 20px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); z-index: 2001; }
+        .exam-badge { background: #7c3aed; color: white; padding: 2px 6px; border-radius: 4px; font-size: 10px; margin-right: 5px; }
+        select { width: 100%; padding: 10px; border-radius: 8px; margin-bottom: 10px; }
     </style>
 </head>
 <body>
 
+<div class="sync-status" id="syncStat">المزامنة متصلة ✅</div>
+
 <header>
     <div class="welcome-msg">أهلاً بك، <span id="tName">...</span> 🌹</div>
-    <div class="t-info" id="tDetails">جاري تحميل البيانات...</div>
+    <div id="tDetails" class="t-info">جاري تحميل بيانات المعلم...</div>
 </header>
 
 <div class="container">
     <div class="card">
-        <select id="vGrade" onchange="loadList()"><option value="">اختر الصف</option></select>
+        <select id="vGrade" onchange="loadList()"><option value="">اختر الفصل الدراسِي</option></select>
         <select id="vWeek" onchange="loadList()"></select>
         
-        <div id="examSettings" style="display:none; margin-bottom:10px; padding:10px; background:#f5f3ff; border-radius:8px;">
-            <label style="font-size:12px; color:#7c3aed; font-weight:bold;">الدرجة العظمى للاختبار:</label>
-            <select id="examMax" onchange="loadList()" style="margin-top:5px;">
-                <option value="30">من 30 درجة</option>
-                <option value="15">من 15 درجة (سيتم مضاعفتها تلقائياً)</option>
+        <div id="examSettings" style="display:none; padding:10px; background:#f5f3ff; border-radius:8px; margin-bottom:10px;">
+            <label style="font-size:12px; color:#7c3aed; font-weight:bold;">الدرجة القصوى للاختبار:</label>
+            <select id="examMax" onchange="loadList()">
+                <option value="30">رصد من 30 درجة</option>
+                <option value="15">رصد من 15 درجة</option>
             </select>
         </div>
-
-        <div class="mode-toggle">
-            <button class="mode-btn active" id="mode-list" onclick="setMode('list')">قائمة منسدلة</button>
-            <button class="mode-btn" id="mode-smart" onclick="setMode('smart')">رصد ذكي</button>
-            <button class="mode-btn" id="mode-voice" onclick="setMode('voice')">رصد صوتي 🎙️</button>
-        </div>
-    </div>
-
-    <div class="bulk-bar" id="bulkControls">
-        <button class="btn-bulk" id="bulk-t" onclick="bulkPrompt('t', 15)">رصد تقييم للكل</button>
-        <button class="btn-bulk" id="bulk-v" onclick="bulkPrompt('v', 15)">رصد حصة للكل</button>
-        <button class="btn-bulk" id="bulk-s" onclick="bulkPrompt('s', 10)">رصد سلوك للكل</button>
-        <button class="btn-bulk" id="bulk-exam" style="display:none; grid-column: span 3; background:#7c3aed; color:white;" onclick="bulkPrompt('exam', document.getElementById('examMax').value)">رصد الاختبار للكل</button>
     </div>
 
     <div id="list"></div>
 </div>
 
-<div class="smart-keyboard" id="numPad">
-    <div class="key-btn" onclick="pressKey(1)">1</div><div class="key-btn" onclick="pressKey(2)">2</div><div class="key-btn" onclick="pressKey(3)">3</div><div class="key-btn" onclick="pressKey(13)">13</div>
-    <div class="key-btn" onclick="pressKey(4)">4</div><div class="key-btn" onclick="pressKey(5)">5</div><div class="key-btn" onclick="pressKey(6)">6</div><div class="key-btn" onclick="pressKey(14)">14</div>
-    <div class="key-btn" onclick="pressKey(7)">7</div><div class="key-btn" onclick="pressKey(8)">8</div><div class="key-btn" onclick="pressKey(9)">9</div><div class="key-btn" onclick="pressKey(15)">15</div>
-    <div class="key-btn" onclick="pressKey(10)">10</div><div class="key-btn" onclick="pressKey(11)">11</div><div class="key-btn" onclick="pressKey(12)">12</div><div class="key-btn" onclick="pressKey(30)">30</div>
-    <div class="key-btn voice" style="grid-column: span 4;" id="voiceStatus" onclick="startVoice()">ابدأ الرصد الصوتي 🎙️</div>
-</div>
+<div class="smart-keyboard" id="numPad"></div>
 
 <script>
     const firebaseConfig = { apiKey: "AIzaSyBePGZiqMPmZQdg36jZ4Rkdtd7OISxmob8", projectId: "rasd-tools" };
     firebase.initializeApp(firebaseConfig);
     const db = firebase.firestore();
     const tId = sessionStorage.getItem('userEmail');
-    let currentStudents = [], currentMode = 'list', activeInputId = null;
+
+    let currentStudents = [], activeInputId = null;
+    let pendingUpdates = {}, updateCount = 0;
 
     window.onload = async () => {
         if(!tId) return location.href="index.html";
         const tDoc = await db.collection('teachers').doc(tId).get();
         if(tDoc.exists) {
-            const data = tDoc.data();
-            document.getElementById('tName').innerText = data.name;
-            document.getElementById('tDetails').innerText = `المادة: ${data.subject} | الفصول: ${data.classes.join('، ')}`;
-            data.classes.forEach(c => document.getElementById('vGrade').innerHTML += `<option value="${c}">${c}</option>`);
+            const d = tDoc.data();
+            document.getElementById('tName').innerText = d.name;
+            document.getElementById('tDetails').innerText = `المادة: ${d.subject} | الفصول: ${d.classes.join('، ')}`;
+            d.classes.forEach(c => document.getElementById('vGrade').innerHTML += `<option value="${c}">${c}</option>`);
         }
         for(let i=1; i<=14; i++) {
-            let label = `أسبوع ${i}`;
-            if(i === 6) label = `الاختبار الشهري الأول (6)`;
-            if(i === 10) label = `الاختبار الشهري الثاني (10)`;
-            document.getElementById('vWeek').innerHTML += `<option value="w${i}">${label}</option>`;
+            let txt = `الأسبوع ${i}`;
+            if(i===6) txt = `الاختبار الشهري الأول (6)`;
+            if(i===10) txt = `الاختبار الشهري الثاني (10)`;
+            document.getElementById('vWeek').innerHTML += `<option value="w${i}">${txt}</option>`;
         }
     };
-
-    function setMode(mode) {
-        currentMode = mode;
-        document.querySelectorAll('.mode-btn').forEach(b => b.classList.remove('active'));
-        document.getElementById(`mode-${mode}`).classList.add('active');
-        document.getElementById('numPad').style.display = (mode === 'smart' || mode === 'voice') ? 'grid' : 'none';
-        loadList();
-    }
 
     async function loadList() {
         const gV = document.getElementById('vGrade').value, wV = document.getElementById('vWeek').value;
         if(!gV || !wV) return;
-        
-        const isExamWeek = (wV === 'w6' || wV === 'w10');
-        document.getElementById('examSettings').style.display = isExamWeek ? 'block' : 'none';
-        document.getElementById('bulk-t').style.display = isExamWeek ? 'none' : 'block';
-        document.getElementById('bulk-v').style.display = isExamWeek ? 'none' : 'block';
-        document.getElementById('bulk-s').style.display = isExamWeek ? 'none' : 'block';
-        document.getElementById('bulk-exam').style.display = isExamWeek ? 'block' : 'none';
 
-        const set = await db.collection('settings').doc('global').get();
-        if(set.exists && set.data().lockedWeeks.includes(wV)) {
-            document.getElementById('list').innerHTML = "<h3 style='color:red; text-align:center'>الأسبوع مغلق 🔒</h3>";
-            return;
-        }
+        const isExam = (wV === 'w6' || wV === 'w10');
+        document.getElementById('examSettings').style.display = isExam ? 'block' : 'none';
 
         const [g, b] = gV.split('_');
         const sSnap = await db.collection('students').where('grade','==',g).where('branch','==',b).get();
@@ -140,117 +106,108 @@
         let h = '';
         currentStudents.forEach((s, idx) => {
             const sc = grades[s.id] || {};
-            h += `<div class="card student-card" id="row_${s.id}"><div class="student-row">
-                    <span style="font-size:14px; width:45%">${idx+1}. ${s.name} ${isExamWeek?'<span class="exam-badge">إختبار</span>':''}</span>
-                    <div class="inputs">`;
-            
-            if(isExamWeek) {
-                const maxE = parseInt(document.getElementById('examMax').value);
-                h += drawInput(s.id, 'exam', maxE, sc.exam);
+            h += `<div class="card"><div class="student-row">
+                <span style="font-size:14px; width:50%">${idx+1}. ${s.name} ${isExam?'<span class="exam-badge">اختبار</span>':''}</span>
+                <div style="display:flex; gap:5px;">`;
+            if(isExam) {
+                const mx = parseInt(document.getElementById('examMax').value);
+                h += drawInp(s.id, 'exam', mx, sc.exam);
             } else {
-                h += drawInput(s.id, 't', 15, sc.t) + drawInput(s.id, 'v', 15, sc.v) + drawInput(s.id, 's', 10, sc.s);
+                h += drawInp(s.id, 't', 15, sc.t) + drawInp(s.id, 'v', 15, sc.v) + drawInp(s.id, 's', 10, sc.s);
             }
-            
             h += `</div></div></div>`;
         });
         document.getElementById('list').innerHTML = h;
     }
 
-    function drawInput(sid, type, max, cur) {
-        let label = type === 't' ? 'تقييم' : type === 'v' ? 'حصة' : type === 's' ? 'سلوك' : 'اختبار';
-        if(currentMode === 'list') {
-            let opt = '<option value="">-</option>';
-            for(let i=0; i<=max; i++) opt += `<option value="${i}" ${cur==i?'selected':''}>${i}</option>`;
-            return `<div style="text-align:center"><small style="display:block; font-size:9px">${label}</small>
-                    <select class="score-sel ${cur!==undefined?'saved':''}" onchange="save('${sid}','${type}',this,${max})">${opt}</select></div>`;
+    function drawInp(sid, type, max, cur) {
+        return `<input type="text" readonly class="score-sel ${cur!==undefined?'saved':''}" 
+                id="inp_${sid}_${type}" onclick="openPad('${sid}','${type}',${max})" 
+                value="${cur!==undefined?cur:''}" placeholder="-">`;
+    }
+
+    function openPad(sid, type, max) {
+        activeInputId = {sid, type, max};
+        document.querySelectorAll('.score-sel').forEach(el => el.classList.remove('active-input'));
+        document.getElementById(`inp_${sid}_${type}`).classList.add('active-input');
+        
+        const pad = document.getElementById('numPad');
+        pad.style.display = 'grid';
+        
+        let html = '';
+        if (max === 30) {
+            // تصميم 8 أعمدة × 4 صفوف (مجموع 32 خانة)
+            pad.style.gridTemplateColumns = 'repeat(8, 1fr)';
+            for(let i=1; i<=30; i++) html += `<div class="key-btn" onclick="press(${i})">${i}</div>`;
+            html += `<div class="key-btn key-zero" onclick="press(0)">0</div>`;
+            html += `<div class="key-btn key-save" onclick="forceSync()">حفظ وتخطِي</div>`;
         } else {
-            return `<div style="text-align:center"><small style="display:block; font-size:9px">${label}</small>
-                    <input type="text" readonly class="score-sel ${cur!==undefined?'saved':''}" 
-                    id="inp_${sid}_${type}" onclick="focusInput('${sid}','${type}',${max})" 
-                    value="${cur!==undefined?cur:''}" placeholder="-"></div>`;
+            // تصميم 4 أعمدة × 4 صفوف (للدرجات 10 أو 15)
+            pad.style.gridTemplateColumns = 'repeat(4, 1fr)';
+            for(let i=1; i<=max; i++) html += `<div class="key-btn" onclick="press(${i})">${i}</div>`;
+            html += `<div class="key-btn key-zero" onclick="press(0)">0</div>`;
+            html += `<div class="key-btn key-fn" onclick="next()">تخطِي</div>`;
         }
+        pad.innerHTML = html;
     }
 
-    function focusInput(sid, type, max) {
-        document.querySelectorAll('.score-sel').forEach(i => i.classList.remove('active-input'));
-        const el = document.getElementById(`inp_${sid}_${type}`);
-        if(el) {
-            el.classList.add('active-input');
-            activeInputId = {sid, type, max, el};
-        }
-    }
-
-    function pressKey(val) {
+    function press(val) {
         if(!activeInputId) return;
-        save(activeInputId.sid, activeInputId.type, activeInputId.el, activeInputId.max, val);
-        moveToNext();
+        const el = document.getElementById(`inp_${activeInputId.sid}_${activeInputId.type}`);
+        el.value = val;
+        el.classList.add('saved');
+
+        // تخزين في الـ Buffer (حفظ مؤقت ذكي)
+        const key = `${activeInputId.sid}_${document.getElementById('vWeek').value}_${activeInputId.type}_${tId}`;
+        pendingUpdates[key] = { 
+            sid: activeInputId.sid, 
+            type: activeInputId.type, 
+            score: val, 
+            week: document.getElementById('vWeek').value, 
+            teacher: tId,
+            maxSet: activeInputId.max 
+        };
+        updateCount++;
+
+        if(updateCount >= 20) forceSync();
+        next();
     }
 
-    function moveToNext() {
+    function next() {
         if(!activeInputId) return;
-        const isExam = activeInputId.type === 'exam';
-        if(isExam) {
+        const types = (document.getElementById('vWeek').value === 'w6' || document.getElementById('vWeek').value === 'w10') ? ['exam'] : ['t', 'v', 's'];
+        let nextTypeIdx = types.indexOf(activeInputId.type) + 1;
+        
+        if(nextTypeIdx < types.length) {
+            openPad(activeInputId.sid, types[nextTypeIdx], types[nextTypeIdx]==='s'?10:15);
+        } else {
             const curIdx = currentStudents.findIndex(s => s.id === activeInputId.sid);
-            if(curIdx < currentStudents.length - 1) focusInput(currentStudents[curIdx+1].id, 'exam', activeInputId.max);
-        } else {
-            const types = ['t', 'v', 's'];
-            let nextTypeIdx = types.indexOf(activeInputId.type) + 1;
-            if(nextTypeIdx < 3) {
-                focusInput(activeInputId.sid, types[nextTypeIdx], types[nextTypeIdx]==='s'?10:15);
+            if(curIdx < currentStudents.length - 1) {
+                openPad(currentStudents[curIdx+1].id, types[0], types[0]==='exam'? parseInt(document.getElementById('examMax').value) : 15);
+                // تمرير الشاشة تلقائياً للطالب التالي
+                document.getElementById(`inp_${currentStudents[curIdx+1].id}_${types[0]}`).scrollIntoView({behavior: 'smooth', block: 'center'});
             } else {
-                const curIdx = currentStudents.findIndex(s => s.id === activeInputId.sid);
-                if(curIdx < currentStudents.length - 1) focusInput(currentStudents[curIdx+1].id, 't', 15);
+                document.getElementById('numPad').style.display = 'none';
+                forceSync();
             }
         }
     }
 
-    async function save(sid, type, el, max, manualVal) {
-        let val = (manualVal !== undefined) ? manualVal : el.value;
-        val = String(val).replace(/[٠-٩]/g, d => "٠١٢٣٤٥٦٧٨٩".indexOf(d));
-        val = parseInt(val);
-        if(isNaN(val)) return;
-        if(val > max) val = max;
-        
-        const week = document.getElementById('vWeek').value;
-        const dataToSave = { sid, type, score: val, week, teacher: tId };
-        
-        // إذا كان اختبار، نحفظ معه الدرجة العظمى المختارة لتسهيل الحساب لاحقاً
-        if(type === 'exam') dataToSave.maxSet = max;
-
-        await db.collection('grades').doc(`${sid}_${week}_${type}_${tId}`).set(dataToSave, {merge:true});
-        el.value = val;
-        el.classList.add('saved');
-    }
-
-    async function bulkPrompt(type, max) {
-        const score = prompt(`رصد جماعي لـ ${type==='exam'?'الاختبار':'الكل'} (الحد الأقصى ${max}):`, max);
-        if(score === null) return;
-        let finalScore = parseInt(score.replace(/[٠-٩]/g, d => "٠١٢٣٤٥٦٧٨٩".indexOf(d)));
-        if(isNaN(finalScore)) return alert("رقم غير صحيح");
-        if(finalScore > max) finalScore = max;
-
-        const week = document.getElementById('vWeek').value;
+    async function forceSync() {
+        if(Object.keys(pendingUpdates).length === 0) return;
+        document.getElementById('syncStat').innerText = "جاري المزامنة... ⏳";
         const batch = db.batch();
-        currentStudents.forEach(s => {
-            const docData = { sid: s.id, type, score: finalScore, week, teacher: tId };
-            if(type === 'exam') docData.maxSet = parseInt(max);
-            batch.set(db.collection('grades').doc(`${s.id}_${week}_${type}_${tId}`), docData, {merge:true});
-        });
+        for (const k in pendingUpdates) {
+            batch.set(db.collection('grades').doc(k), pendingUpdates[k], {merge:true});
+        }
         await batch.commit();
-        alert("تم الرصد بنجاح ✅"); loadList();
+        pendingUpdates = {}; updateCount = 0;
+        document.getElementById('syncStat').innerText = "تم الحفظ بنجاح ✅";
+        setTimeout(()=> document.getElementById('syncStat').innerText = "المزامنة متصلة ✅", 3000);
     }
 
-    function startVoice() {
-        const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
-        if(!SpeechRecognition) return alert("المتصفح لا يدعم الصوت");
-        const rec = new SpeechRecognition(); rec.lang = 'ar-EG';
-        rec.onresult = (e) => {
-            const text = e.results[0][0].transcript;
-            const num = text.match(/\d+/);
-            if(num) pressKey(num[0]);
-        };
-        rec.start();
-    }
+    // مزامنة تلقائية كل 20 ثانية للأمان
+    setInterval(forceSync, 20000);
 </script>
 </body>
 </html>

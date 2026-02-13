@@ -15,6 +15,8 @@
     <script src="https://www.gstatic.com/firebasejs/9.0.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.0.0/firebase-firestore-compat.js"></script>
     
+    <script src="firebase-config.js"></script>
+    
     <style>
         * { box-sizing: border-box; }
         body { 
@@ -110,15 +112,19 @@
 </div>
 
 <script>
-    // تسجيل الـ Service Worker لضمان عمل الصفحة حتى بدون شبكة
     if ('serviceWorker' in navigator) {
         window.addEventListener('load', () => {
             navigator.serviceWorker.register('./sw.js');
         });
     }
 
-    const firebaseConfig = { apiKey: "AIzaSyBePGZiqMPmZQdg36jZ4Rkdtd7OISxmob8", projectId: "rasd-tools" };
-    firebase.initializeApp(firebaseConfig);
+    // تهيئة Firebase باستخدام الملف الخارجي
+    if (typeof firebaseConfig !== 'undefined') {
+        firebase.initializeApp(firebaseConfig);
+    } else {
+        console.error("Firebase config is missing!");
+    }
+
     const db = firebase.firestore();
 
     async function handleLogin() {
@@ -133,6 +139,7 @@
         btn.innerText = "جاري التحقق...";
         btn.disabled = true;
 
+        // الدخول كمدير (الأدمن)
         if (u === "admin" && p === "790707071") {
             sessionStorage.setItem('userEmail', 'admin');
             sessionStorage.setItem('isAdmin', 'true');
@@ -145,6 +152,7 @@
             if (tDoc.exists) {
                 if (tDoc.data().pass === p) {
                     sessionStorage.setItem('userEmail', u);
+                    sessionStorage.setItem('isAdmin', 'false'); // لضمان عدم دخول المعلم لصفحة الأدمن
                     window.location.href = "teacher.html";
                 } else {
                     showError("كلمة المرور غير صحيحة");
@@ -154,6 +162,7 @@
             }
         } catch (e) {
             showError("خطأ في الاتصال بالخادم");
+            console.error(e);
         }
     }
 
@@ -168,4 +177,3 @@
 </script>
 </body>
 </html>
-

@@ -22,7 +22,6 @@
         .score-sel.active-input { border: 2px solid var(--primary); background: #fff; box-shadow: 0 0 5px rgba(59,130,246,0.5); }
         .score-sel.saved { background: #f0fdf4; border-color: var(--success); }
         
-        /* كيبورد الأرقام المخصص */
         .smart-keyboard { position: fixed; bottom: 0; left: 0; right: 0; background: #f8fafc; padding: 10px; border-top: 2px solid #ddd; display: none; grid-template-columns: repeat(4, 1fr); gap: 5px; z-index: 1000; box-shadow: 0 -5px 15px rgba(0,0,0,0.1); }
         .key-btn { padding: 15px 5px; background: white; border: 1px solid #cbd5e1; border-radius: 8px; font-weight: bold; cursor: pointer; text-align: center; }
         .key-btn:active { background: #e2e8f0; }
@@ -33,6 +32,7 @@
         .mode-toggle { display: flex; gap: 5px; margin-bottom: 10px; }
         .mode-btn { flex: 1; padding: 8px; font-size: 11px; border-radius: 20px; border: 1px solid #ddd; background: #fff; cursor: pointer; }
         .mode-btn.active { background: var(--primary); color: white; border-color: var(--primary); }
+        .exam-badge { background: #7c3aed; color: white; padding: 2px 8px; border-radius: 5px; font-size: 10px; margin-right: 5px; }
     </style>
 </head>
 <body>
@@ -46,17 +46,27 @@
     <div class="card">
         <select id="vGrade" onchange="loadList()"><option value="">اختر الصف</option></select>
         <select id="vWeek" onchange="loadList()"></select>
+        
+        <div id="examSettings" style="display:none; margin-bottom:10px; padding:10px; background:#f5f3ff; border-radius:8px;">
+            <label style="font-size:12px; color:#7c3aed; font-weight:bold;">الدرجة العظمى للاختبار:</label>
+            <select id="examMax" onchange="loadList()" style="margin-top:5px;">
+                <option value="30">من 30 درجة</option>
+                <option value="15">من 15 درجة (سيتم مضاعفتها تلقائياً)</option>
+            </select>
+        </div>
+
         <div class="mode-toggle">
             <button class="mode-btn active" id="mode-list" onclick="setMode('list')">قائمة منسدلة</button>
-            <button class="mode-btn" id="mode-smart" onclick="setMode('smart')">رصد ذكي (أرقام)</button>
+            <button class="mode-btn" id="mode-smart" onclick="setMode('smart')">رصد ذكي</button>
             <button class="mode-btn" id="mode-voice" onclick="setMode('voice')">رصد صوتي 🎙️</button>
         </div>
     </div>
 
     <div class="bulk-bar" id="bulkControls">
-        <button class="btn-bulk" onclick="bulkPrompt('t', 15)">رصد تقييم للكل</button>
-        <button class="btn-bulk" onclick="bulkPrompt('v', 15)">رصد حصة للكل</button>
-        <button class="btn-bulk" onclick="bulkPrompt('s', 10)">رصد سلوك للكل</button>
+        <button class="btn-bulk" id="bulk-t" onclick="bulkPrompt('t', 15)">رصد تقييم للكل</button>
+        <button class="btn-bulk" id="bulk-v" onclick="bulkPrompt('v', 15)">رصد حصة للكل</button>
+        <button class="btn-bulk" id="bulk-s" onclick="bulkPrompt('s', 10)">رصد سلوك للكل</button>
+        <button class="btn-bulk" id="bulk-exam" style="display:none; grid-column: span 3; background:#7c3aed; color:white;" onclick="bulkPrompt('exam', document.getElementById('examMax').value)">رصد الاختبار للكل</button>
     </div>
 
     <div id="list"></div>
@@ -66,7 +76,7 @@
     <div class="key-btn" onclick="pressKey(1)">1</div><div class="key-btn" onclick="pressKey(2)">2</div><div class="key-btn" onclick="pressKey(3)">3</div><div class="key-btn" onclick="pressKey(13)">13</div>
     <div class="key-btn" onclick="pressKey(4)">4</div><div class="key-btn" onclick="pressKey(5)">5</div><div class="key-btn" onclick="pressKey(6)">6</div><div class="key-btn" onclick="pressKey(14)">14</div>
     <div class="key-btn" onclick="pressKey(7)">7</div><div class="key-btn" onclick="pressKey(8)">8</div><div class="key-btn" onclick="pressKey(9)">9</div><div class="key-btn" onclick="pressKey(15)">15</div>
-    <div class="key-btn" onclick="pressKey(10)">10</div><div class="key-btn" onclick="pressKey(11)">11</div><div class="key-btn" onclick="pressKey(12)">12</div><div class="key-btn" onclick="pressKey(0)">0</div>
+    <div class="key-btn" onclick="pressKey(10)">10</div><div class="key-btn" onclick="pressKey(11)">11</div><div class="key-btn" onclick="pressKey(12)">12</div><div class="key-btn" onclick="pressKey(30)">30</div>
     <div class="key-btn voice" style="grid-column: span 4;" id="voiceStatus" onclick="startVoice()">ابدأ الرصد الصوتي 🎙️</div>
 </div>
 
@@ -86,7 +96,12 @@
             document.getElementById('tDetails').innerText = `المادة: ${data.subject} | الفصول: ${data.classes.join('، ')}`;
             data.classes.forEach(c => document.getElementById('vGrade').innerHTML += `<option value="${c}">${c}</option>`);
         }
-        for(let i=1; i<=14; i++) document.getElementById('vWeek').innerHTML += `<option value="w${i}">أسبوع ${i}</option>`;
+        for(let i=1; i<=14; i++) {
+            let label = `أسبوع ${i}`;
+            if(i === 6) label = `الاختبار الشهري الأول (6)`;
+            if(i === 10) label = `الاختبار الشهري الثاني (10)`;
+            document.getElementById('vWeek').innerHTML += `<option value="w${i}">${label}</option>`;
+        }
     };
 
     function setMode(mode) {
@@ -101,6 +116,13 @@
         const gV = document.getElementById('vGrade').value, wV = document.getElementById('vWeek').value;
         if(!gV || !wV) return;
         
+        const isExamWeek = (wV === 'w6' || wV === 'w10');
+        document.getElementById('examSettings').style.display = isExamWeek ? 'block' : 'none';
+        document.getElementById('bulk-t').style.display = isExamWeek ? 'none' : 'block';
+        document.getElementById('bulk-v').style.display = isExamWeek ? 'none' : 'block';
+        document.getElementById('bulk-s').style.display = isExamWeek ? 'none' : 'block';
+        document.getElementById('bulk-exam').style.display = isExamWeek ? 'block' : 'none';
+
         const set = await db.collection('settings').doc('global').get();
         if(set.exists && set.data().lockedWeeks.includes(wV)) {
             document.getElementById('list').innerHTML = "<h3 style='color:red; text-align:center'>الأسبوع مغلق 🔒</h3>";
@@ -118,41 +140,44 @@
         let h = '';
         currentStudents.forEach((s, idx) => {
             const sc = grades[s.id] || {};
-            h += `
-            <div class="card student-card" id="row_${s.id}">
-                <div class="student-row">
-                    <span style="font-size:14px; width:45%">${idx+1}. ${s.name}</span>
-                    <div class="inputs">
-                        ${drawInput(s.id, 't', 15, sc.t)}
-                        ${drawInput(s.id, 'v', 15, sc.v)}
-                        ${drawInput(s.id, 's', 10, sc.s)}
-                    </div>
-                </div>
-            </div>`;
+            h += `<div class="card student-card" id="row_${s.id}"><div class="student-row">
+                    <span style="font-size:14px; width:45%">${idx+1}. ${s.name} ${isExamWeek?'<span class="exam-badge">إختبار</span>':''}</span>
+                    <div class="inputs">`;
+            
+            if(isExamWeek) {
+                const maxE = parseInt(document.getElementById('examMax').value);
+                h += drawInput(s.id, 'exam', maxE, sc.exam);
+            } else {
+                h += drawInput(s.id, 't', 15, sc.t) + drawInput(s.id, 'v', 15, sc.v) + drawInput(s.id, 's', 10, sc.s);
+            }
+            
+            h += `</div></div></div>`;
         });
         document.getElementById('list').innerHTML = h;
     }
 
     function drawInput(sid, type, max, cur) {
+        let label = type === 't' ? 'تقييم' : type === 'v' ? 'حصة' : type === 's' ? 'سلوك' : 'اختبار';
         if(currentMode === 'list') {
             let opt = '<option value="">-</option>';
             for(let i=0; i<=max; i++) opt += `<option value="${i}" ${cur==i?'selected':''}>${i}</option>`;
-            return `<select class="score-sel ${cur!==undefined?'saved':''}" onchange="save('${sid}','${type}',this,${max})">${opt}</select>`;
+            return `<div style="text-align:center"><small style="display:block; font-size:9px">${label}</small>
+                    <select class="score-sel ${cur!==undefined?'saved':''}" onchange="save('${sid}','${type}',this,${max})">${opt}</select></div>`;
         } else {
-            return `<input type="text" readonly class="score-sel ${cur!==undefined?'saved':''}" 
+            return `<div style="text-align:center"><small style="display:block; font-size:9px">${label}</small>
+                    <input type="text" readonly class="score-sel ${cur!==undefined?'saved':''}" 
                     id="inp_${sid}_${type}" onclick="focusInput('${sid}','${type}',${max})" 
-                    value="${cur!==undefined?cur:''}" placeholder="-">`;
+                    value="${cur!==undefined?cur:''}" placeholder="-"></div>`;
         }
     }
 
     function focusInput(sid, type, max) {
         document.querySelectorAll('.score-sel').forEach(i => i.classList.remove('active-input'));
-        document.querySelectorAll('.student-card').forEach(c => c.classList.remove('active-row'));
         const el = document.getElementById(`inp_${sid}_${type}`);
-        el.classList.add('active-input');
-        document.getElementById(`row_${sid}`).classList.add('active-row');
-        activeInputId = {sid, type, max, el};
-        el.scrollIntoView({behavior: 'smooth', block: 'center'});
+        if(el) {
+            el.classList.add('active-input');
+            activeInputId = {sid, type, max, el};
+        }
     }
 
     function pressKey(val) {
@@ -162,66 +187,68 @@
     }
 
     function moveToNext() {
-        const types = ['t', 'v', 's'];
-        let nextTypeIdx = types.indexOf(activeInputId.type) + 1;
-        if(nextTypeIdx < 3) {
-            focusInput(activeInputId.sid, types[nextTypeIdx], activeInputId.type === 's' ? 10 : 15);
-        } else {
+        if(!activeInputId) return;
+        const isExam = activeInputId.type === 'exam';
+        if(isExam) {
             const curIdx = currentStudents.findIndex(s => s.id === activeInputId.sid);
-            if(curIdx < currentStudents.length - 1) {
-                focusInput(currentStudents[curIdx+1].id, 't', 15);
+            if(curIdx < currentStudents.length - 1) focusInput(currentStudents[curIdx+1].id, 'exam', activeInputId.max);
+        } else {
+            const types = ['t', 'v', 's'];
+            let nextTypeIdx = types.indexOf(activeInputId.type) + 1;
+            if(nextTypeIdx < 3) {
+                focusInput(activeInputId.sid, types[nextTypeIdx], types[nextTypeIdx]==='s'?10:15);
+            } else {
+                const curIdx = currentStudents.findIndex(s => s.id === activeInputId.sid);
+                if(curIdx < currentStudents.length - 1) focusInput(currentStudents[curIdx+1].id, 't', 15);
             }
         }
     }
 
     async function save(sid, type, el, max, manualVal) {
         let val = (manualVal !== undefined) ? manualVal : el.value;
-        val = String(val).replace(/[٠-٩]/g, d => "٠١٢٣٤٥٦٧٨٩".indexOf(d)); // تحويل الأرقام العربية لإنجليزية
+        val = String(val).replace(/[٠-٩]/g, d => "٠١٢٣٤٥٦٧٨٩".indexOf(d));
         val = parseInt(val);
         if(isNaN(val)) return;
         if(val > max) val = max;
         
         const week = document.getElementById('vWeek').value;
-        await db.collection('grades').doc(`${sid}_${week}_${type}_${tId}`).set({
-            sid, type, score: val, week, teacher: tId
-        }, {merge:true});
+        const dataToSave = { sid, type, score: val, week, teacher: tId };
         
+        // إذا كان اختبار، نحفظ معه الدرجة العظمى المختارة لتسهيل الحساب لاحقاً
+        if(type === 'exam') dataToSave.maxSet = max;
+
+        await db.collection('grades').doc(`${sid}_${week}_${type}_${tId}`).set(dataToSave, {merge:true});
         el.value = val;
         el.classList.add('saved');
     }
 
     async function bulkPrompt(type, max) {
-        const score = prompt(`أدخل الدرجة المطلوبة لجميع الطلاب (الحد الأقصى ${max}):`, max);
+        const score = prompt(`رصد جماعي لـ ${type==='exam'?'الاختبار':'الكل'} (الحد الأقصى ${max}):`, max);
         if(score === null) return;
         let finalScore = parseInt(score.replace(/[٠-٩]/g, d => "٠١٢٣٤٥٦٧٨٩".indexOf(d)));
-        if(isNaN(finalScore)) return alert("يرجى إدخال رقم صحيح");
+        if(isNaN(finalScore)) return alert("رقم غير صحيح");
         if(finalScore > max) finalScore = max;
 
         const week = document.getElementById('vWeek').value;
         const batch = db.batch();
         currentStudents.forEach(s => {
-            batch.set(db.collection('grades').doc(`${s.id}_${week}_${type}_${tId}`), {
-                sid: s.id, type, score: finalScore, week, teacher: tId
-            }, {merge:true});
+            const docData = { sid: s.id, type, score: finalScore, week, teacher: tId };
+            if(type === 'exam') docData.maxSet = parseInt(max);
+            batch.set(db.collection('grades').doc(`${s.id}_${week}_${type}_${tId}`), docData, {merge:true});
         });
         await batch.commit();
-        alert("تم الرصد للجميع بنجاح ✅");
-        loadList();
+        alert("تم الرصد بنجاح ✅"); loadList();
     }
 
-    // الرصد الصوتي
     function startVoice() {
         const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
-        if(!SpeechRecognition) return alert("متصفحك لا يدعم الرصد الصوتي");
-        const rec = new SpeechRecognition();
-        rec.lang = 'ar-EG';
-        rec.onstart = () => document.getElementById('voiceStatus').innerText = "جاري الاستماع... (قل الدرجة)";
+        if(!SpeechRecognition) return alert("المتصفح لا يدعم الصوت");
+        const rec = new SpeechRecognition(); rec.lang = 'ar-EG';
         rec.onresult = (e) => {
             const text = e.results[0][0].transcript;
             const num = text.match(/\d+/);
             if(num) pressKey(num[0]);
         };
-        rec.onend = () => document.getElementById('voiceStatus').innerText = "ابدأ الرصد الصوتي 🎙️";
         rec.start();
     }
 </script>

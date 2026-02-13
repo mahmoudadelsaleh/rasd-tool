@@ -3,405 +3,202 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>لوحة تحكم القائد v2026 - الإصدار النهائي</title>
+    <title>لوحة تحكم القائد v2026 - الإصدار المعتمد</title>
     <script src="https://www.gstatic.com/firebasejs/9.0.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.0.0/firebase-firestore-compat.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
-    
     <style>
-        :root {
-            --bg: #f8fafc; --sidebar: #1e293b; --accent: #3b82f6;
-            --c1: #4f46e5; --c2: #0891b2; --c3: #059669; --c4: #d97706; --c5: #e11d48; --c6: #7c3aed; --c7: #2563eb; --c8: #10b981;
-        }
-        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: var(--bg); margin: 0; display: flex; flex-direction: column; height: 100vh; overflow: hidden; }
-        header { background: var(--sidebar); color: white; padding: 15px 25px; display: flex; justify-content: space-between; align-items: center; box-shadow: 0 2px 10px rgba(0,0,0,0.2); z-index: 100; }
-        .tabs-nav { display: flex; background: white; padding: 5px; gap: 5px; overflow-x: auto; border-bottom: 1px solid #e2e8f0; scrollbar-width: none; }
-        .tab-btn { padding: 12px 20px; border: none; border-radius: 10px; cursor: pointer; font-weight: bold; white-space: nowrap; transition: 0.3s; color: #64748b; background: #f1f5f9; }
-        .tab-btn.active { color: white; transform: translateY(-2px); }
+        :root { --bg: #f8fafc; --sidebar: #1e293b; --accent: #3b82f6; --c-exp: #10b981; }
+        body { font-family: 'Segoe UI', Tahoma, sans-serif; background: var(--bg); margin: 0; display: flex; flex-direction: column; height: 100vh; overflow: hidden; }
+        header { background: var(--sidebar); color: white; padding: 15px 25px; display: flex; justify-content: space-between; align-items: center; z-index: 100; }
+        .tabs-nav { display: flex; background: white; padding: 5px; gap: 5px; overflow-x: auto; border-bottom: 1px solid #e2e8f0; }
+        .tab-btn { padding: 10px 18px; border: none; border-radius: 8px; cursor: pointer; font-weight: bold; white-space: nowrap; background: #f1f5f9; color: #64748b; }
+        .tab-btn.active { background: var(--accent); color: white; }
         .content-area { flex: 1; overflow-y: auto; padding: 20px; }
-        .tab-panel { display: none; max-width: 1000px; margin: auto; animation: slideUp 0.4s ease-out; }
+        .tab-panel { display: none; max-width: 1000px; margin: auto; animation: fadeIn 0.3s ease; }
         .tab-panel.active { display: block; }
-        .card { background: white; border-radius: 15px; padding: 20px; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1); margin-bottom: 20px; border-top: 5px solid; }
-        .grid-stats { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px; }
-        .stat-box { padding: 20px; border-radius: 15px; text-align: center; background: #fff; border: 1px solid #e2e8f0; }
-        .stat-box b { font-size: 28px; display: block; color: var(--sidebar); }
-        input, select, textarea { width: 100%; padding: 12px; margin: 8px 0; border-radius: 10px; border: 1px solid #cbd5e1; font-size: 14px; box-sizing: border-box; }
-        .btn-save { background: var(--sidebar); color: white; border: none; padding: 12px 25px; border-radius: 10px; cursor: pointer; width: 100%; font-weight: bold; margin-top: 10px; }
-        table { width: 100%; border-collapse: collapse; margin-top: 15px; background: white; border-radius: 10px; overflow: hidden; }
-        th { background: #f1f5f9; padding: 12px; text-align: right; font-size: 13px; color: #475569; }
-        td { padding: 12px; border-bottom: 1px solid #f1f5f9; font-size: 14px; }
-        .btn-edit { background: #eab308; color: white; border: none; padding: 5px 10px; border-radius: 5px; cursor: pointer; margin-left: 5px; }
-        .btn-del { background: #ef4444; color: white; border: none; padding: 5px 10px; border-radius: 5px; cursor: pointer; }
-        @keyframes slideUp { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
+        .card { background: white; border-radius: 12px; padding: 20px; box-shadow: 0 4px 6px rgba(0,0,0,0.05); margin-bottom: 20px; }
+        input, select, textarea { width: 100%; padding: 10px; margin: 8px 0; border-radius: 8px; border: 1px solid #cbd5e1; }
+        .btn-main { background: var(--sidebar); color: white; border: none; padding: 12px 20px; border-radius: 8px; cursor: pointer; width: 100%; font-weight: bold; }
+        table { width: 100%; border-collapse: collapse; margin-top: 15px; }
+        th { background: #f1f5f9; padding: 10px; text-align: right; font-size: 13px; }
+        td { padding: 10px; border-bottom: 1px solid #eee; font-size: 14px; }
+        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
     </style>
 </head>
 <body>
 
 <header>
-    <div><strong>نظام إدارة الرصد الذكي</strong> | م. محمود عادل</div>
-    <div id="schoolNameDisplay" style="font-size: 14px; color: #94a3b8;">جاري تحميل البيانات...</div>
+    <div>لوحة الإدارة المركزية | <b>2026</b></div>
+    <div id="status" style="font-size: 12px; color: #94a3b8;">متصل ✅</div>
 </header>
 
 <div class="tabs-nav">
-    <button class="tab-btn active" style="--bg-act: var(--c7)" onclick="openTab(event, 'p1')">📊 إحصائيات</button>
-    <button class="tab-btn" style="--bg-act: var(--c1)" onclick="openTab(event, 'p2')">➕ إضافة معلم</button>
-    <button class="tab-btn" style="--bg-act: var(--c2)" onclick="openTab(event, 'p3')">📝 تعديل معلمين</button>
-    <button class="tab-btn" style="--bg-act: var(--c3)" onclick="openTab(event, 'p4')">🎓 إضافة طلاب</button>
-    <button class="tab-btn" style="--bg-act: var(--c4)" onclick="openTab(event, 'p5')">👁️ مراقبة الرصد</button>
-    <button class="tab-btn" style="--bg-act: var(--c5)" onclick="openTab(event, 'p6')">🔒 أقفال يدوية</button>
-    <button class="tab-btn" style="--bg-act: var(--c6)" onclick="openTab(event, 'p7')">⚙️ ضبط آلي</button>
-    <button class="tab-btn" style="--bg-act: var(--c8)" onclick="openTab(event, 'p8')">📥 تصدير التقارير</button>
+    <button class="tab-btn active" onclick="openTab(event, 'stats')">📊 الإحصائيات</button>
+    <button class="tab-btn" onclick="openTab(event, 'teachers')">👨‍🏫 المعلمون</button>
+    <button class="tab-btn" onclick="openTab(event, 'students')">🎓 الطلاب</button>
+    <button class="tab-btn" onclick="openTab(event, 'export')">📥 تصدير النتائج</button>
 </div>
 
 <div class="content-area">
-    <div id="p1" class="tab-panel active">
-        <div class="card" style="border-color: var(--c7)">
-            <h2 style="color:var(--c7)">ملخص إنجاز المدرسة</h2>
-            <div class="grid-stats">
-                <div class="stat-box">إجمالي المعلمين<b id="countT">0</b></div>
-                <div class="stat-box">إجمالي الطلاب<b id="countS">0</b></div>
-                <div class="stat-box">حالة النظام<b id="sysStatus">نشط</b></div>
+    <div id="stats" class="tab-panel active">
+        <div class="card">
+            <h2>ملخص النظام</h2>
+            <div style="display:grid; grid-template-columns: 1fr 1fr; gap:20px;">
+                <div style="text-align:center; padding:20px; background:#eff6ff; border-radius:10px;">معلمون<br><b id="countT" style="font-size:24px;">0</b></div>
+                <div style="text-align:center; padding:20px; background:#ecfdf5; border-radius:10px;">طلاب<br><b id="countS" style="font-size:24px;">0</b></div>
             </div>
         </div>
     </div>
 
-    <div id="p2" class="tab-panel">
-        <div class="card" style="border-color: var(--c1)">
-            <h2 id="tFormTitle" style="color:var(--c1)">تسجيل معلم جديد</h2>
-            <input type="text" id="tName" placeholder="الاسم الكامل">
-            <input type="text" id="tSub" placeholder="المادة الدراسية">
-            <input type="text" id="tUser" placeholder="اسم المستخدم (الإيميل أو الكود)">
-            <input type="text" id="tPass" placeholder="كلمة المرور">
-            <div style="margin:10px 0; border: 1px solid #eee; padding: 10px; border-radius: 10px;">
-                <p style="margin-top:0; font-weight:bold; font-size:13px;">الفصول المسندة:</p>
-                <label><input type="checkbox" class="t-cls" value="1_general"> 1 ثانوي</label><br>
-                <label><input type="checkbox" class="t-cls" value="2_scientific"> 2 ثانوي علمي</label><br>
-                <label><input type="checkbox" class="t-cls" value="2_literary"> 2 ثانوي أدبي</label>
-            </div>
-            <button id="btnSaveT" class="btn-save" style="background:var(--c1)" onclick="saveTeacher()">حفظ المعلم</button>
-            <button id="btnCancelEdit" class="btn-save" style="background:#64748b; display:none" onclick="cancelTeacherEdit()">إلغاء التعديل</button>
+    <div id="teachers" class="tab-panel">
+        <div class="card">
+            <h3>إضافة / تعديل معلم</h3>
+            <input type="text" id="tName" placeholder="اسم المعلم">
+            <input type="text" id="tSub" placeholder="المادة">
+            <input type="text" id="tUser" placeholder="اسم المستخدم (الإيميل)">
+            <input type="password" id="tPass" placeholder="كلمة المرور">
+            <div style="font-size:12px; margin-top:10px;">الفصول (مثال: 1_general, 2_scientific):</div>
+            <input type="text" id="tClasses" placeholder="فصل1, فصل2">
+            <button class="btn-main" onclick="saveTeacher()">حفظ بيانات المعلم</button>
+        </div>
+        <div class="card">
+            <table id="tTable"><thead><tr><th>المعلم</th><th>المادة</th><th>الفصول</th><th>إجراء</th></tr></thead><tbody id="tBody"></tbody></table>
         </div>
     </div>
 
-    <div id="p3" class="tab-panel">
-        <div class="card" style="border-color: var(--c2)">
-            <h2 style="color:var(--c2)">إدارة بيانات المعلمين</h2>
-            <table id="mainTable">
-                <thead><tr><th>المعلم</th><th>المادة</th><th>الفصول</th><th>إجراء</th></tr></thead>
-                <tbody id="teachersTable"></tbody>
-            </table>
-        </div>
-    </div>
-
-    <div id="p4" class="tab-panel">
-        <div class="card" style="border-color: var(--c3)">
-            <h2 style="color:var(--c3)">رفع أسماء الطلاب</h2>
+    <div id="students" class="tab-panel">
+        <div class="card">
+            <h3>رفع الطلاب</h3>
             <select id="sGrade">
                 <option value="1_general">1 ثانوي</option>
                 <option value="2_scientific">2 ثانوي علمي</option>
                 <option value="2_literary">2 ثانوي أدبي</option>
             </select>
-            <textarea id="sNames" placeholder="الصق الأسماء هنا.. اسم في كل سطر" rows="8"></textarea>
-            <p style="font-size:11px; color:gray">سيقوم النظام بتلقائية بتجاهل الأسماء المكررة في نفس الفصل.</p>
-            <button class="btn-save" style="background:var(--c3)" onclick="uploadStudents()">بدء الرفع الذكي</button>
+            <textarea id="sNames" rows="5" placeholder="ضع الأسماء هنا (اسم في كل سطر)"></textarea>
+            <button class="btn-main" onclick="uploadStudents()">رفع الطلاب</button>
         </div>
     </div>
 
-    <div id="p5" class="tab-panel">
-        <div class="card" style="border-color: var(--c4)">
-            <h2 style="color:var(--c4)">رادار الرصد والمتابعة</h2>
-            <div style="display:grid; grid-template-columns: 1fr 1fr 1fr; gap:10px">
-                <select id="monT" onchange="updateMonClasses()"><option value="">اختر المعلم</option></select>
-                <select id="monC"><option value="">الفصل</option></select>
-                <select id="monW"><option value="">الأسبوع</option></select>
-            </div>
-            <button class="btn-save" style="background:var(--c4)" onclick="fetchMonitoring()">عرض الكشف</button>
-            <div id="monResult" style="margin-top:15px"></div>
-        </div>
-    </div>
-
-    <div id="p6" class="tab-panel">
-        <div class="card" style="border-color: var(--c5)">
-            <h2 style="color:var(--c5)">إغلاق وفتح أسابيع الرصد</h2>
-            <div id="lockGrid" style="display:grid; grid-template-columns:repeat(auto-fill, minmax(100px, 1fr)); gap:10px"></div>
-        </div>
-    </div>
-
-    <div id="p7" class="tab-panel">
-        <div class="card" style="border-color: var(--c6)">
-            <h2 style="color:var(--c6)">إعدادات المنظومة العامة</h2>
-            <label>تاريخ بداية الفصل الدراسي (السبت الأول):</label>
-            <input type="date" id="startD" onchange="saveAutoSettings()">
-            <label style="margin-top:15px; display:block">
-                <input type="checkbox" id="sysActive" onchange="saveAutoSettings()"> تفعيل دخول المعلمين للمنظومة
-            </label>
-        </div>
-    </div>
-
-    <div id="p8" class="tab-panel">
-        <div class="card" style="border-color: var(--c8)">
-            <h2 style="color:var(--c8)">تصدير النتائج النهائية المجمعة</h2>
-            <p style="font-size:13px; color:#64748b">يتم حساب المتوسطات (تقييم 15، حصة 15، سلوك 10، اختبارات 30) لكل مادة في شيت منفصل.</p>
+    <div id="export" class="tab-panel">
+        <div class="card" style="border-right: 5px solid var(--c-exp);">
+            <h2>تصدير النتائج النهائية المجمعة</h2>
+            <p style="font-size:13px; color:#64748b;">هذا التقرير يحسب تلقائياً الأوزان النسبية (70 درجة) مع مراعاة الأسابيع التي حددها المعلمون للاختبارات.</p>
             <select id="expGrade">
                 <option value="1_general">الصف الأول ثانوي</option>
-                <option value="2_scientific">الصف الثاني ثانوي (علمي)</option>
-                <option value="2_literary">الصف الثاني ثانوي (أدبي)</option>
+                <option value="2_scientific">الصف الثاني ثانوي علمي</option>
+                <option value="2_literary">الصف الثاني ثانوي أدبي</option>
             </select>
-            <button class="btn-save" style="background:var(--c8)" onclick="exportFullData()">تصدير ملف Excel المجمع</button>
-            <div id="expStatus" style="margin-top:10px; font-weight:bold; color:var(--c8)"></div>
+            <button class="btn-main" style="background:var(--c-exp)" onclick="exportComprehensiveExcel()">تصدير ملف Excel المجمع</button>
+            <div id="expStatus" style="margin-top:15px; font-weight:bold;"></div>
         </div>
     </div>
 </div>
 
 <script>
-    // تكوين Firebase
     const firebaseConfig = { apiKey: "AIzaSyBePGZiqMPmZQdg36jZ4Rkdtd7OISxmob8", projectId: "rasd-tools" };
     firebase.initializeApp(firebaseConfig);
     const db = firebase.firestore();
 
-    let teachers = [], students = [], settings = { startDate: '', lockedWeeks: [], systemActive: true };
-    let editMode = false;
+    let teachers = [], students = [];
 
-    // التنقل بين التبويبات
     function openTab(evt, tabId) {
         document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
-        document.querySelectorAll('.tab-btn').forEach(b => { 
-            b.classList.remove('active'); 
-            b.style.background = "#f1f5f9"; 
-            b.style.color = "#64748b";
-        });
+        document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
         document.getElementById(tabId).classList.add('active');
         evt.currentTarget.classList.add('active');
-        const color = evt.currentTarget.style.getPropertyValue('--bg-act');
-        evt.currentTarget.style.background = color;
-        evt.currentTarget.style.color = "white";
     }
 
-    // عند التحميل
-    window.onload = async () => {
-        const lg = document.getElementById('lockGrid');
-        const mw = document.getElementById('monW');
-        lg.innerHTML = ''; mw.innerHTML = '<option value="">الأسبوع</option>';
-        for(let i=1; i<=14; i++) {
-            lg.innerHTML += `<label style="padding:10px; background:#fef2f2; border-radius:10px; text-align:center; font-size:11px">
-                أسبوع ${i}<br><input type="checkbox" class="w-lock" value="w${i}" onchange="saveManualLocks()">
-            </label>`;
-            mw.innerHTML += `<option value="w${i}">أسبوع ${i}</option>`;
-        }
-        await loadAllData();
-    };
-
-    // جلب كل البيانات
-    async function loadAllData() {
-        document.getElementById('schoolNameDisplay').innerText = "جاري المزامنة...";
-        
-        // جلب المعلمين
+    async function loadData() {
         const tSnap = await db.collection('teachers').get();
         teachers = tSnap.docs.map(doc => ({id: doc.id, ...doc.data()}));
-        
-        // جلب الطلاب
         const sSnap = await db.collection('students').get();
         students = sSnap.docs.map(doc => ({id: doc.id, ...doc.data()}));
         
-        // جلب الإعدادات
-        const setDoc = await db.collection('settings').doc('global').get();
-        if(setDoc.exists) {
-            settings = setDoc.data();
-            document.getElementById('startD').value = settings.startDate || '';
-            document.getElementById('sysActive').checked = settings.systemActive;
-            settings.lockedWeeks.forEach(w => {
-                const cb = document.querySelector(`.w-lock[value="${w}"]`);
-                if(cb) cb.checked = true;
-            });
-        }
-        
         document.getElementById('countT').innerText = teachers.length;
         document.getElementById('countS').innerText = students.length;
-        document.getElementById('schoolNameDisplay').innerText = "متصل ✅";
-        renderTeachersTable();
-        populateMonTeachers();
+        renderTeachers();
     }
 
-    // إدارة المعلمين
-    function renderTeachersTable() {
-        const tbody = document.getElementById('teachersTable');
-        tbody.innerHTML = '';
+    function renderTeachers() {
+        const b = document.getElementById('tBody'); b.innerHTML = '';
         teachers.forEach(t => {
-            tbody.innerHTML += `<tr>
-                <td>${t.name}</td>
-                <td>${t.subject}</td>
-                <td>${t.classes ? t.classes.join(', ') : '-'}</td>
-                <td>
-                    <button class="btn-edit" onclick="editTeacher('${t.id}')">تعديل</button>
-                    <button class="btn-del" onclick="deleteT('${t.id}')">حذف</button>
-                </td>
-            </tr>`;
+            b.innerHTML += `<tr><td>${t.name}</td><td>${t.subject}</td><td>${t.classes?.join(',')}</td>
+            <td><button onclick="deleteT('${t.id}')" style="color:red">حذف</button></td></tr>`;
         });
-    }
-
-    function editTeacher(id) {
-        const t = teachers.find(x => x.id === id);
-        if(!t) return;
-        editMode = true;
-        document.getElementById('tFormTitle').innerText = "تعديل بيانات المعلم";
-        document.getElementById('tUser').value = t.id;
-        document.getElementById('tUser').readOnly = true;
-        document.getElementById('tName').value = t.name;
-        document.getElementById('tSub').value = t.subject;
-        document.getElementById('tPass').value = t.pass;
-        document.querySelectorAll('.t-cls').forEach(cb => {
-            cb.checked = t.classes && t.classes.includes(cb.value);
-        });
-        document.getElementById('btnSaveT').innerText = "تحديث الآن";
-        document.getElementById('btnCancelEdit').style.display = "block";
-        openTab({currentTarget: document.querySelector('[onclick*="p2"]')}, 'p2');
-    }
-
-    function cancelTeacherEdit() {
-        editMode = false;
-        document.getElementById('tFormTitle').innerText = "تسجيل معلم جديد";
-        document.getElementById('tUser').value = '';
-        document.getElementById('tUser').readOnly = false;
-        document.getElementById('tName').value = '';
-        document.getElementById('tSub').value = '';
-        document.getElementById('tPass').value = '';
-        document.querySelectorAll('.t-cls').forEach(cb => cb.checked = false);
-        document.getElementById('btnSaveT').innerText = "حفظ المعلم";
-        document.getElementById('btnCancelEdit').style.display = "none";
     }
 
     async function saveTeacher() {
-        const id = document.getElementById('tUser').value.trim();
+        const id = document.getElementById('tUser').value;
         const data = {
-            name: document.getElementById('tName').value.trim(),
-            subject: document.getElementById('tSub').value.trim(),
-            pass: document.getElementById('tPass').value.trim(),
-            classes: Array.from(document.querySelectorAll('.t-cls:checked')).map(c => c.value)
+            name: document.getElementById('tName').value,
+            subject: document.getElementById('tSub').value,
+            pass: document.getElementById('tPass').value,
+            classes: document.getElementById('tClasses').value.split(',').map(c => c.trim())
         };
-        if(!id || !data.name) return alert("أكمل الحقول المطلوبة");
-        await db.collection('teachers').doc(id).set(data);
-        alert("تمت العملية بنجاح ✅");
-        cancelTeacherEdit();
-        loadAllData();
+        await db.collection('teachers').doc(id).set(data, {merge:true});
+        alert("تم الحفظ"); loadData();
     }
 
-    async function deleteT(id) {
-        if(confirm("هل تريد بالتأكيد حذف المعلم وكافة صلاحياته؟")) {
-            await db.collection('teachers').doc(id).delete();
-            loadAllData();
-        }
-    }
-
-    // إدارة الطلاب ومنع التكرار
     async function uploadStudents() {
-        const rawNames = document.getElementById('sNames').value.split('\n').filter(n => n.trim());
-        const gradeVal = document.getElementById('sGrade').value;
-        if(!gradeVal || rawNames.length === 0) return alert("أدخل الأسماء واختر الصف");
-        
-        const [g, b] = gradeVal.split('_');
-        const existingS = students.filter(s => s.grade === g && s.branch === b).map(s => s.name);
-        const newNames = rawNames.filter(n => !existingS.includes(n.trim()));
-
-        if(newNames.length === 0) return alert("لا توجد أسماء جديدة لإضافتها!");
-
+        const names = document.getElementById('sNames').value.split('\n').filter(n => n.trim());
+        const grade = document.getElementById('sGrade').value;
+        const [g, b] = grade.split('_');
         const batch = db.batch();
-        newNames.forEach((n, i) => {
-            const newRef = db.collection('students').doc();
-            batch.set(newRef, {name: n.trim(), grade: g, branch: b, sortOrder: Date.now() + i});
+        names.forEach(n => {
+            const ref = db.collection('students').doc();
+            batch.set(ref, {name: n.trim(), grade: g, branch: b, sortOrder: Date.now()});
         });
         await batch.commit();
-        alert(`تمت إضافة ${newNames.length} طالب جديد ✅`);
-        document.getElementById('sNames').value = '';
-        loadAllData();
+        alert("تم الرفع"); loadData();
     }
 
-    // المتابعة والأقفال
-    function populateMonTeachers() {
-        const monT = document.getElementById('monT');
-        monT.innerHTML = '<option value="">اختر المعلم</option>';
-        teachers.forEach(t => { monT.innerHTML += `<option value="${t.id}">${t.name}</option>`; });
-    }
-
-    function updateMonClasses() {
-        const t = teachers.find(x => x.id === document.getElementById('monT').value);
-        const mc = document.getElementById('monC');
-        mc.innerHTML = '<option value="">الفصل</option>';
-        if(t && t.classes) { t.classes.forEach(c => mc.innerHTML += `<option value="${c}">${c}</option>`); }
-    }
-
-    async function fetchMonitoring() {
-        const tId = document.getElementById('monT').value;
-        const week = document.getElementById('monW').value;
-        const classVal = document.getElementById('monC').value;
-        if(!tId || !week || !classVal) return alert("أكمل الاختيارات");
-        const [g, b] = classVal.split('_');
-        const resDiv = document.getElementById('monResult');
-        resDiv.innerHTML = "جاري المعالجة...";
-        
-        const gSnap = await db.collection('grades').where('teacher','==',tId).where('week','==',week).get();
-        const sSnap = await db.collection('students').where('grade','==',g).where('branch','==',b).get();
-        
-        const grades = {};
-        gSnap.forEach(doc => { const d = doc.data(); if(!grades[d.sid]) grades[d.sid] = {}; grades[d.sid][d.type] = d.score; });
-        
-        let html = '<table><thead><tr><th>الطالب</th><th>تقييم/اختبار</th><th>حصة</th><th>سلوك</th></tr></thead><tbody>';
-        sSnap.docs.sort((a,b)=>a.data().sortOrder - b.data().sortOrder).forEach(doc => {
-            const s = doc.data(); const sc = grades[doc.id] || {};
-            const mainScore = (week==='w6'||week==='w10') ? (sc.exam || '-') : (sc.t || '-');
-            html += `<tr><td>${s.name}</td><td>${mainScore}</td><td>${sc.v||'-'}</td><td>${sc.s||'-'}</td></tr>`;
-        });
-        resDiv.innerHTML = html + '</tbody></table>';
-    }
-
-    async function saveManualLocks() {
-        settings.lockedWeeks = Array.from(document.querySelectorAll('.w-lock:checked')).map(c => c.value);
-        await db.collection('settings').doc('global').set(settings, {merge: true});
-    }
-
-    async function saveAutoSettings() {
-        settings.startDate = document.getElementById('startD').value;
-        settings.systemActive = document.getElementById('sysActive').checked;
-        await db.collection('settings').doc('global').set(settings, {merge: true});
-        alert("تم حفظ الإعدادات ✅");
-    }
-
-    // --- وظيفة التصدير المجمع المتقدمة ---
-    async function exportFullData() {
+    // --- دالة التصدير العبقرية ---
+    async function exportComprehensiveExcel() {
         const gradeVal = document.getElementById('expGrade').value;
-        const [g, b] = gradeVal.split('_');
         const status = document.getElementById('expStatus');
-        status.innerText = "جاري جلب البيانات وحساب المتوسطات والأوزان النسيبة...";
-
+        status.innerText = "⏳ جاري تجميع البيانات وتحليل خيارات المعلمين...";
+        
         try {
-            const sList = students.filter(s => s.grade === g && s.branch === b).sort((a,b) => a.sortOrder - b.sortOrder);
-            const gSnap = await db.collection('grades').get(); 
+            const [g, b] = gradeVal.split('_');
+            const targetStudents = students.filter(s => s.grade === g && s.branch === b).sort((a,b)=>a.sortOrder - b.sortOrder);
+            const gSnap = await db.collection('grades').get();
             const allGrades = gSnap.docs.map(d => d.data());
-            const wb = XLSX.utils.book_new();
             
-            // تحديد المواد المرتبطة بهذا الصف
-            const relevantSubjects = [...new Set(teachers.filter(t => t.classes.includes(gradeVal)).map(t => t.subject))];
+            const wb = XLSX.utils.book_new();
+            const relevantTeachers = teachers.filter(t => t.classes.includes(gradeVal));
+            const subjects = [...new Set(relevantTeachers.map(t => t.subject))];
 
-            relevantSubjects.forEach(subject => {
-                const teacherIds = teachers.filter(t => t.subject === subject).map(t => t.id);
-                
-                const sheetData = sList.map(student => {
-                    const sGrades = allGrades.filter(rg => rg.sid === student.id && teacherIds.includes(rg.teacher));
+            subjects.forEach(sub => {
+                const subTeachers = relevantTeachers.filter(t => t.subject === sub);
+                const tIds = subTeachers.map(t => t.id);
+
+                const sheetData = targetStudents.map(student => {
+                    const sGrades = allGrades.filter(rg => rg.sid === student.id && tIds.includes(rg.teacher));
                     
-                    // حساب متوسط التقييمات (باستثناء أسابيع الاختبارات 6 و 10)
+                    // المعلم الأول لهذه المادة (لأخذ إعدادات أسابيع الاختبار منه)
+                    const mainT = subTeachers[0];
+                    const ex1W = mainT.exam1Week || "w6";
+                    const ex2W = mainT.exam2Week || "w10";
+
+                    // حساب المتوسطات (استثناء الأسابيع التي اختارها المعلم كأيام اختبار)
                     const calcAvg = (type) => {
-                        const vals = sGrades.filter(v => v.type === type && v.week !== 'w6' && v.week !== 'w10').map(v => v.score);
+                        const vals = sGrades.filter(v => v.type === type && v.week !== ex1W && v.week !== ex2W && !v.week.startsWith('ex'))
+                                           .map(v => v.score);
                         return vals.length ? parseFloat((vals.reduce((a,b)=>a+b,0)/vals.length).toFixed(2)) : 0;
                     };
 
-                    // حساب متوسط الاختبارين (w6 و w10) مع مراعاة الوزن النسبي
-                    const examEntries = sGrades.filter(v => v.type === 'exam');
-                    let totalExamNormalized = 0;
-                    examEntries.forEach(ex => {
-                        let score = ex.score;
-                        if(ex.maxSet === 15) score = score * 2; // مضاعفة الدرجة إذا رصدت من 15 لتصبح من 30
-                        totalExamNormalized += score;
-                    });
-                    const avgExam = examEntries.length ? parseFloat((totalExamNormalized / examEntries.length).toFixed(2)) : 0;
+                    // جلب درجات الاختبارات من الخانات المخصصة
+                    const getExamScore = (exKey) => {
+                        const entry = sGrades.find(v => v.week === exKey && v.type === 'exam');
+                        if(!entry) return 0;
+                        let s = parseFloat(entry.score) || 0;
+                        return (entry.maxSet === 15) ? s * 2 : s; // الوزن النسبي
+                    };
+
+                    const ex1Score = getExamScore('ex1');
+                    const ex2Score = getExamScore('ex2');
+                    const avgExams = parseFloat(((ex1Score + ex2Score) / 2).toFixed(2));
 
                     const avgT = calcAvg('t');
                     const avgV = calcAvg('v');
@@ -409,25 +206,27 @@
 
                     return {
                         "اسم الطالب": student.name,
-                        "متوسط التقييم (15)": avgT,
-                        "متوسط الحصة والواجب (15)": avgV,
-                        "متوسط السلوك (10)": avgS,
-                        "متوسط الاختبارات (30)": avgExam,
-                        "المجموع النهائي (70)": parseFloat((avgT + avgV + avgS + avgExam).toFixed(2))
+                        "التقييمات (15)": avgT,
+                        "الحصة والواجب (15)": avgV,
+                        "السلوك (10)": avgS,
+                        "متوسط الاختبارات (30)": avgExams,
+                        "المجموع النهائي (70)": parseFloat((avgT + avgV + avgS + avgExams).toFixed(2))
                     };
                 });
 
                 const ws = XLSX.utils.json_to_sheet(sheetData);
-                XLSX.utils.book_append_sheet(wb, ws, subject.substring(0, 31));
+                XLSX.utils.book_append_sheet(wb, ws, sub);
             });
 
-            XLSX.writeFile(wb, `تقرير_رصد_${gradeVal}_2026.xlsx`);
-            status.innerText = "تم التصدير بنجاح ✅";
-        } catch (error) {
-            console.error(error);
-            status.innerText = "حدث خطأ أثناء التصدير ❌";
+            XLSX.writeFile(wb, `النتائج_النهائية_${gradeVal}.xlsx`);
+            status.innerText = "✅ تم استخراج التقرير بنجاح!";
+        } catch (e) {
+            status.innerText = "❌ خطأ في التصدير: " + e.message;
+            console.error(e);
         }
     }
+
+    window.onload = loadData;
 </script>
 </body>
 </html>

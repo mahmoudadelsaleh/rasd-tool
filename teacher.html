@@ -3,44 +3,51 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>نظام الرصد الذكي v2026</title>
+    <title>نظام الرصد الذكي v2026 - نسخة المعلم</title>
     <script src="https://www.gstatic.com/firebasejs/9.0.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.0.0/firebase-firestore-compat.js"></script>
     <style>
-        :root { --primary: #3b82f6; --success: #10b981; --sidebar: #1e293b; --exam-bg: #fef3c7; --exam-border: #d97706; }
+        :root { --primary: #3b82f6; --success: #10b981; --sidebar: #1e293b; --exam-bg: #fef3c7; --exam-border: #d97706; --locked: #94a3b8; }
         body { font-family: 'Segoe UI', Tahoma, sans-serif; background: #f1f5f9; margin: 0; padding-bottom: 250px; }
+        
+        /* رسالة الإدارة */
+        #adminNotice { background: #fffbeb; border-bottom: 2px solid #fde68a; padding: 10px; font-size: 13px; color: #92400e; display: none; text-align: center; font-weight: bold; }
+        
         header { background: var(--sidebar); color: white; padding: 12px; display: flex; justify-content: space-between; align-items: center; box-shadow: 0 2px 8px rgba(0,0,0,0.1); }
         .container { padding: 10px; max-width: 800px; margin: auto; }
-        .card { background: white; border-radius: 12px; padding: 12px; margin-bottom: 8px; border: 1px solid #e2e8f0; box-shadow: 0 2px 4px rgba(0,0,0,0.05); position: relative; }
+        
+        .card { background: white; border-radius: 12px; padding: 12px; margin-bottom: 8px; border: 1px solid #e2e8f0; position: relative; }
         .active-row { border: 2px solid var(--primary); background: #f8fafc; }
+
         .smart-keyboard { position: fixed; bottom: 0; left: 0; right: 0; background: #cbd5e1; padding: 6px; display: none; gap: 5px; z-index: 2000; height: 235px; grid-template-columns: repeat(5, 1fr); border-top: 1px solid #94a3b8; }
         .key-btn { background: white; border-radius: 8px; font-weight: bold; cursor: pointer; display: flex; align-items: center; justify-content: center; font-size: 17px; border: 1px solid #94a3b8; height: 44px; }
         .key-btn:active { background: var(--primary); color: white; }
         .key-all { background: #8b5cf6; color: white; font-size: 11px; }
-        .key-fn { background: #64748b; color: white; font-size: 11px; }
         .key-done { background: var(--success); color: white; grid-column: span 2; font-size: 14px; }
-        .student-row { display: flex; justify-content: space-between; align-items: center; }
+
         .score-sel { width: 44px; height: 40px; font-weight: bold; text-align: center; border-radius: 8px; border: 1px solid #cbd5e1; background: #fff; font-size: 16px; }
         .score-sel.active-input { border: 3px solid var(--primary); background: #eff6ff; }
         .score-sel.saved { border-color: var(--success); background: #f0fdf4; color: #15803d; }
-        .score-sel.locked-exam { background: var(--exam-bg); border: 1px dashed var(--exam-border); color: #92400e; }
+        .score-sel.locked-item { background: #e2e8f0; cursor: not-allowed; opacity: 0.6; }
+        .score-sel.locked-exam { background: var(--exam-bg); border: 1px dashed var(--exam-border); }
+        
         .sync-status { position: fixed; top: 5px; left: 5px; font-size: 10px; background: #fff; padding: 3px 10px; border-radius: 20px; z-index: 2005; border: 1px solid #ddd; }
-        .hide-on-pad { display: none !important; }
         select { width: 100%; padding: 10px; border-radius: 8px; border: 1px solid #cbd5e1; font-weight: bold; }
     </style>
 </head>
 <body>
 
+<div id="adminNotice"></div>
 <div class="sync-status" id="syncStat">متصل ✅</div>
 
 <header>
     <div>أهلاً: <b id="tName">...</b></div>
-    <button id="closeBtn" onclick="closePad()" style="display:none; background:rgba(255,255,255,0.2); color:white; border:1px solid white; padding:4px 12px; border-radius:8px; font-size:12px;">إنهاء X</button>
+    <button id="closeBtn" onclick="closePad()" style="display:none; background:none; color:white; border:1px solid white; padding:4px 10px; border-radius:8px;">إغلاق X</button>
 </header>
 
 <div class="container">
     <div class="card" id="configCard">
-        <select id="vGrade" onchange="loadList()" style="margin-bottom:8px;"></select>
+        <select id="vGrade" onchange="loadList()" style="margin-bottom:8px;"><option value="">اختر الفصل</option></select>
         <select id="vWeek" onchange="loadList()"></select>
     </div>
     <div id="list"></div>
@@ -55,25 +62,38 @@
     const tId = sessionStorage.getItem('userEmail');
 
     let currentStudents = [], activeInputId = null, pendingUpdates = {};
-    let exam1Week = "w6", exam2Week = "w10";
+    let openWeeks = [], adminMsg = "";
 
     window.onload = async () => {
         if(!tId) return location.href="index.html";
+        
+        // جلب إعدادات الإدارة (الرسائل والأسابيع المفتوحة)
+        const sysDoc = await db.collection('system').doc('config').get();
+        if(sysDoc.exists) {
+            const sys = sysDoc.data();
+            openWeeks = sys.openWeeks || [];
+            if(sys.message) {
+                document.getElementById('adminNotice').innerText = "📢 " + sys.message;
+                document.getElementById('adminNotice').style.display = 'block';
+            }
+        }
+
         const tDoc = await db.collection('teachers').doc(tId).get();
         if(tDoc.exists) {
             const d = tDoc.data();
             document.getElementById('tName').innerText = d.name;
             d.classes.forEach(c => document.getElementById('vGrade').innerHTML += `<option value="${c}">${c}</option>`);
-            exam1Week = d.exam1Week || "w6"; exam2Week = d.exam2Week || "w10";
         }
+        
         const weekSel = document.getElementById('vWeek');
         for(let i=1; i<=14; i++) weekSel.innerHTML += `<option value="w${i}">الأسبوع ${i}</option>`;
-        weekSel.innerHTML += `<option value="ex1">📝 رصد اختبار 1</option><option value="ex2">📝 رصد اختبار 2</option>`;
+        weekSel.innerHTML += `<option value="ex1">📝 اختبار 1</option><option value="ex2">📝 اختبار 2</option>`;
     };
 
     async function loadList() {
         const gV = document.getElementById('vGrade').value, wV = document.getElementById('vWeek').value;
         if(!gV || !wV) return;
+        
         const [g, b] = gV.split('_');
         const sSnap = await db.collection('students').where('grade','==',g).where('branch','==',b).get();
         currentStudents = sSnap.docs.map(doc => ({id: doc.id, ...doc.data()})).sort((a,b)=>a.sortOrder-b.sortOrder);
@@ -90,51 +110,39 @@
 
     function renderList(grades, wV) {
         let h = '';
+        const isLocked = !openWeeks.includes(wV) && !wV.startsWith('ex');
+
         currentStudents.forEach((s, idx) => {
             const sc = grades[s.id] || {};
             const weekGrades = sc[wV] || {};
-            const isExPage = wV.startsWith('ex');
-            
             h += `<div class="card" id="row_${s.id}"><div class="student-row">
                 <span style="width:40%; font-size:13px;"><b>${idx+1}.</b> ${s.name}</span>
                 <div style="display:flex; gap:6px;">`;
             
-            if(isExPage) {
-                h += drawInp(s.id, 'exam', 30, weekGrades.exam, 'اختبار');
+            if(wV.startsWith('ex')) {
+                h += drawInp(s.id, 'exam', 30, weekGrades.exam, 'اختبار', false);
             } else {
-                let tScore = weekGrades.t; 
-                let tClass = "", tReadonly = false;
-                
-                if(wV === exam1Week || wV === exam2Week) {
-                    const exKey = (wV === exam1Week) ? 'ex1' : 'ex2';
-                    // هنا قمنا بحل مشكلة الـ undefined في التقييم
-                    tScore = (sc[exKey] && sc[exKey].exam !== undefined) ? sc[exKey].exam : "";
-                    tClass = "locked-exam"; tReadonly = true;
-                }
-                
-                h += `<div style="text-align:center"><small style="font-size:8px;display:block;color:#64748b">تقييم</small>
-                      <input type="text" readonly class="score-sel ${tClass} ${(tScore !== "" && tScore !== undefined)?'saved':''}" 
-                      id="inp_${s.id}_t" ${tReadonly ? '' : `onclick="openPad('${s.id}','t',15)"`} value="${tScore !== undefined ? tScore : ''}"></div>`;
-                
-                h += drawInp(s.id, 'v', 15, weekGrades.v, 'حصة');
-                h += drawInp(s.id, 's', 10, weekGrades.s, 'سلوك');
+                h += drawInp(s.id, 't', 15, weekGrades.t, 'تقييم', isLocked);
+                h += drawInp(s.id, 'v', 15, weekGrades.v, 'حصة', isLocked);
+                h += drawInp(s.id, 's', 10, weekGrades.s, 'سلوك', isLocked);
             }
             h += `</div></div></div>`;
         });
         document.getElementById('list').innerHTML = h;
     }
 
-    function drawInp(sid, type, max, cur, label) {
-        // فلترة القيمة هنا لضمان عدم ظهور undefined
-        const cleanVal = (cur !== undefined && cur !== null) ? cur : '';
-        return `<div style="text-align:center"><small style="font-size:8px;display:block;color:#64748b">${label}</small>
-                <input type="text" readonly class="score-sel ${cleanVal !== '' ? 'saved' : ''}" 
-                id="inp_${sid}_${type}" onclick="openPad('${sid}','${type}',${max})" value="${cleanVal}"></div>`;
+    function drawInp(sid, type, max, cur, label, isLocked) {
+        const val = cur !== undefined ? cur : '';
+        const lockedClass = isLocked ? 'locked-item' : '';
+        const icon = isLocked ? '🔒' : '';
+        return `<div style="text-align:center"><small style="font-size:8px;display:block">${label} ${icon}</small>
+                <input type="text" readonly class="score-sel ${lockedClass} ${val!==''?'saved':''}" 
+                id="inp_${sid}_${type}" ${isLocked ? '' : `onclick="openPad('${sid}','${type}',${max})"`} value="${val}"></div>`;
     }
 
     function openPad(sid, type, max) {
         activeInputId = {sid, type, max};
-        document.getElementById('configCard').classList.add('hide-on-pad');
+        document.getElementById('configCard').style.display = 'none';
         document.getElementById('closeBtn').style.display = 'block';
         document.querySelectorAll('.card').forEach(c => c.classList.remove('active-row'));
         document.getElementById(`row_${sid}`).classList.add('active-row');
@@ -147,8 +155,7 @@
         for(let i=1; i<=max; i++) html += `<div class="key-btn" onclick="press(${i})">${i}</div>`;
         html += `<div class="key-btn" style="background:#f1f5f9" onclick="press(0)">0</div>`;
         html += `<div class="key-btn key-all" onclick="applyToAll()">للـكل 👥</div>`;
-        html += `<div class="key-btn key-fn" onclick="next()">التالي ⏭️</div>`;
-        html += `<div class="key-btn key-done" onclick="closePad()">تم والحفظ ✅</div>`;
+        html += `<div class="key-btn key-done" onclick="closePad()">تم ✅</div>`;
         pad.innerHTML = html;
         window.scrollTo({ top: document.getElementById(`row_${sid}`).offsetTop - 80, behavior: 'smooth' });
     }
@@ -167,12 +174,11 @@
         if(!activeInputId) return;
         const {type} = activeInputId;
         const val = document.getElementById(`inp_${activeInputId.sid}_${type}`).value;
-        if(val === "" || val === undefined) return;
-        if(!confirm(`رصد (${val}) للجميع في خانة (${type})؟`)) return;
+        if(val === "") return alert("اختر درجة أولاً");
         const wV = document.getElementById('vWeek').value;
         currentStudents.forEach(s => {
             const targetInp = document.getElementById(`inp_${s.id}_${type}`);
-            if(targetInp && !targetInp.classList.contains('locked-exam')) {
+            if(targetInp && !targetInp.classList.contains('locked-item')) {
                 targetInp.value = val;
                 targetInp.classList.add('saved');
                 pendingUpdates[`${s.id}_${wV}_${type}`] = { sid: s.id, type, score: parseInt(val), week: wV, teacher: tId };
@@ -182,9 +188,8 @@
     }
 
     function next() {
-        if(!activeInputId) return;
         const wV = document.getElementById('vWeek').value;
-        const types = wV.startsWith('ex') ? ['exam'] : ((wV===exam1Week||wV===exam2Week)?['v','s']:['t','v','s']);
+        const types = wV.startsWith('ex') ? ['exam'] : ['t','v','s'];
         let nIdx = types.indexOf(activeInputId.type) + 1;
         if(nIdx < types.length) {
             openPad(activeInputId.sid, types[nIdx], types[nIdx]==='s'?10:15);
@@ -198,14 +203,14 @@
 
     function closePad() {
         document.getElementById('numPad').style.display = 'none';
-        document.getElementById('configCard').classList.remove('hide-on-pad');
+        document.getElementById('configCard').style.display = 'block';
         document.getElementById('closeBtn').style.display = 'none';
         forceSync();
     }
 
     async function forceSync() {
         if(Object.keys(pendingUpdates).length === 0) return;
-        document.getElementById('syncStat').innerText = "⏳ حفظ...";
+        document.getElementById('syncStat').innerText = "⏳ مزامنة...";
         const batch = db.batch();
         for (const k in pendingUpdates) {
             const docId = `${pendingUpdates[k].sid}_${pendingUpdates[k].week}_${pendingUpdates[k].type}_${tId}`;

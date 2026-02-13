@@ -2,30 +2,121 @@
 <html lang="ar" dir="rtl">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>تسجيل دخول المنظومة</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>منظومة الرصد - تسجيل الدخول</title>
+    
+    <link rel="apple-touch-icon" href="icon-180x180.png">
+    <link rel="icon" type="image/png" sizes="192x192" href="icon-192x192.png">
+    <link rel="manifest" href="manifest.json">
+    <meta name="theme-color" content="#1e293b">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+
     <script src="https://www.gstatic.com/firebasejs/9.0.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.0.0/firebase-firestore-compat.js"></script>
+    
     <style>
-        body { font-family: 'Segoe UI', sans-serif; background: #1e293b; display: flex; align-items: center; justify-content: center; height: 100vh; margin: 0; }
-        .login-card { background: white; padding: 40px; border-radius: 20px; box-shadow: 0 10px 25px rgba(0,0,0,0.2); width: 100%; max-width: 350px; text-align: center; }
-        input { width: 100%; padding: 12px; margin: 10px 0; border: 1px solid #ddd; border-radius: 8px; box-sizing: border-box; }
-        button { width: 100%; padding: 12px; background: #3b82f6; color: white; border: none; border-radius: 8px; cursor: pointer; font-weight: bold; }
-        button:hover { background: #2563eb; }
-        .error { color: #e11d48; font-size: 13px; margin-top: 10px; display: none; }
+        * { box-sizing: border-box; }
+        body { 
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; 
+            background: #1e293b; 
+            display: flex; 
+            align-items: center; 
+            justify-content: center; 
+            height: 100vh; 
+            margin: 0;
+            overflow: hidden;
+        }
+        .login-card { 
+            background: white; 
+            padding: 30px; 
+            border-radius: 25px; 
+            box-shadow: 0 15px 35px rgba(0,0,0,0.3); 
+            width: 90%; 
+            max-width: 380px; 
+            text-align: center;
+            animation: fadeIn 0.8s ease-out;
+        }
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        .logo-container {
+            width: 80px;
+            height: 80px;
+            margin: 0 auto 20px;
+            background: url('icon-192x192.png') no-repeat center;
+            background-size: contain;
+            border-radius: 15px;
+        }
+        h2 { color: #1e293b; margin-bottom: 5px; font-size: 22px; }
+        p { color: #64748b; font-size: 14px; margin-bottom: 25px; }
+        
+        input { 
+            width: 100%; 
+            padding: 14px; 
+            margin: 8px 0; 
+            border: 2px solid #f1f5f9; 
+            border-radius: 12px; 
+            background: #f8fafc;
+            font-size: 16px;
+            outline: none;
+            transition: 0.3s;
+        }
+        input:focus { border-color: #3b82f6; background: white; }
+        
+        button { 
+            width: 100%; 
+            padding: 14px; 
+            background: #3b82f6; 
+            color: white; 
+            border: none; 
+            border-radius: 12px; 
+            cursor: pointer; 
+            font-weight: bold; 
+            font-size: 16px;
+            margin-top: 15px;
+            box-shadow: 0 4px 12px rgba(59, 130, 246, 0.3);
+            transition: 0.2s;
+        }
+        button:active { transform: scale(0.98); background: #2563eb; }
+        
+        .error { 
+            color: #e11d48; 
+            font-size: 13px; 
+            margin-top: 15px; 
+            background: #fff1f2;
+            padding: 8px;
+            border-radius: 8px;
+            display: none; 
+        }
+        .version { margin-top: 20px; font-size: 10px; color: #cbd5e1; }
     </style>
 </head>
 <body>
 
 <div class="login-card">
-    <h2>تسجيل الدخول</h2>
-    <input type="text" id="user" placeholder="اسم المستخدم">
-    <input type="password" id="pass" placeholder="كلمة المرور">
-    <button onclick="handleLogin()">دخول</button>
+    <div class="logo-container"></div>
+    <h2>منظومة الرصد</h2>
+    <p>بوابة تسجيل دخول المعلمين</p>
+    
+    <input type="text" id="user" placeholder="اسم المستخدم" autocomplete="username">
+    <input type="password" id="pass" placeholder="كلمة المرور" autocomplete="current-password">
+    
+    <button id="loginBtn" onclick="handleLogin()">تسجيل الدخول</button>
+    
     <div id="err" class="error">بيانات الدخول غير صحيحة</div>
+    <div class="version">إصدار v2026.1.0</div>
 </div>
 
 <script>
+    // تسجيل الـ Service Worker لضمان عمل الصفحة حتى بدون شبكة
+    if ('serviceWorker' in navigator) {
+        window.addEventListener('load', () => {
+            navigator.serviceWorker.register('./sw.js');
+        });
+    }
+
     const firebaseConfig = { apiKey: "AIzaSyBePGZiqMPmZQdg36jZ4Rkdtd7OISxmob8", projectId: "rasd-tools" };
     firebase.initializeApp(firebaseConfig);
     const db = firebase.firestore();
@@ -33,8 +124,14 @@
     async function handleLogin() {
         const u = document.getElementById('user').value.trim();
         const p = document.getElementById('pass').value.trim();
+        const btn = document.getElementById('loginBtn');
         const err = document.getElementById('err');
+        
+        if(!u || !p) return;
+
         err.style.display = "none";
+        btn.innerText = "جاري التحقق...";
+        btn.disabled = true;
 
         if (u === "admin" && p === "790707071") {
             sessionStorage.setItem('userEmail', 'admin');
@@ -50,18 +147,25 @@
                     sessionStorage.setItem('userEmail', u);
                     window.location.href = "teacher.html";
                 } else {
-                    err.innerText = "كلمة المرور غير صحيحة";
-                    err.style.display = "block";
+                    showError("كلمة المرور غير صحيحة");
                 }
             } else {
-                err.innerText = "اسم المستخدم غير موجود";
-                err.style.display = "block";
+                showError("اسم المستخدم غير موجود");
             }
         } catch (e) {
-            err.innerText = "خطأ في الاتصال";
-            err.style.display = "block";
+            showError("خطأ في الاتصال بالخادم");
         }
+    }
+
+    function showError(msg) {
+        const err = document.getElementById('err');
+        const btn = document.getElementById('loginBtn');
+        err.innerText = msg;
+        err.style.display = "block";
+        btn.innerText = "تسجيل الدخول";
+        btn.disabled = false;
     }
 </script>
 </body>
 </html>
+

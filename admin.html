@@ -3,40 +3,46 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>الماستر v2026 - الإصدار النهائي الشامل</title>
+    <title>لوحة الماستر v2026 - الإصدار النهائي الشامل</title>
+
+    <link rel="apple-touch-icon" href="icon-180x180.png">
+    <link rel="icon" type="image/png" sizes="192x192" href="icon-192x192.png">
+    <link rel="manifest" href="manifest.json">
+    <meta name="theme-color" content="#0f172a">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+
     <script src="https://www.gstatic.com/firebasejs/9.0.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.0.0/firebase-firestore-compat.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+
+    <script src="firebase-config.js"></script>
+
     <style>
         :root { --primary: #0f172a; --accent: #3b82f6; --danger: #ef4444; --success: #10b981; --bg: #f1f5f9; }
-        body { font-family: 'Segoe UI', Tahoma, sans-serif; background: var(--bg); margin: 0; display: flex; flex-direction: column; align-items: center; }
+        body { font-family: 'Segoe UI', Tahoma, sans-serif; background: var(--bg); margin: 0; display: flex; flex-direction: column; align-items: center; overscroll-behavior-y: contain; }
         .app-container { width: 100%; max-width: 600px; min-height: 100vh; background: var(--bg); box-shadow: 0 0 20px rgba(0,0,0,0.1); }
-        header { background: var(--primary); color: white; padding: 15px; text-align: center; position: sticky; top: 0; z-index: 1001; }
-
-        .tabs-nav { display: grid; grid-template-columns: repeat(3, 1fr); background: white; border-bottom: 2px solid #e2e8f0; position: sticky; top: 50px; z-index: 1000; }
-        .tab-btn { padding: 12px 5px; border: none; background: none; cursor: pointer; font-weight: bold; font-size: 11px; color: #64748b; border-bottom: 2px solid transparent; }
+        header { background: var(--primary); color: white; padding: 15px; text-align: center; position: sticky; top: 0; z-index: 1001; display: flex; justify-content: center; align-items: center; gap: 10px; }
+        .logo-header { width: 24px; height: 24px; background: url('icon-192x192.png') no-repeat center; background-size: contain; border-radius: 4px; }
+        .tabs-nav { display: grid; grid-template-columns: repeat(3, 1fr); background: white; border-bottom: 2px solid #e2e8f0; position: sticky; top: 54px; z-index: 1000; }
+        .tab-btn { padding: 12px 5px; border: none; background: none; cursor: pointer; font-weight: bold; font-size: 11px; color: #64748b; border-bottom: 2px solid transparent; transition: 0.3s; }
         .tab-btn.active { color: var(--accent); border-bottom-color: var(--accent); background: #f0f7ff; }
-
-        .content-area { padding: 15px; box-sizing: border-box; }
+        .content-area { padding: 15px; box-sizing: border-box; padding-bottom: 80px; }
         .tab-panel { display: none; }
         .tab-panel.active { display: block; animation: fadeIn 0.3s; }
-
-        .card { background: white; border-radius: 15px; padding: 15px; margin-bottom: 15px; box-shadow: 0 2px 5px rgba(0,0,0,0.05); }
+        .card { background: white; border-radius: 15px; padding: 15px; margin-bottom: 15px; box-shadow: 0 2px 5px rgba(0,0,0,0.05); border: 1px solid #e2e8f0; }
         .stat-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; }
         .stat-box { background: white; padding: 12px; border-radius: 12px; text-align: center; border: 1px solid #e2e8f0; }
         .stat-val { display: block; font-size: 22px; font-weight: bold; color: var(--accent); }
         .stat-label { font-size: 11px; color: #64748b; }
-
-        .teacher-card { background: white; border-radius: 12px; padding: 15px; margin-bottom: 12px; border-right: 5px solid var(--accent); position: relative; }
-        .btn-main { width: 100%; padding: 12px; border-radius: 10px; border: none; font-weight: bold; cursor: pointer; color: white; margin-bottom: 8px; }
-        input, select, textarea { width: 100%; padding: 12px; margin: 5px 0 10px; border-radius: 10px; border: 1px solid #cbd5e1; box-sizing: border-box; }
-
-        .grid-checks { display: flex; flex-wrap: wrap; gap: 8px; margin: 10px 0; background: #f8fafc; padding: 10px; border-radius: 10px; }
-        .check-item { background: white; border: 1px solid #e2e8f0; padding: 6px 12px; border-radius: 20px; font-size: 11px; display: flex; align-items: center; gap: 5px; }
-
+        .teacher-card { background: white; border-radius: 12px; padding: 15px; margin-bottom: 12px; border-right: 5px solid var(--accent); position: relative; box-shadow: 0 2px 4px rgba(0,0,0,0.02); }
+        .btn-main { width: 100%; padding: 12px; border-radius: 10px; border: none; font-weight: bold; cursor: pointer; color: white; margin-bottom: 8px; transition: 0.2s; }
+        .btn-main:active { transform: scale(0.98); opacity: 0.9; }
+        input, select, textarea { width: 100%; padding: 12px; margin: 5px 0 10px; border-radius: 10px; border: 1px solid #cbd5e1; box-sizing: border-box; background: #f8fafc; font-size: 14px; }
+        .grid-checks { display: flex; flex-wrap: wrap; gap: 8px; margin: 10px 0; background: #f8fafc; padding: 10px; border-radius: 10px; border: 1px solid #e2e8f0; }
+        .check-item { background: white; border: 1px solid #e2e8f0; padding: 6px 12px; border-radius: 20px; font-size: 11px; display: flex; align-items: center; gap: 5px; cursor: pointer; }
         .backup-item { background: #fff; border: 1px solid #e2e8f0; padding: 10px; border-radius: 10px; margin-bottom: 8px; font-size: 11px; border-right: 4px solid var(--success); }
-        .list-item { display: flex; justify-content: space-between; padding: 8px; border-bottom: 1px solid #eee; font-size: 13px; }
-
+        .list-item { display: flex; justify-content: space-between; align-items: center; padding: 10px; border-bottom: 1px solid #f1f5f9; font-size: 13px; }
         @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
     </style>
 </head>
@@ -44,8 +50,9 @@
 
 <div class="app-container">
     <header>
+        <div class="logo-header"></div>
         <b>لوحة الماستر v2026</b>
-        <div id="status" style="font-size: 10px; color: #94a3b8; margin-top: 4px;">جاري المزامنة...</div>
+        <div id="status" style="font-size: 10px; color: #94a3b8; position: absolute; left: 15px;">...</div>
     </header>
 
     <div class="tabs-nav">
@@ -68,10 +75,10 @@
 
         <div id="teachers" class="tab-panel">
             <div class="card">
-                <h4 id="tFormTitle">إضافة معلم جديد</h4>
+                <h4 id="tFormTitle" style="margin-top:0">إضافة معلم جديد</h4>
                 <input type="text" id="tName" placeholder="الاسم الكامل">
                 <input type="text" id="tSub" placeholder="المادة">
-                <input type="text" id="tUser" placeholder="اليوزر ID (لا يمكن تغييره بعد الحفظ)">
+                <input type="text" id="tUser" placeholder="اليوزر ID (اسم الدخول)">
                 <input type="text" id="tPass" placeholder="كلمة المرور">
                 <div class="grid-checks">
                     <label class="check-item"><input type="checkbox" name="tCls" value="1_general"> أولى ثانوي</label>
@@ -98,14 +105,13 @@
             <div class="card">
                 <h4>👥 استعراض الطلاب</h4>
                 <select id="viewSGrade" onchange="renderStudentList()"></select>
-                <div id="studentListView" style="max-height: 300px; overflow-y: auto;"></div>
+                <div id="studentListView" style="max-height: 400px; overflow-y: auto;"></div>
             </div>
         </div>
 
         <div id="control" class="tab-panel">
             <div class="card">
                 <h4>📅 جدولة الاختبارات</h4>
-                <div style="font-size: 12px; margin-bottom: 10px; color: #64748b;">(تحديد أي أسبوع يعتبر اختبار لإغلاق خانة التقييم عند المعلم)</div>
                 <label>أسبوع الاختبار 1:</label><select id="ex1W" onchange="updateConfig()"></select>
                 <label>أسبوع الاختبار 2:</label><select id="ex2W" onchange="updateConfig()"></select>
             </div>
@@ -117,7 +123,7 @@
 
         <div id="reset" class="tab-panel">
             <div class="card" style="border-right: 5px solid var(--danger);">
-                <h4>🧹 تصفير وسجلات الأرشفة</h4>
+                <h4>🧹 تصفير وأرشفة</h4>
                 <select id="resT" onchange="loadResetOptions()"><option value="">اختر المعلم...</option></select>
                 <div id="resW" class="grid-checks" style="background: #fff1f2;"></div>
                 <button class="btn-main" style="background:var(--danger)" onclick="executeSafeReset()">تصفير الأسابيع المحددة</button>
@@ -127,7 +133,7 @@
 
         <div id="export" class="tab-panel">
             <div class="card">
-                <h4>📥 التصدير الاحترافي للكنترول</h4>
+                <h4>📥 التصدير للكنترول (Excel)</h4>
                 <select id="expGrade">
                     <option value="1_general">أولى ثانوي</option>
                     <option value="2_scientific">ثانية علمي</option>
@@ -135,23 +141,32 @@
                 </select>
                 <button class="btn-main" style="background:var(--accent)" onclick="runExport('period1')">تقرير الفترة الأولى (أ1-6)</button>
                 <button class="btn-main" style="background:var(--primary)" onclick="runExport('period2')">تقرير الفترة الثانية (أ7-12)</button>
-                <button class="btn-main" style="background:#8b5cf6" onclick="runExport('full')">التقرير الشامل (سجل المادة الكامل)</button>
-                <button class="btn-main" style="background:var(--success)" onclick="runExport('control')">📜 التقرير النهائي للكنترول (70 درجة)</button>
+                <button class="btn-main" style="background:#8b5cf6" onclick="runExport('full')">التقرير الشامل (سجل المادة)</button>
+                <button class="btn-main" style="background:var(--success)" onclick="runExport('control')">📜 التقرير النهائي (70 درجة)</button>
             </div>
         </div>
     </div>
 </div>
 
 <script>
-    const firebaseConfig = { apiKey: "AIzaSyBePGZiqMPmZQdg36jZ4Rkdtd7OISxmob8", projectId: "rasd-tools" };
-    firebase.initializeApp(firebaseConfig);
-    const db = firebase.firestore();
+    if ('serviceWorker' in navigator) {
+        window.addEventListener('load', () => { navigator.serviceWorker.register('./sw.js'); });
+    }
 
+    // تم حذف المفتاح ووضعه في الملف الخارجي firebase-config.js
+    if (typeof firebaseConfig !== 'undefined') {
+        firebase.initializeApp(firebaseConfig);
+    } else {
+        alert("ملف الإعدادات firebase-config.js مفقود!");
+    }
+    
+    const db = firebase.firestore();
     let teachers = [], students = [], grades = [], config = { openWeeks: [], ex1W: 'w6', ex2W: 'w12' };
     const classAr = { '1_general': 'أولى ثانوي', '2_scientific': 'ثانية علمي', '2_literary': 'ثانية أدبي' };
 
     async function init() {
-        document.getElementById('status').innerText = "⏳ مزامنة البيانات...";
+        if(sessionStorage.getItem('isAdmin') !== 'true') return location.href="index.html";
+        document.getElementById('status').innerText = "⏳...";
         try {
             const [tS, sS, gS, cS] = await Promise.all([
                 db.collection('teachers').get(),
@@ -159,18 +174,14 @@
                 db.collection('grades').get(),
                 db.collection('system').doc('config').get()
             ]);
-
             teachers = tS.docs.map(d => ({id: d.id, ...d.data()}));
             students = sS.docs.map(d => ({id: d.id, ...d.data()})).sort((a,b)=>a.sortOrder-b.sortOrder);
             grades = gS.docs.map(d => d.data());
             if(cS.exists) config = cS.data();
-
             renderUI();
             loadBackups();
-            document.getElementById('status').innerText = "✅ النظام جاهز";
-        } catch (e) {
-            document.getElementById('status').innerText = "❌ خطأ في الاتصال";
-        }
+            document.getElementById('status').innerText = "✅";
+        } catch (e) { document.getElementById('status').innerText = "❌"; }
     }
 
     function renderUI() {
@@ -190,19 +201,15 @@
                 <b>${t.name}</b> <small>(${t.subject})</small><br>
                 <div style="margin-top:5px">${t.classes.map(c => `<span class="check-item" style="display:inline-block; font-size:9px">${classAr[c]}</span>`).join('')}</div>
                 <div style="margin-top:10px; display:flex; gap:10px">
-                    <button onclick="editT('${t.id}')" style="color:var(--accent); background:none; border:1px solid; border-radius:5px; cursor:pointer">تعديل</button>
-                    <button onclick="deleteDoc('teachers','${t.id}')" style="color:var(--danger); background:none; border:1px solid; border-radius:5px; cursor:pointer">حذف</button>
+                    <button onclick="editT('${t.id}')" style="color:var(--accent); background:none; border:1px solid; border-radius:5px; cursor:pointer; padding:5px 10px">تعديل</button>
+                    <button onclick="deleteDoc('teachers','${t.id}')" style="color:var(--danger); background:none; border:1px solid; border-radius:5px; cursor:pointer; padding:5px 10px">حذف</button>
                 </div>
             </div>`;
         });
 
         const ex1 = document.getElementById('ex1W'), ex2 = document.getElementById('ex2W'), lockG = document.getElementById('weeksLock'), resT = document.getElementById('resT');
-        ex1.innerHTML = ''; ex2.innerHTML = ''; lockG.innerHTML = ''; resT.innerHTML = '<option value="">اختر المعلم للتصفير...</option>';
-
-        const allW = [];
-        for(let i=1; i<=14; i++) allW.push('w'+i);
-        allW.push('ex1', 'ex2');
-
+        ex1.innerHTML = ''; ex2.innerHTML = ''; lockG.innerHTML = ''; resT.innerHTML = '<option value="">اختر المعلم...</option>';
+        const allW = []; for(let i=1; i<=14; i++) allW.push('w'+i); allW.push('ex1', 'ex2');
         allW.forEach(w => {
             const label = w.startsWith('ex') ? (w==='ex1'?'اختبار 1':'اختبار 2') : 'أسبوع '+w.substring(1);
             if(!w.startsWith('ex')) {
@@ -212,7 +219,6 @@
             lockG.innerHTML += `<label class="check-item"><input type="checkbox" ${config.openWeeks.includes(w)?'checked':''} onchange="toggleW('${w}',this.checked)"> ${label}</label>`;
         });
         teachers.forEach(t => resT.innerHTML += `<option value="${t.id}">${t.name}</option>`);
-
         const vsG = document.getElementById('viewSGrade');
         vsG.innerHTML = '<option value="">اختر الصف للعرض...</option>';
         Object.keys(classAr).forEach(c => vsG.innerHTML += `<option value="${c}">${classAr[c]}</option>`);
@@ -221,18 +227,14 @@
     async function uploadStudents() {
         const gradeVal = document.getElementById('sGrade').value;
         const names = document.getElementById('sNames').value.split('\n').map(n => n.trim()).filter(n => n !== "");
-        if(!names.length) return alert("الرجاء إدخال الأسماء");
+        if(!names.length) return alert("أدخل الأسماء");
         const [g, b] = gradeVal.split('_');
-        let added = 0, skipped = 0;
+        let added = 0;
         for (let name of names) {
             const isDup = students.some(s => s.name === name && (s.grade + '_' + (s.branch||'general')) === gradeVal);
-            if (!isDup) {
-                await db.collection('students').add({ name, grade: g, branch: b || 'general', sortOrder: 999 });
-                added++;
-            } else { skipped++; }
+            if (!isDup) { await db.collection('students').add({ name, grade: g, branch: b || 'general', sortOrder: 999 }); added++; }
         }
-        alert(`تم: إضافة ${added} وتجاهل ${skipped} مكرر`);
-        init();
+        alert(`تمت إضافة ${added} طالب`); init();
     }
 
     function renderStudentList() {
@@ -244,8 +246,7 @@
     }
 
     function loadResetOptions() {
-        const wBox = document.getElementById('resW');
-        wBox.innerHTML = '';
+        const wBox = document.getElementById('resW'); wBox.innerHTML = '';
         for(let i=1; i<=14; i++) wBox.innerHTML += `<label class="check-item"><input type="checkbox" name="rw" value="w${i}"> أ${i}</label>`;
         wBox.innerHTML += `<label class="check-item"><input type="checkbox" name="rw" value="ex1"> خ1</label><label class="check-item"><input type="checkbox" name="rw" value="ex2"> خ2</label>`;
     }
@@ -258,23 +259,15 @@
             const snap = await db.collection('grades').where('teacher', '==', tId).where('week', 'in', selW).get();
             if(snap.empty) return alert("لا توجد بيانات");
             const bData = snap.docs.map(d => ({id: d.id, ...d.data()}));
-            await db.collection('backups').add({
-                tId, tName: teachers.find(x=>x.id===tId).name,
-                date: new Date().toLocaleString('ar-EG'),
-                data: bData, weeks: selW, timestamp: Date.now()
-            });
-            const batch = db.batch();
-            snap.docs.forEach(d => batch.delete(d.ref));
-            await batch.commit();
-            alert("تم التصفير والأرشفة بنجاح ✅");
-            init();
+            await db.collection('backups').add({ tId, tName: teachers.find(x=>x.id===tId).name, date: new Date().toLocaleString('ar-EG'), data: bData, weeks: selW, timestamp: Date.now() });
+            const batch = db.batch(); snap.docs.forEach(d => batch.delete(d.ref)); await batch.commit();
+            alert("تم التصفير والأرشفة بنجاح ✅"); init();
         }
     }
 
     async function loadBackups() {
         const bSnap = await db.collection('backups').orderBy('timestamp', 'desc').limit(5).get();
-        const div = document.getElementById('backupListArea');
-        div.innerHTML = '<h4>📦 سجل الأرشفة (آخر 5)</h4>';
+        const div = document.getElementById('backupListArea'); div.innerHTML = '<h4>📦 سجل الأرشفة (آخر 5)</h4>';
         bSnap.forEach(doc => {
             const b = doc.data();
             div.innerHTML += `<div class="backup-item" style="display:flex; justify-content:space-between; padding:10px; margin-bottom:5px; background:white; border-radius:10px;">
@@ -285,149 +278,62 @@
     }
 
     async function restoreBackup(id) {
-        if(!confirm("إعادة هذه البيانات للجدول الرئيسي؟")) return;
+        if(!confirm("إعادة البيانات؟")) return;
         const bDoc = await db.collection('backups').doc(id).get();
-        const batch = db.batch();
-        bDoc.data().data.forEach(item => { const {id, ...p} = item; batch.set(db.collection('grades').doc(id), p); });
+        const batch = db.batch(); bDoc.data().data.forEach(item => { const {id, ...p} = item; batch.set(db.collection('grades').doc(id), p); });
         await batch.commit(); alert("تم الاسترجاع ✅"); init();
     }
 
-    function editT(id) {
-        const t = teachers.find(x => x.id === id);
-        document.getElementById('tName').value = t.name;
-        document.getElementById('tSub').value = t.subject;
-        document.getElementById('tUser').value = t.id;
-        document.getElementById('tUser').readOnly = true;
-        document.getElementById('tPass').value = t.pass;
-        document.querySelectorAll('input[name="tCls"]').forEach(cb => cb.checked = t.classes.includes(cb.value));
-        document.getElementById('tFormTitle').innerText = "📝 تعديل بيانات: " + t.name;
-        document.getElementById('tSaveBtn').innerText = "تحديث البيانات";
-        document.getElementById('tCancelBtn').style.display = "block";
-        window.scrollTo(0,0);
-    }
-
-    function resetTForm() {
-        document.getElementById('tFormTitle').innerText = "إضافة معلم جديد";
-        document.getElementById('tUser').readOnly = false;
-        ['tName','tSub','tUser','tPass'].forEach(i => document.getElementById(i).value = '');
-        document.querySelectorAll('input[name="tCls"]').forEach(cb => cb.checked = false);
-        document.getElementById('tSaveBtn').innerText = "حفظ المعلم";
-        document.getElementById('tCancelBtn').style.display = "none";
-    }
-
-    async function saveTeacher() {
-        const id = document.getElementById('tUser').value.trim();
-        const cls = Array.from(document.querySelectorAll('input[name="tCls"]:checked')).map(c => c.value);
-        if(!id || !cls.length) return alert("أكمل البيانات");
-        await db.collection('teachers').doc(id).set({
-            name: document.getElementById('tName').value,
-            subject: document.getElementById('tSub').value,
-            pass: document.getElementById('tPass').value,
-            classes: cls
-        }, {merge:true});
-        resetTForm(); init();
-    }
-
-    // --- محرك التصدير المطور (الذي طلبته) ---
     async function runExport(type) {
-        const gV = document.getElementById('expGrade').value;
-        if (!gV) return alert("اختر الصف أولاً");
-        document.getElementById('status').innerText = "⏳ جاري تحضير الملف (شيت لكل مادة)...";
-        
-        const workbook = XLSX.utils.book_new();
-        const subjects = [...new Set(teachers.map(t => t.subject))];
-
+        const gV = document.getElementById('expGrade').value; if (!gV) return alert("اختر الصف");
+        const workbook = XLSX.utils.book_new(); const subjects = [...new Set(teachers.map(t => t.subject))];
         subjects.forEach(sub => {
             const subTeachers = teachers.filter(t => t.subject === sub);
             const subStudents = students.filter(s => (s.grade + '_' + (s.branch||'general')) === gV);
-            let sheetData = [];
-
+            let sheetData = []; const tIds = subTeachers.map(t => t.id);
             subStudents.forEach((s, idx) => {
                 let row = { "م": idx + 1, "الاسم": s.name };
-                // نجمع درجات الطالب في هذه المادة (قد يكون هناك أكثر من معلم لنفس المادة)
-                const tIds = subTeachers.map(t => t.id);
-
                 if (type === 'period1' || type === 'period2') {
                     const range = type === 'period1' ? ['w1','w2','w3','w4','w5','w6'] : ['w7','w8','w9','w10','w11','w12'];
-                    let sumT = 0, sumV = 0, sumS = 0;
-                    range.forEach(w => {
-                        const tScore = getSubScore(s.id, tIds, w, 't');
-                        const vScore = getSubScore(s.id, tIds, w, 'v');
-                        const sScore = getSubScore(s.id, tIds, w, 's');
-                        row[`${w}_ت`] = tScore;
-                        row[`${w}_ح`] = vScore; // ح تعني واجب كما طلبت
-                        row[`${w}_س`] = sScore;
-                        sumT += tScore; sumV += vScore; sumS += sScore;
+                    let sT=0, sV=0, sS=0; range.forEach(w => { 
+                        let t=getScore(s.id,tIds,w,'t'), v=getScore(s.id,tIds,w,'v'), sc=getScore(s.id,tIds,w,'s');
+                        row[`${w}_ت`]=t; row[`${w}_ح`]=v; row[`${w}_س`]=sc; sT+=t; sV+=v; sS+=sc; 
                     });
-                    row["متوسط ت"] = (sumT / 6).toFixed(2);
-                    row["متوسط ح"] = (sumV / 6).toFixed(2);
-                    row["متوسط س"] = (sumS / 6).toFixed(2);
-                    row["الاختبار"] = getSubScore(s.id, tIds, type==='period1'?'ex1':'ex2', 'exam');
-
-                } else if (type === 'full') {
-                    for(let i=1; i<=14; i++) {
-                        row[`أ${i}_ت`] = getSubScore(s.id, tIds, 'w'+i, 't');
-                        row[`أ${i}_ح`] = getSubScore(s.id, tIds, 'w'+i, 'v');
-                        row[`أ${i}_س`] = getSubScore(s.id, tIds, 'w'+i, 's');
-                    }
-                    row["خ1"] = getSubScore(s.id, tIds, 'ex1', 'exam');
-                    row["خ2"] = getSubScore(s.id, tIds, 'ex2', 'exam');
-
+                    row["م ت"]=(sT/6).toFixed(1); row["م ح"]=(sV/6).toFixed(1); row["م س"]=(sS/6).toFixed(1);
+                    row["الاختبار"]=getScore(s.id,tIds,type==='period1'?'ex1':'ex2','exam');
                 } else if (type === 'control') {
-                    let t12 = 0, v12 = 0, s12 = 0;
-                    for(let i=1; i<=12; i++) {
-                        t12 += getSubScore(s.id, tIds, 'w'+i, 't');
-                        v12 += getSubScore(s.id, tIds, 'w'+i, 'v');
-                        s12 += getSubScore(s.id, tIds, 'w'+i, 's');
-                    }
-                    const avgT = (t12 / 12);
-                    const avgV = (v12 / 12);
-                    const avgS = (s12 / 12) * (10/15);
-                    const ex1 = getSubScore(s.id, tIds, 'ex1', 'exam');
-                    const ex2 = getSubScore(s.id, tIds, 'ex2', 'exam');
-                    const avgEx = (ex1 + ex2) / 2;
-
-                    row["متوسط ت (15)"] = avgT.toFixed(2);
-                    row["متوسط ح (15)"] = avgV.toFixed(2);
-                    row["متوسط س (10)"] = avgS.toFixed(2);
-                    row["متوسط الاختبارين (30)"] = avgEx.toFixed(2);
-                    row["المجموع (70)"] = (avgT + avgV + avgS + avgEx).toFixed(2);
+                    let t12=0, v12=0, s12=0; for(let i=1; i<=12; i++) { t12+=getScore(s.id,tIds,'w'+i,'t'); v12+=getScore(s.id,tIds,'w'+i,'v'); s12+=getScore(s.id,tIds,'w'+i,'s'); }
+                    let avgT=t12/12, avgV=v12/12, avgS=(s12/12)*(10/15), exAvg=(getScore(s.id,tIds,'ex1','exam')+getScore(s.id,tIds,'ex2','exam'))/2;
+                    row["تقييم (15)"]=avgT.toFixed(1); row["واجب (15)"]=avgV.toFixed(1); row["سلوك (10)"]=avgS.toFixed(1); row["اختبار (30)"]=exAvg.toFixed(1);
+                    row["المجموع (70)"]=(avgT+avgV+avgS+exAvg).toFixed(1);
                 }
                 sheetData.push(row);
             });
-
-            const worksheet = XLSX.utils.json_to_sheet(sheetData);
-            XLSX.utils.book_append_sheet(workbook, worksheet, sub.substring(0, 30));
+            XLSX.utils.book_append_sheet(workbook, XLSX.utils.json_to_sheet(sheetData), sub.substring(0, 30));
         });
-
-        XLSX.writeFile(workbook, `تقرير_${type}_${gV}.xlsx`);
-        document.getElementById('status').innerText = "✅ تم استخراج الملف";
+        XLSX.writeFile(workbook, `Report_${type}_${gV}.xlsx`);
     }
 
-    function getSubScore(sid, tIds, week, type) {
-        // نجمع الدرجات لجميع المعلمين الذين يدرسون نفس المادة لهذا الطالب
-        return grades.filter(g => g.sid === sid && tIds.includes(g.teacher) && g.week === week && g.type === type)
-                     .reduce((a, b) => a + parseFloat(b.score || 0), 0);
+    function getScore(sid, tIds, week, type) { return grades.filter(g => g.sid === sid && tIds.includes(g.teacher) && g.week === week && g.type === type).reduce((a, b) => a + parseFloat(b.score || 0), 0); }
+    function editT(id) {
+        const t = teachers.find(x => x.id === id); document.getElementById('tName').value = t.name; document.getElementById('tSub').value = t.subject;
+        document.getElementById('tUser').value = t.id; document.getElementById('tUser').readOnly = true; document.getElementById('tPass').value = t.pass;
+        document.querySelectorAll('input[name="tCls"]').forEach(cb => cb.checked = t.classes.includes(cb.value));
+        document.getElementById('tFormTitle').innerText = "تعديل: " + t.name; document.getElementById('tSaveBtn').innerText = "تحديث"; document.getElementById('tCancelBtn').style.display = "block"; window.scrollTo(0,0);
     }
-
-    async function updateConfig() {
-        config.ex1W = document.getElementById('ex1W').value;
-        config.ex2W = document.getElementById('ex2W').value;
-        await db.collection('system').doc('config').set(config);
+    function resetTForm() { document.getElementById('tFormTitle').innerText = "إضافة معلم"; document.getElementById('tUser').readOnly = false; ['tName','tSub','tUser','tPass'].forEach(i => document.getElementById(i).value = ''); document.querySelectorAll('input[name="tCls"]').forEach(cb => cb.checked = false); document.getElementById('tSaveBtn').innerText = "حفظ"; document.getElementById('tCancelBtn').style.display = "none"; }
+    async function saveTeacher() {
+        const id = document.getElementById('tUser').value.trim(); const cls = Array.from(document.querySelectorAll('input[name="tCls"]:checked')).map(c => c.value);
+        if(!id || !cls.length) return alert("أكمل البيانات");
+        await db.collection('teachers').doc(id).set({ name: document.getElementById('tName').value, subject: document.getElementById('tSub').value, pass: document.getElementById('tPass').value, classes: cls }, {merge:true});
+        resetTForm(); init();
     }
-    async function toggleW(w, s) {
-        if(s) config.openWeeks.push(w); else config.openWeeks = config.openWeeks.filter(x => x !== w);
-        await db.collection('system').doc('config').set(config);
-    }
-    async function deleteDoc(col, id) { if(confirm("حذف نهائي؟")) { await db.collection(col).doc(id).delete(); init(); } }
-    function openTab(evt, tabId) {
-        document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
-        document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
-        document.getElementById(tabId).classList.add('active');
-        evt.currentTarget.classList.add('active');
-    }
-
+    async function toggleW(w, s) { if(s) config.openWeeks.push(w); else config.openWeeks = config.openWeeks.filter(x => x !== w); await db.collection('system').doc('config').set(config); }
+    async function updateConfig() { config.ex1W = document.getElementById('ex1W').value; config.ex2W = document.getElementById('ex2W').value; await db.collection('system').doc('config').set(config); }
+    async function deleteDoc(col, id) { if(confirm("حذف؟")) { await db.collection(col).doc(id).delete(); init(); } }
+    function openTab(evt, tabId) { document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active')); document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active')); document.getElementById(tabId).classList.add('active'); evt.currentTarget.classList.add('active'); }
     window.onload = init;
 </script>
 </body>
 </html>
+

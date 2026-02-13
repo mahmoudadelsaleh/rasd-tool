@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>الماستر v2026 - الإصدار النهائي</title>
+    <title>الماستر v2026 - الإصدار النهائي الشامل</title>
     <script src="https://www.gstatic.com/firebasejs/9.0.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.0.0/firebase-firestore-compat.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
@@ -12,15 +12,15 @@
         body { font-family: 'Segoe UI', Tahoma, sans-serif; background: var(--bg); margin: 0; display: flex; flex-direction: column; align-items: center; }
         .app-container { width: 100%; max-width: 600px; min-height: 100vh; background: var(--bg); box-shadow: 0 0 20px rgba(0,0,0,0.1); }
         header { background: var(--primary); color: white; padding: 15px; text-align: center; position: sticky; top: 0; z-index: 1001; }
-        
+
         .tabs-nav { display: grid; grid-template-columns: repeat(3, 1fr); background: white; border-bottom: 2px solid #e2e8f0; position: sticky; top: 50px; z-index: 1000; }
         .tab-btn { padding: 12px 5px; border: none; background: none; cursor: pointer; font-weight: bold; font-size: 11px; color: #64748b; border-bottom: 2px solid transparent; }
         .tab-btn.active { color: var(--accent); border-bottom-color: var(--accent); background: #f0f7ff; }
-        
+
         .content-area { padding: 15px; box-sizing: border-box; }
         .tab-panel { display: none; }
         .tab-panel.active { display: block; animation: fadeIn 0.3s; }
-        
+
         .card { background: white; border-radius: 15px; padding: 15px; margin-bottom: 15px; box-shadow: 0 2px 5px rgba(0,0,0,0.05); }
         .stat-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; }
         .stat-box { background: white; padding: 12px; border-radius: 12px; text-align: center; border: 1px solid #e2e8f0; }
@@ -30,10 +30,10 @@
         .teacher-card { background: white; border-radius: 12px; padding: 15px; margin-bottom: 12px; border-right: 5px solid var(--accent); position: relative; }
         .btn-main { width: 100%; padding: 12px; border-radius: 10px; border: none; font-weight: bold; cursor: pointer; color: white; margin-bottom: 8px; }
         input, select, textarea { width: 100%; padding: 12px; margin: 5px 0 10px; border-radius: 10px; border: 1px solid #cbd5e1; box-sizing: border-box; }
-        
+
         .grid-checks { display: flex; flex-wrap: wrap; gap: 8px; margin: 10px 0; background: #f8fafc; padding: 10px; border-radius: 10px; }
         .check-item { background: white; border: 1px solid #e2e8f0; padding: 6px 12px; border-radius: 20px; font-size: 11px; display: flex; align-items: center; gap: 5px; }
-        
+
         .backup-item { background: #fff; border: 1px solid #e2e8f0; padding: 10px; border-radius: 10px; margin-bottom: 8px; font-size: 11px; border-right: 4px solid var(--success); }
         .list-item { display: flex; justify-content: space-between; padding: 8px; border-bottom: 1px solid #eee; font-size: 13px; }
 
@@ -127,15 +127,16 @@
 
         <div id="export" class="tab-panel">
             <div class="card">
-                <h4>📥 التصدير الكامل Excel</h4>
+                <h4>📥 التصدير الاحترافي للكنترول</h4>
                 <select id="expGrade">
                     <option value="1_general">أولى ثانوي</option>
                     <option value="2_scientific">ثانية علمي</option>
                     <option value="2_literary">ثانية أدبي</option>
                 </select>
-                <button class="btn-main" style="background:var(--accent)" onclick="runExport('period1')">تصدير الفترة 1 (أ1-6 + اختبار)</button>
-                <button class="btn-main" style="background:var(--primary)" onclick="runExport('period2')">تصدير الفترة 2 (أ7-12 + اختبار)</button>
-                <button class="btn-main" style="background:var(--success)" onclick="runExport('full')">تصدير السجل الكامل (14 أسبوع)</button>
+                <button class="btn-main" style="background:var(--accent)" onclick="runExport('period1')">تقرير الفترة الأولى (أ1-6)</button>
+                <button class="btn-main" style="background:var(--primary)" onclick="runExport('period2')">تقرير الفترة الثانية (أ7-12)</button>
+                <button class="btn-main" style="background:#8b5cf6" onclick="runExport('full')">التقرير الشامل (سجل المادة الكامل)</button>
+                <button class="btn-main" style="background:var(--success)" onclick="runExport('control')">📜 التقرير النهائي للكنترول (70 درجة)</button>
             </div>
         </div>
     </div>
@@ -173,7 +174,6 @@
     }
 
     function renderUI() {
-        // تحديث الإحصائيات
         document.getElementById('s-t').innerText = teachers.length;
         document.getElementById('s-s').innerText = students.length;
         let statsH = '';
@@ -183,7 +183,6 @@
         });
         document.getElementById('statsDetails').innerHTML = statsH;
 
-        // بطاقات المعلمين
         const tDiv = document.getElementById('teacherCards');
         tDiv.innerHTML = '<h4>قائمة المعلمين</h4>';
         teachers.forEach(t => {
@@ -197,10 +196,9 @@
             </div>`;
         });
 
-        // الأقفال ومنتقي التصفير
         const ex1 = document.getElementById('ex1W'), ex2 = document.getElementById('ex2W'), lockG = document.getElementById('weeksLock'), resT = document.getElementById('resT');
         ex1.innerHTML = ''; ex2.innerHTML = ''; lockG.innerHTML = ''; resT.innerHTML = '<option value="">اختر المعلم للتصفير...</option>';
-        
+
         const allW = [];
         for(let i=1; i<=14; i++) allW.push('w'+i);
         allW.push('ex1', 'ex2');
@@ -215,21 +213,17 @@
         });
         teachers.forEach(t => resT.innerHTML += `<option value="${t.id}">${t.name}</option>`);
 
-        // منتقي عرض الطلاب
         const vsG = document.getElementById('viewSGrade');
         vsG.innerHTML = '<option value="">اختر الصف للعرض...</option>';
         Object.keys(classAr).forEach(c => vsG.innerHTML += `<option value="${c}">${classAr[c]}</option>`);
     }
 
-    // --- إدارة الطلاب ---
     async function uploadStudents() {
         const gradeVal = document.getElementById('sGrade').value;
         const names = document.getElementById('sNames').value.split('\n').map(n => n.trim()).filter(n => n !== "");
         if(!names.length) return alert("الرجاء إدخال الأسماء");
-        
         const [g, b] = gradeVal.split('_');
         let added = 0, skipped = 0;
-        
         for (let name of names) {
             const isDup = students.some(s => s.name === name && (s.grade + '_' + (s.branch||'general')) === gradeVal);
             if (!isDup) {
@@ -249,7 +243,6 @@
         `).join('');
     }
 
-    // --- التصفير الذكي ---
     function loadResetOptions() {
         const wBox = document.getElementById('resW');
         wBox.innerHTML = '';
@@ -261,18 +254,15 @@
         const tId = document.getElementById('resT').value;
         const selW = Array.from(document.querySelectorAll('input[name="rw"]:checked')).map(e => e.value);
         if(!tId || !selW.length) return alert("حدد المعلم والأسابيع");
-
         if(confirm("سيتم نقل البيانات للأرشيف وتصفيرها. متابعة؟")) {
             const snap = await db.collection('grades').where('teacher', '==', tId).where('week', 'in', selW).get();
-            if(snap.empty) return alert("لا توجد بيانات لهذه الاختيارات");
-
+            if(snap.empty) return alert("لا توجد بيانات");
             const bData = snap.docs.map(d => ({id: d.id, ...d.data()}));
             await db.collection('backups').add({
                 tId, tName: teachers.find(x=>x.id===tId).name,
                 date: new Date().toLocaleString('ar-EG'),
                 data: bData, weeks: selW, timestamp: Date.now()
             });
-
             const batch = db.batch();
             snap.docs.forEach(d => batch.delete(d.ref));
             await batch.commit();
@@ -302,7 +292,6 @@
         await batch.commit(); alert("تم الاسترجاع ✅"); init();
     }
 
-    // --- التعديل والحفظ ---
     function editT(id) {
         const t = teachers.find(x => x.id === id);
         document.getElementById('tName').value = t.name;
@@ -311,7 +300,6 @@
         document.getElementById('tUser').readOnly = true;
         document.getElementById('tPass').value = t.pass;
         document.querySelectorAll('input[name="tCls"]').forEach(cb => cb.checked = t.classes.includes(cb.value));
-        
         document.getElementById('tFormTitle').innerText = "📝 تعديل بيانات: " + t.name;
         document.getElementById('tSaveBtn').innerText = "تحديث البيانات";
         document.getElementById('tCancelBtn').style.display = "block";
@@ -331,7 +319,6 @@
         const id = document.getElementById('tUser').value.trim();
         const cls = Array.from(document.querySelectorAll('input[name="tCls"]:checked')).map(c => c.value);
         if(!id || !cls.length) return alert("أكمل البيانات");
-
         await db.collection('teachers').doc(id).set({
             name: document.getElementById('tName').value,
             subject: document.getElementById('tSub').value,
@@ -341,33 +328,88 @@
         resetTForm(); init();
     }
 
-    // --- التصدير ---
-    function runExport(type) {
+    // --- محرك التصدير المطور (الذي طلبته) ---
+    async function runExport(type) {
         const gV = document.getElementById('expGrade').value;
-        const filteredStudents = students.filter(s => (s.grade + '_' + (s.branch||'general')) === gV);
-        const data = filteredStudents.map((s, idx) => {
-            let row = { "م": idx + 1, "الاسم": s.name };
-            if (type === 'full') {
-                for(let i=1; i<=14; i++) {
-                    const sc = grades.filter(g => g.sid === s.id && g.week === 'w'+i).reduce((a,c)=>a+c.score,0);
-                    row[`أسبوع ${i}`] = sc || 0;
+        if (!gV) return alert("اختر الصف أولاً");
+        document.getElementById('status').innerText = "⏳ جاري تحضير الملف (شيت لكل مادة)...";
+        
+        const workbook = XLSX.utils.book_new();
+        const subjects = [...new Set(teachers.map(t => t.subject))];
+
+        subjects.forEach(sub => {
+            const subTeachers = teachers.filter(t => t.subject === sub);
+            const subStudents = students.filter(s => (s.grade + '_' + (s.branch||'general')) === gV);
+            let sheetData = [];
+
+            subStudents.forEach((s, idx) => {
+                let row = { "م": idx + 1, "الاسم": s.name };
+                // نجمع درجات الطالب في هذه المادة (قد يكون هناك أكثر من معلم لنفس المادة)
+                const tIds = subTeachers.map(t => t.id);
+
+                if (type === 'period1' || type === 'period2') {
+                    const range = type === 'period1' ? ['w1','w2','w3','w4','w5','w6'] : ['w7','w8','w9','w10','w11','w12'];
+                    let sumT = 0, sumV = 0, sumS = 0;
+                    range.forEach(w => {
+                        const tScore = getSubScore(s.id, tIds, w, 't');
+                        const vScore = getSubScore(s.id, tIds, w, 'v');
+                        const sScore = getSubScore(s.id, tIds, w, 's');
+                        row[`${w}_ت`] = tScore;
+                        row[`${w}_ح`] = vScore; // ح تعني واجب كما طلبت
+                        row[`${w}_س`] = sScore;
+                        sumT += tScore; sumV += vScore; sumS += sScore;
+                    });
+                    row["متوسط ت"] = (sumT / 6).toFixed(2);
+                    row["متوسط ح"] = (sumV / 6).toFixed(2);
+                    row["متوسط س"] = (sumS / 6).toFixed(2);
+                    row["الاختبار"] = getSubScore(s.id, tIds, type==='period1'?'ex1':'ex2', 'exam');
+
+                } else if (type === 'full') {
+                    for(let i=1; i<=14; i++) {
+                        row[`أ${i}_ت`] = getSubScore(s.id, tIds, 'w'+i, 't');
+                        row[`أ${i}_ح`] = getSubScore(s.id, tIds, 'w'+i, 'v');
+                        row[`أ${i}_س`] = getSubScore(s.id, tIds, 'w'+i, 's');
+                    }
+                    row["خ1"] = getSubScore(s.id, tIds, 'ex1', 'exam');
+                    row["خ2"] = getSubScore(s.id, tIds, 'ex2', 'exam');
+
+                } else if (type === 'control') {
+                    let t12 = 0, v12 = 0, s12 = 0;
+                    for(let i=1; i<=12; i++) {
+                        t12 += getSubScore(s.id, tIds, 'w'+i, 't');
+                        v12 += getSubScore(s.id, tIds, 'w'+i, 'v');
+                        s12 += getSubScore(s.id, tIds, 'w'+i, 's');
+                    }
+                    const avgT = (t12 / 12);
+                    const avgV = (v12 / 12);
+                    const avgS = (s12 / 12) * (10/15);
+                    const ex1 = getSubScore(s.id, tIds, 'ex1', 'exam');
+                    const ex2 = getSubScore(s.id, tIds, 'ex2', 'exam');
+                    const avgEx = (ex1 + ex2) / 2;
+
+                    row["متوسط ت (15)"] = avgT.toFixed(2);
+                    row["متوسط ح (15)"] = avgV.toFixed(2);
+                    row["متوسط س (10)"] = avgS.toFixed(2);
+                    row["متوسط الاختبارين (30)"] = avgEx.toFixed(2);
+                    row["المجموع (70)"] = (avgT + avgV + avgS + avgEx).toFixed(2);
                 }
-            } else {
-                const range = type==='period1'?['w1','w2','w3','w4','w5','w6']:['w7','w8','w9','w10','w11','w12'];
-                let sum = 0;
-                range.forEach(w => sum += grades.filter(g => g.sid === s.id && g.week === w).reduce((a,c)=>a+c.score,0));
-                row["مجموع الفترات"] = sum;
-                row["درجة الاختبار"] = grades.filter(g => g.sid === s.id && g.week === (type==='period1'?'ex1':'ex2')).reduce((a,c)=>a+c.score,0);
-            }
-            return row;
+                sheetData.push(row);
+            });
+
+            const worksheet = XLSX.utils.json_to_sheet(sheetData);
+            XLSX.utils.book_append_sheet(workbook, worksheet, sub.substring(0, 30));
         });
-        const ws = XLSX.utils.json_to_sheet(data);
-        const wb = XLSX.utils.book_new();
-        XLSX.utils.book_append_sheet(wb, ws, "نتائج");
-        XLSX.writeFile(wb, `Export_${gV}_${type}.xlsx`);
+
+        XLSX.writeFile(workbook, `تقرير_${type}_${gV}.xlsx`);
+        document.getElementById('status').innerText = "✅ تم استخراج الملف";
     }
 
-    // --- المساعدة ---
+    function getSubScore(sid, tIds, week, type) {
+        // نجمع الدرجات لجميع المعلمين الذين يدرسون نفس المادة لهذا الطالب
+        return grades.filter(g => g.sid === sid && tIds.includes(g.teacher) && g.week === week && g.type === type)
+                     .reduce((a, b) => a + parseFloat(b.score || 0), 0);
+    }
+
     async function updateConfig() {
         config.ex1W = document.getElementById('ex1W').value;
         config.ex2W = document.getElementById('ex2W').value;

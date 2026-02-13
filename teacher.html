@@ -2,253 +2,225 @@
 <html lang="ar" dir="rtl">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>لوحة التحكم الشاملة - الإدارة</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>نظام الرصد الذكي v2026 - نسخة المعلم</title>
     <script src="https://www.gstatic.com/firebasejs/9.0.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.0.0/firebase-firestore-compat.js"></script>
     <style>
-        :root { --sidebar: #0f172a; --accent: #3b82f6; --danger: #ef4444; --success: #22c55e; --bg: #f1f5f9; }
-        body { font-family: 'Segoe UI', sans-serif; background: var(--bg); margin: 0; }
+        :root { --primary: #3b82f6; --success: #10b981; --sidebar: #1e293b; --exam-bg: #fef3c7; --exam-border: #d97706; --locked: #94a3b8; }
+        body { font-family: 'Segoe UI', Tahoma, sans-serif; background: #f1f5f9; margin: 0; padding-bottom: 250px; }
         
-        header { background: var(--sidebar); color: white; padding: 15px; text-align: center; }
+        /* رسالة الإدارة */
+        #adminNotice { background: #fffbeb; border-bottom: 2px solid #fde68a; padding: 10px; font-size: 13px; color: #92400e; display: none; text-align: center; font-weight: bold; }
         
-        /* نظام التبويبات المدمج */
-        .tabs { display: flex; background: white; overflow-x: auto; border-bottom: 1px solid #e2e8f0; sticky: top; z-index: 100; }
-        .tab-btn { padding: 15px 20px; border: none; background: none; cursor: pointer; font-weight: bold; color: #64748b; white-space: nowrap; }
-        .tab-btn.active { color: var(--accent); border-bottom: 3px solid var(--accent); background: #eff6ff; }
+        header { background: var(--sidebar); color: white; padding: 12px; display: flex; justify-content: space-between; align-items: center; box-shadow: 0 2px 8px rgba(0,0,0,0.1); }
+        .container { padding: 10px; max-width: 800px; margin: auto; }
         
-        .container { padding: 20px; max-width: 1100px; margin: auto; }
-        .content-section { display: none; }
-        .content-section.active { display: block; }
+        .card { background: white; border-radius: 12px; padding: 12px; margin-bottom: 8px; border: 1px solid #e2e8f0; position: relative; }
+        .active-row { border: 2px solid var(--primary); background: #f8fafc; }
+
+        .smart-keyboard { position: fixed; bottom: 0; left: 0; right: 0; background: #cbd5e1; padding: 6px; display: none; gap: 5px; z-index: 2000; height: 235px; grid-template-columns: repeat(5, 1fr); border-top: 1px solid #94a3b8; }
+        .key-btn { background: white; border-radius: 8px; font-weight: bold; cursor: pointer; display: flex; align-items: center; justify-content: center; font-size: 17px; border: 1px solid #94a3b8; height: 44px; }
+        .key-btn:active { background: var(--primary); color: white; }
+        .key-all { background: #8b5cf6; color: white; font-size: 11px; }
+        .key-done { background: var(--success); color: white; grid-column: span 2; font-size: 14px; }
+
+        .score-sel { width: 44px; height: 40px; font-weight: bold; text-align: center; border-radius: 8px; border: 1px solid #cbd5e1; background: #fff; font-size: 16px; }
+        .score-sel.active-input { border: 3px solid var(--primary); background: #eff6ff; }
+        .score-sel.saved { border-color: var(--success); background: #f0fdf4; color: #15803d; }
+        .score-sel.locked-item { background: #e2e8f0; cursor: not-allowed; opacity: 0.6; }
+        .score-sel.locked-exam { background: var(--exam-bg); border: 1px dashed var(--exam-border); }
         
-        .card { background: white; border-radius: 12px; padding: 20px; margin-bottom: 20px; box-shadow: 0 4px 6px rgba(0,0,0,0.05); }
-        
-        /* جداول البيانات */
-        table { width: 100%; border-collapse: collapse; margin-top: 10px; background: white; }
-        th, td { padding: 12px; text-align: right; border-bottom: 1px solid #e2e8f0; }
-        th { background: #f8fafc; color: #1e293b; }
-        
-        /* التنسيقات السابقة (الفصول والطلاب) */
-        .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 15px; }
-        input, select, textarea { width: 100%; padding: 10px; margin: 5px 0 15px; border-radius: 8px; border: 1px solid #cbd5e1; box-sizing: border-box; }
-        .btn { padding: 10px 15px; border-radius: 8px; border: none; cursor: pointer; font-weight: bold; }
-        .btn-primary { background: var(--accent); color: white; }
-        .btn-danger { background: var(--danger); color: white; }
-        
-        /* التحكم في الأسابيع */
-        .status-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); gap: 10px; }
-        .toggle-box { padding: 10px; border: 1px solid #e2e8f0; border-radius: 8px; text-align: center; background: #fff; }
-        .badge { padding: 2px 8px; border-radius: 10px; font-size: 11px; font-weight: bold; }
-        .badge-open { background: #dcfce7; color: #166534; }
-        .badge-closed { background: #fee2e2; color: #991b1b; }
+        .sync-status { position: fixed; top: 5px; left: 5px; font-size: 10px; background: #fff; padding: 3px 10px; border-radius: 20px; z-index: 2005; border: 1px solid #ddd; }
+        select { width: 100%; padding: 10px; border-radius: 8px; border: 1px solid #cbd5e1; font-weight: bold; }
     </style>
 </head>
 <body>
 
+<div id="adminNotice"></div>
+<div class="sync-status" id="syncStat">متصل ✅</div>
+
 <header>
-    <h2>نظام الرصد المركزي - لوحة المدير</h2>
+    <div>أهلاً: <b id="tName">...</b></div>
+    <button id="closeBtn" onclick="closePad()" style="display:none; background:none; color:white; border:1px solid white; padding:4px 10px; border-radius:8px;">إغلاق X</button>
 </header>
 
-<div class="tabs">
-    <button class="tab-btn active" onclick="showTab('monitoring')">📊 المراقبة والرسائل</button>
-    <button class="tab-btn" onclick="showTab('control')">🔓 فتح/إغلاق الأسابيع</button>
-    <button class="tab-btn" onclick="showTab('teachers')">👨‍🏫 إدارة المعلمين</button>
-    <button class="tab-btn" onclick="showTab('students')">🎓 الطلاب والفصول</button>
-    <button class="tab-btn" onclick="showTab('reset')">🧹 تصفير البيانات</button>
-</div>
-
 <div class="container">
-    
-    <div id="monitoring" class="content-section active">
-        <div class="card">
-            <h3>✉️ توجيهات الأسبوع</h3>
-            <textarea id="adminMsg" placeholder="اكتب التعليمات التي ستظهر للمعلمين في صفحاتهم..."></textarea>
-            <button class="btn btn-primary" onclick="saveAdminMsg()">حفظ ونشر التعليمات 🚀</button>
-        </div>
-        <div class="card">
-            <h3>📊 حالة رصد المعلمين</h3>
-            <div id="monTable">جاري التحميل...</div>
-        </div>
+    <div class="card" id="configCard">
+        <select id="vGrade" onchange="loadList()" style="margin-bottom:8px;"><option value="">اختر الفصل</option></select>
+        <select id="vWeek" onchange="loadList()"></select>
     </div>
-
-    <div id="control" class="content-section">
-        <div class="card">
-            <h3>🔓 التحكم في صلاحيات الرصد</h3>
-            <p>الأسبوع المفتوح يمكن للمعلم الرصد فيه، المغلق يظهر للقراءة فقط.</p>
-            <div class="status-grid" id="weeksControl"></div>
-        </div>
-    </div>
-
-    <div id="teachers" class="content-section">
-        <div class="card">
-            <h3>إضافة معلم جديد</h3>
-            <input type="text" id="tName" placeholder="اسم المعلم">
-            <input type="email" id="tEmail" placeholder="البريد الإلكتروني (Gmail)">
-            <input type="text" id="tClasses" placeholder="الفصول (مثال: 1-أ, 2-ب مقسومة بفاصلة)">
-            <button class="btn btn-primary" onclick="addTeacher()">حفظ المعلم</button>
-        </div>
-        <div class="card">
-            <h3>قائمة المعلمين</h3>
-            <div id="teachersList"></div>
-        </div>
-    </div>
-
-    <div id="students" class="content-section">
-        <div class="card">
-            <h3>إضافة طالب</h3>
-            <input type="text" id="sName" placeholder="اسم الطالب">
-            <input type="text" id="sGrade" placeholder="الصف (مثال: 1)">
-            <input type="text" id="sBranch" placeholder="الفصل (مثال: أ)">
-            <button class="btn btn-primary" onclick="addStudent()">إضافة الطالب</button>
-        </div>
-        <div class="card">
-            <h3>عرض الطلاب حسب الفصل</h3>
-            <div style="display:flex; gap:10px;">
-                <input type="text" id="fGrade" placeholder="الصف">
-                <input type="text" id="fBranch" placeholder="الفصل">
-                <button class="btn btn-primary" onclick="loadStudents()">عرض</button>
-            </div>
-            <div id="studentsList"></div>
-        </div>
-    </div>
-
-    <div id="reset" class="content-section">
-        <div class="card" style="border-right: 5px solid var(--danger);">
-            <h3>🧹 منطقة حذف البيانات</h3>
-            <p>تنبيه: سيتم مسح الدرجات نهائياً للأسبوع المختار ولا يمكن التراجع.</p>
-            <select id="resetWeekSelector"></select>
-            <button class="btn btn-danger" onclick="resetGrades()">تصفير الدرجات الآن ⚠️</button>
-        </div>
-    </div>
-
+    <div id="list"></div>
 </div>
+
+<div class="smart-keyboard" id="numPad"></div>
 
 <script>
     const firebaseConfig = { apiKey: "AIzaSyBePGZiqMPmZQdg36jZ4Rkdtd7OISxmob8", projectId: "rasd-tools" };
     firebase.initializeApp(firebaseConfig);
     const db = firebase.firestore();
+    const tId = sessionStorage.getItem('userEmail');
 
-    function showTab(tabId) {
-        document.querySelectorAll('.content-section').forEach(s => s.classList.remove('active'));
-        document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
-        document.getElementById(tabId).classList.add('active');
-        event.currentTarget.classList.add('active');
-        if(tabId === 'monitoring') loadMonitoring();
-        if(tabId === 'teachers') loadTeachersList();
-    }
+    let currentStudents = [], activeInputId = null, pendingUpdates = {};
+    let openWeeks = [], adminMsg = "";
 
-    window.onload = () => {
-        loadSystemConfig();
-        loadMonitoring();
-        setupResetOptions();
+    window.onload = async () => {
+        if(!tId) return location.href="index.html";
+        
+        // جلب إعدادات الإدارة (الرسائل والأسابيع المفتوحة)
+        const sysDoc = await db.collection('system').doc('config').get();
+        if(sysDoc.exists) {
+            const sys = sysDoc.data();
+            openWeeks = sys.openWeeks || [];
+            if(sys.message) {
+                document.getElementById('adminNotice').innerText = "📢 " + sys.message;
+                document.getElementById('adminNotice').style.display = 'block';
+            }
+        }
+
+        const tDoc = await db.collection('teachers').doc(tId).get();
+        if(tDoc.exists) {
+            const d = tDoc.data();
+            document.getElementById('tName').innerText = d.name;
+            d.classes.forEach(c => document.getElementById('vGrade').innerHTML += `<option value="${c}">${c}</option>`);
+        }
+        
+        const weekSel = document.getElementById('vWeek');
+        for(let i=1; i<=14; i++) weekSel.innerHTML += `<option value="w${i}">الأسبوع ${i}</option>`;
+        weekSel.innerHTML += `<option value="ex1">📝 اختبار 1</option><option value="ex2">📝 اختبار 2</option>`;
     };
 
-    // --- وظائف التحكم (الجديدة) ---
-    async function loadSystemConfig() {
-        const doc = await db.collection('system').doc('config').get();
-        const data = doc.exists ? doc.data() : { openWeeks: [], message: "" };
+    async function loadList() {
+        const gV = document.getElementById('vGrade').value, wV = document.getElementById('vWeek').value;
+        if(!gV || !wV) return;
         
+        const [g, b] = gV.split('_');
+        const sSnap = await db.collection('students').where('grade','==',g).where('branch','==',b).get();
+        currentStudents = sSnap.docs.map(doc => ({id: doc.id, ...doc.data()})).sort((a,b)=>a.sortOrder-b.sortOrder);
+        
+        const gSnap = await db.collection('grades').where('teacher','==',tId).get();
+        const grades = {};
+        gSnap.forEach(doc => { 
+            const d = doc.data(); if(!grades[d.sid]) grades[d.sid] = {}; 
+            if(!grades[d.sid][d.week]) grades[d.sid][d.week] = {};
+            grades[d.sid][d.week][d.type] = d.score;
+        });
+        renderList(grades, wV);
+    }
+
+    function renderList(grades, wV) {
         let h = '';
-        for(let i=1; i<=14; i++) {
-            const isOpen = data.openWeeks.includes('w'+i);
-            h += `<div class="toggle-box">
-                    <b>أسبوع ${i}</b><br>
-                    <span class="badge ${isOpen?'badge-open':'badge-closed'}">${isOpen?'مفتوح':'مغلق'}</span><br>
-                    <input type="checkbox" ${isOpen?'checked':''} onchange="toggleWeek('w${i}', this.checked)">
-                  </div>`;
-        }
-        document.getElementById('weeksControl').innerHTML = h;
-        document.getElementById('adminMsg').value = data.message || "";
-    }
+        const isLocked = !openWeeks.includes(wV) && !wV.startsWith('ex');
 
-    async function toggleWeek(wId, status) {
-        const ref = db.collection('system').doc('config');
-        const doc = await ref.get();
-        let current = doc.exists ? doc.data().openWeeks || [] : [];
-        if(status) current.push(wId); else current = current.filter(w => w !== wId);
-        await ref.set({ openWeeks: current }, {merge:true});
-        loadSystemConfig();
-    }
-
-    async function saveAdminMsg() {
-        await db.collection('system').doc('config').set({ message: document.getElementById('adminMsg').value }, {merge:true});
-        alert("تم نشر الرسالة ✅");
-    }
-
-    // --- وظائف إدارة المعلمين والطلاب (المستعادة من الكود السابق) ---
-    async function addTeacher() {
-        const name = document.getElementById('tName').value;
-        const email = document.getElementById('tEmail').value;
-        const classes = document.getElementById('tClasses').value.split(',').map(c => c.trim());
-        if(!name || !email) return alert("اكمل البيانات");
-        await db.collection('teachers').doc(email).set({ name, classes });
-        alert("تمت الإضافة");
-        loadTeachersList();
-    }
-
-    async function loadTeachersList() {
-        const snap = await db.collection('teachers').get();
-        let h = '<table><tr><th>المعلم</th><th>الايميل</th><th>الفصول</th><th>إجراء</th></tr>';
-        snap.forEach(doc => {
-            const t = doc.data();
-            h += `<tr><td>${t.name}</td><td>${doc.id}</td><td>${t.classes.join(', ')}</td>
-                  <td><button class="btn-danger" onclick="deleteDoc('teachers','${doc.id}')">حذف</button></td></tr>`;
+        currentStudents.forEach((s, idx) => {
+            const sc = grades[s.id] || {};
+            const weekGrades = sc[wV] || {};
+            h += `<div class="card" id="row_${s.id}"><div class="student-row">
+                <span style="width:40%; font-size:13px;"><b>${idx+1}.</b> ${s.name}</span>
+                <div style="display:flex; gap:6px;">`;
+            
+            if(wV.startsWith('ex')) {
+                h += drawInp(s.id, 'exam', 30, weekGrades.exam, 'اختبار', false);
+            } else {
+                h += drawInp(s.id, 't', 15, weekGrades.t, 'تقييم', isLocked);
+                h += drawInp(s.id, 'v', 15, weekGrades.v, 'حصة', isLocked);
+                h += drawInp(s.id, 's', 10, weekGrades.s, 'سلوك', isLocked);
+            }
+            h += `</div></div></div>`;
         });
-        document.getElementById('teachersList').innerHTML = h + '</table>';
+        document.getElementById('list').innerHTML = h;
     }
 
-    async function addStudent() {
-        const name = document.getElementById('sName').value;
-        const grade = document.getElementById('sGrade').value;
-        const branch = document.getElementById('sBranch').value;
-        await db.collection('students').add({ name, grade, branch, sortOrder: Date.now() });
-        alert("تم إضافة الطالب");
+    function drawInp(sid, type, max, cur, label, isLocked) {
+        const val = cur !== undefined ? cur : '';
+        const lockedClass = isLocked ? 'locked-item' : '';
+        const icon = isLocked ? '🔒' : '';
+        return `<div style="text-align:center"><small style="font-size:8px;display:block">${label} ${icon}</small>
+                <input type="text" readonly class="score-sel ${lockedClass} ${val!==''?'saved':''}" 
+                id="inp_${sid}_${type}" ${isLocked ? '' : `onclick="openPad('${sid}','${type}',${max})"`} value="${val}"></div>`;
     }
 
-    async function loadStudents() {
-        const g = document.getElementById('fGrade').value;
-        const b = document.getElementById('fBranch').value;
-        const snap = await db.collection('students').where('grade','==',g).where('branch','==',b).get();
-        let h = '<ul>';
-        snap.forEach(doc => h += `<li>${doc.data().name} <button onclick="deleteDoc('students','${doc.id}')">حذف</button></li>`);
-        document.getElementById('studentsList').innerHTML = h + '</ul>';
+    function openPad(sid, type, max) {
+        activeInputId = {sid, type, max};
+        document.getElementById('configCard').style.display = 'none';
+        document.getElementById('closeBtn').style.display = 'block';
+        document.querySelectorAll('.card').forEach(c => c.classList.remove('active-row'));
+        document.getElementById(`row_${sid}`).classList.add('active-row');
+        document.querySelectorAll('.score-sel').forEach(el => el.classList.remove('active-input'));
+        document.getElementById(`inp_${sid}_${type}`).classList.add('active-input');
+
+        const pad = document.getElementById('numPad');
+        pad.style.display = 'grid';
+        let html = '';
+        for(let i=1; i<=max; i++) html += `<div class="key-btn" onclick="press(${i})">${i}</div>`;
+        html += `<div class="key-btn" style="background:#f1f5f9" onclick="press(0)">0</div>`;
+        html += `<div class="key-btn key-all" onclick="applyToAll()">للـكل 👥</div>`;
+        html += `<div class="key-btn key-done" onclick="closePad()">تم ✅</div>`;
+        pad.innerHTML = html;
+        window.scrollTo({ top: document.getElementById(`row_${sid}`).offsetTop - 80, behavior: 'smooth' });
     }
 
-    async function deleteDoc(col, id) {
-        if(confirm("هل أنت متأكد؟")) {
-            await db.collection(col).doc(id).delete();
-            alert("تم الحذف");
-            location.reload();
+    function press(val) {
+        if(!activeInputId) return;
+        const {sid, type} = activeInputId;
+        const inp = document.getElementById(`inp_${sid}_${type}`);
+        inp.value = val; inp.classList.add('saved');
+        const wV = document.getElementById('vWeek').value;
+        pendingUpdates[`${sid}_${wV}_${type}`] = { sid, type, score: val, week: wV, teacher: tId };
+        next();
+    }
+
+    function applyToAll() {
+        if(!activeInputId) return;
+        const {type} = activeInputId;
+        const val = document.getElementById(`inp_${activeInputId.sid}_${type}`).value;
+        if(val === "") return alert("اختر درجة أولاً");
+        const wV = document.getElementById('vWeek').value;
+        currentStudents.forEach(s => {
+            const targetInp = document.getElementById(`inp_${s.id}_${type}`);
+            if(targetInp && !targetInp.classList.contains('locked-item')) {
+                targetInp.value = val;
+                targetInp.classList.add('saved');
+                pendingUpdates[`${s.id}_${wV}_${type}`] = { sid: s.id, type, score: parseInt(val), week: wV, teacher: tId };
+            }
+        });
+        forceSync();
+    }
+
+    function next() {
+        const wV = document.getElementById('vWeek').value;
+        const types = wV.startsWith('ex') ? ['exam'] : ['t','v','s'];
+        let nIdx = types.indexOf(activeInputId.type) + 1;
+        if(nIdx < types.length) {
+            openPad(activeInputId.sid, types[nIdx], types[nIdx]==='s'?10:15);
+        } else {
+            const curIdx = currentStudents.findIndex(s => s.id === activeInputId.sid);
+            if(curIdx < currentStudents.length - 1) {
+                openPad(currentStudents[curIdx+1].id, types[0], types[0]==='exam'?30:15);
+            } else { closePad(); }
         }
     }
 
-    // --- وظائف المراقبة والتصفير ---
-    async function loadMonitoring() {
-        const teachers = await db.collection('teachers').get();
-        const grades = await db.collection('grades').get();
-        let h = '<table><tr><th>المعلم</th><th>عدد الحركات المرصودة</th></tr>';
-        teachers.forEach(tDoc => {
-            const count = grades.docs.filter(g => g.data().teacher === tDoc.id).length;
-            h += `<tr><td>${tDoc.data().name}</td><td>${count} درجة مرصودة</td></tr>`;
-        });
-        document.getElementById('monTable').innerHTML = h + '</table>';
+    function closePad() {
+        document.getElementById('numPad').style.display = 'none';
+        document.getElementById('configCard').style.display = 'block';
+        document.getElementById('closeBtn').style.display = 'none';
+        forceSync();
     }
 
-    function setupResetOptions() {
-        const sel = document.getElementById('resetWeekSelector');
-        for(let i=1; i<=14; i++) sel.innerHTML += `<option value="w${i}">الأسبوع ${i}</option>`;
-        sel.innerHTML += `<option value="ex1">الاختبار 1</option><option value="ex2">الاختبار 2</option>`;
-    }
-
-    async function resetGrades() {
-        const w = document.getElementById('resetWeekSelector').value;
-        if(!confirm(`سيتم مسح درجات ${w} نهائياً؟`)) return;
-        const snap = await db.collection('grades').where('week','==',w).get();
+    async function forceSync() {
+        if(Object.keys(pendingUpdates).length === 0) return;
+        document.getElementById('syncStat').innerText = "⏳ مزامنة...";
         const batch = db.batch();
-        snap.forEach(doc => batch.delete(doc.ref));
+        for (const k in pendingUpdates) {
+            const docId = `${pendingUpdates[k].sid}_${pendingUpdates[k].week}_${pendingUpdates[k].type}_${tId}`;
+            batch.set(db.collection('grades').doc(docId), pendingUpdates[k], {merge:true});
+        }
         await batch.commit();
-        alert("تم التصفير بنجاح");
+        pendingUpdates = {};
+        document.getElementById('syncStat').innerText = "✅ تم الحفظ";
     }
+    setInterval(forceSync, 20000);
 </script>
 </body>
 </html>

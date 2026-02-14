@@ -139,17 +139,18 @@
         btn.disabled = true;
 
         try {
-            // البحث عن المستخدم في جدول المعلمين (بما فيهم الأدمن)
             const tDoc = await db.collection('teachers').doc(u).get();
-            
+
             if (tDoc.exists) {
                 const userData = tDoc.data();
-                
+
                 if (userData.pass === p) {
                     sessionStorage.setItem('userEmail', u);
-                    
-                    // التحقق من نوع الحساب (أدمن أم معلم) من الحقل role
-                    if (userData.role === 'admin') {
+
+                    // معالجة حقل role لضمان دقة التحقق
+                    const role = userData.role ? userData.role.toString().toLowerCase().trim() : 'teacher';
+
+                    if (role === 'admin') {
                         sessionStorage.setItem('isAdmin', 'true');
                         window.location.href = "admin.html";
                     } else {

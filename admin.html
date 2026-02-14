@@ -1,155 +1,306 @@
 <!DOCTYPE html>
 <html lang="ar" dir="rtl">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-<title>لوحة الماستر v2026</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>لوحة الماستر v2026 - النسخة الكاملة</title>
 
-<link rel="apple-touch-icon" href="icon-180x180.png">
-<link rel="icon" type="image/png" sizes="192x192" href="icon-192x192.png">
-<link rel="manifest" href="manifest.json">
-<meta name="theme-color" content="#0f172a">
+    <script src="https://www.gstatic.com/firebasejs/9.0.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.0.0/firebase-firestore-compat.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+    <script src="firebase-config.js"></script>
 
-<script src="https://www.gstatic.com/firebasejs/9.0.0/firebase-app-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/9.0.0/firebase-firestore-compat.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
-<script src="firebase-config.js"></script>
+    <style>
+        :root {
+            --primary: #0f172a;
+            --accent: #3b82f6;
+            --danger: #ef4444;
+            --success: #10b981;
+            --bg: #f1f5f9;
+        }
+        body { font-family: 'Segoe UI', Tahoma, sans-serif; background: var(--bg); margin: 0; direction: rtl; }
+        .app-container { width: 100%; max-width: 600px; margin: auto; min-height: 100vh; background: var(--bg); }
+        header { background: var(--primary); color: white; padding: 15px; text-align: center; position: sticky; top: 0; z-index: 1001; }
+        
+        .tabs-nav { 
+            display: grid; 
+            grid-template-columns: repeat(3, 1fr); 
+            background: white; 
+            border-bottom: 2px solid #e2e8f0; 
+            position: sticky; 
+            top: 54px; 
+            z-index: 1000; 
+        }
+        .tab-btn { padding: 12px; border: none; background: none; font-weight: bold; font-size: 13px; color: #64748b; border-bottom: 2px solid transparent; cursor: pointer; }
+        .tab-btn.active { color: var(--accent); border-bottom-color: var(--accent); background: #f0f7ff; }
+        
+        .content-area { padding: 15px; padding-bottom: 80px; }
+        .tab-panel { display: none; animation: fadeIn 0.3s; }
+        .tab-panel.active { display: block; }
+        
+        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
 
-<style>
-:root{--primary:#0f172a;--accent:#3b82f6;--danger:#ef4444;--success:#10b981;--bg:#f1f5f9;}
-body{font-family:'Segoe UI',Tahoma,sans-serif;background:var(--bg);margin:0;display:flex;flex-direction:column;align-items:center;}
-.app-container{width:100%;max-width:600px;min-height:100vh;background:var(--bg);}
-header{background:var(--primary);color:white;padding:15px;text-align:center;position:sticky;top:0;z-index:1001;}
-.tabs-nav{display:grid;grid-template-columns:repeat(6,1fr);background:white;border-bottom:2px solid #e2e8f0;position:sticky;top:54px;z-index:1000;}
-.tab-btn{padding:10px 5px;border:none;background:none;font-weight:bold;font-size:11px;color:#64748b;border-bottom:2px solid transparent;}
-.tab-btn.active{color:var(--accent);border-bottom-color:var(--accent);background:#f0f7ff;}
-.content-area{padding:15px;padding-bottom:80px;}
-.tab-panel{display:none;}
-.tab-panel.active{display:block;}
-.card{background:white;border-radius:15px;padding:15px;margin-bottom:15px;border:1px solid #e2e8f0;}
-.btn-main{width:100%;padding:12px;border-radius:10px;border:none;font-weight:bold;color:white;margin-bottom:8px;cursor:pointer;}
-input,select,textarea{width:100%;padding:10px;margin:5px 0;border-radius:10px;border:1px solid #cbd5e1;}
-.grid-checks{display:flex;flex-wrap:wrap;gap:8px;margin:10px 0;}
-.check-item{background:white;border:1px solid #e2e8f0;padding:6px 10px;border-radius:20px;font-size:11px;}
-.list-item{display:flex;justify-content:space-between;padding:8px;border-bottom:1px solid #eee;}
-</style>
+        .card { background: white; border-radius: 15px; padding: 15px; margin-bottom: 15px; border: 1px solid #e2e8f0; box-shadow: 0 2px 4px rgba(0,0,0,0.05); }
+        .btn-main { width: 100%; padding: 12px; border-radius: 10px; border: none; font-weight: bold; color: white; margin-bottom: 8px; cursor: pointer; transition: 0.2s; }
+        .btn-main:active { transform: scale(0.98); }
+        
+        input, select { width: 100%; padding: 12px; margin: 8px 0; border-radius: 10px; border: 1px solid #cbd5e1; box-sizing: border-box; }
+        
+        .grid-checks { display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; margin: 10px 0; }
+        .check-item { background: #fff; border: 1px solid #e2e8f0; padding: 10px; border-radius: 10px; font-size: 14px; display: flex; align-items: center; gap: 8px; cursor: pointer; }
+        
+        .list-item { 
+            display: flex; justify-content: space-between; align-items: center; 
+            padding: 12px; background: white; margin-bottom: 8px; border-radius: 10px; border-right: 4px solid var(--accent);
+        }
+        .status-badge { font-size: 11px; padding: 2px 8px; border-radius: 10px; background: #e2e8f0; }
+    </style>
 </head>
 
 <body>
 <div class="app-container">
+    <header>
+        <b>لوحة التحكم الاحترافية v2026</b>
+        <div id="status" style="font-size:12px; color:#94a3b8; margin-top:5px;">⏳ جاري الاتصال...</div>
+    </header>
 
-<header>
-<b>لوحة الماستر v2026</b>
-<div id="status" style="font-size:10px;color:#94a3b8;">⏳...</div>
-</header>
+    <div class="tabs-nav">
+        <button class="tab-btn active" onclick="openTab(event,'teachers')">👨‍🏫 المعلمين</button>
+        <button class="tab-btn" onclick="openTab(event,'control')">🔓 الأقفال</button>
+        <button class="tab-btn" onclick="openTab(event,'reset')">🧹 التصفير/تصدير</button>
+    </div>
 
-<div class="tabs-nav">
-<button class="tab-btn active" onclick="openTab(event,'stats')">📊 الإحصائيات</button>
-<button class="tab-btn" onclick="openTab(event,'teachers')">👨‍🏫 المعلمين</button>
-<button class="tab-btn" onclick="openTab(event,'students')">🎓 الطلاب</button>
-<button class="tab-btn" onclick="openTab(event,'control')">🔓 الأقفال</button>
-<button class="tab-btn" onclick="openTab(event,'reset')">🧹 التصفير</button>
-<button class="tab-btn" onclick="openTab(event,'export')">📥 التصدير</button>
-</div>
+    <div class="content-area">
+        
+        <div id="teachers" class="tab-panel active">
+            <div class="card">
+                <h4 style="margin-top:0;">➕ إضافة معلم جديد</h4>
+                <input type="text" id="newTName" placeholder="اسم المعلم بالكامل">
+                <input type="text" id="newTSubject" placeholder="المادة الدراسية">
+                <button class="btn-main" style="background:var(--success)" onclick="addTeacher()">حفظ في قاعدة البيانات</button>
+            </div>
+            <div id="teacherCards">
+                </div>
+        </div>
 
-<div class="content-area">
+        <div id="control" class="tab-panel">
+            <div class="card">
+                <h4>🔓 فتح وإغلاق الأسابيع</h4>
+                <p style="font-size:12px; color:gray;">التغيير يتم فوراً في تطبيق الطالب</p>
+                <div id="weeksLock" class="grid-checks"></div>
+            </div>
 
-<div id="stats" class="tab-panel active">
-<div id="statsDetails"></div>
-</div>
+            <div class="card">
+                <h4>📅 جدولة الاختبارات</h4>
+                <label>اختر الأسبوع:</label>
+                <select id="examWeek">
+                    <option value="w1">الأسبوع 1</option>
+                    <option value="w2">الأسبوع 2</option>
+                    <option value="w3">الأسبوع 3</option>
+                </select>
+                <label>توقيت الاختبار:</label>
+                <input type="datetime-local" id="examDate">
+                <button class="btn-main" style="background:var(--accent)" onclick="scheduleExam()">تحديث موعد الاختبار</button>
+            </div>
+        </div>
 
-<div id="teachers" class="tab-panel">
-<div id="teacherCards"></div>
-</div>
+        <div id="reset" class="tab-panel">
+            <div class="card" style="border-right: 5px solid var(--danger);">
+                <h4>🧹 منطقة التصفير (خطر)</h4>
+                <select id="resT" onchange="loadResetOptions()">
+                    <option value="">-- اختر المعلم المراد تصفيره --</option>
+                </select>
+                <div id="resW" class="grid-checks"></div>
+                <button class="btn-main" style="background:var(--danger)" onclick="executeSafeReset()">تنفيذ المسح النهائي</button>
+            </div>
 
-<div id="students" class="tab-panel">
-<div class="card">
-<select id="expGrade">
-<option value="1_general">أولى ثانوي</option>
-<option value="2_scientific">ثانية علمي</option>
-<option value="2_literary">ثانية أدبي</option>
-</select>
-</div>
-</div>
+            <div class="card">
+                <h4>📥 تصدير البيانات</h4>
+                <button class="btn-main" style="background:var(--primary)" onclick="runExport()">تحميل كملف Excel</button>
+            </div>
+        </div>
 
-<div id="control" class="tab-panel">
-<div class="card">
-<h4>🔓 التحكم في فتح الأسابيع</h4>
-<div id="weeksLock" class="grid-checks"></div>
-</div>
-</div>
-
-<div id="reset" class="tab-panel">
-<div class="card">
-<select id="resT" onchange="loadResetOptions()"></select>
-<div id="resW" class="grid-checks"></div>
-<button class="btn-main" style="background:var(--danger)" onclick="executeSafeReset()">تصفير</button>
-</div>
-<div id="backupListArea"></div>
-</div>
-
-<div id="export" class="tab-panel">
-<div class="card">
-<button class="btn-main" style="background:var(--accent)" onclick="runExport()">تصدير Excel</button>
-</div>
-</div>
-
-</div>
+    </div>
 </div>
 
 <script>
-firebase.initializeApp(firebaseConfig);
-const db=firebase.firestore();
-let teachers=[],students=[];
+    // تهيئة فايربيز
+    firebase.initializeApp(firebaseConfig);
+    const db = firebase.firestore();
 
-async function init(){
-document.getElementById('status').innerText="⏳...";
-const tS=await db.collection('teachers').get();
-const sS=await db.collection('students').get();
-teachers=tS.docs.map(d=>({id:d.id,...d.data()}));
-students=sS.docs.map(d=>({id:d.id,...d.data()}));
-renderUI();
-document.getElementById('status').innerText="✅";
-}
+    let teachers = [];
+    let students = [];
+    let weeksStatus = {};
 
-function renderUI(){
-const tDiv=document.getElementById('teacherCards');
-tDiv.innerHTML='';
-teachers.forEach(t=>{
-tDiv.innerHTML+=`<div class="card"><b>${t.name}</b></div>`;
-});
-}
+    // 1. الدالة الأساسية (قراءة البيانات)
+    async function init() {
+        updateStatus("⏳ جاري جلب البيانات...");
+        try {
+            // جلب المعلمين (قراءة حقيقية)
+            const tSnap = await db.collection('teachers').get();
+            teachers = tSnap.docs.map(d => ({ id: d.id, ...d.data() }));
 
-function openTab(evt,id){
-document.querySelectorAll('.tab-panel').forEach(p=>p.classList.remove('active'));
-document.querySelectorAll('.tab-btn').forEach(b=>b.classList.remove('active'));
-document.getElementById(id).classList.add('active');
-evt.currentTarget.classList.add('active');
-}
+            // جلب الطلاب
+            const sSnap = await db.collection('students').get();
+            students = sSnap.docs.map(d => ({ id: d.id, ...d.data() }));
 
-function loadResetOptions(){
-const container=document.getElementById('resW');
-container.innerHTML='';
-for(let i=1;i<=14;i++){
-container.innerHTML+=`<label class="check-item"><input type="checkbox" value="w${i}"> أسبوع ${i}</label>`;
-}
-}
+            // جلب الأقفال
+            const lockDoc = await db.collection('settings').doc('weeks_control').get();
+            weeksStatus = lockDoc.exists ? lockDoc.data() : {};
 
-async function executeSafeReset(){
-alert("تم تنفيذ التصفير (نسخة تجريبية)");
-}
+            renderTeachers();
+            renderLocks();
+            loadResetOptions();
+            updateStatus("✅ متصل وقابل للتعديل");
+        } catch (e) {
+            console.error(e);
+            updateStatus("❌ خطأ في الاتصال بالقاعدة");
+        }
+    }
 
-async function runExport(){
-if(students.length===0) return alert("لا يوجد طلاب");
-const data=students.map(s=>({"اسم الطالب":s.name}));
-const ws=XLSX.utils.json_to_sheet(data);
-const wb=XLSX.utils.book_new();
-XLSX.utils.book_append_sheet(wb,ws,"Report");
-XLSX.writeFile(wb,"تقرير.xlsx");
-}
+    function updateStatus(msg) {
+        document.getElementById('status').innerText = msg;
+    }
 
-window.onload=init;
+    // 2. إدارة المعلمين
+    function renderTeachers() {
+        const tDiv = document.getElementById('teacherCards');
+        const resT = document.getElementById('resT');
+        
+        tDiv.innerHTML = '<h4>قائمة المعلمين الحالية:</h4>';
+        resT.innerHTML = '<option value="">-- اختر المعلم --</option>';
+
+        teachers.forEach(t => {
+            // إضافة للوحة المعلمين
+            tDiv.innerHTML += `
+                <div class="list-item">
+                    <div>
+                        <b>${t.name}</b><br>
+                        <small style="color:gray;">${t.subject || 'عام'}</small>
+                    </div>
+                    <button onclick="deleteTeacher('${t.id}')" style="color:var(--danger); background:none; border:none; cursor:pointer; font-weight:bold;">حذف</button>
+                </div>
+            `;
+            // إضافة للقائمة المنسدلة في التصفير
+            resT.innerHTML += `<option value="${t.id}">${t.name}</option>`;
+        });
+    }
+
+    async function addTeacher() {
+        const name = document.getElementById('newTName').value;
+        const subject = document.getElementById('newTSubject').value;
+        if (!name) return alert("يرجى كتابة اسم المعلم");
+
+        updateStatus("⏳ جاري الحفظ...");
+        await db.collection('teachers').add({ name, subject, createdAt: new Date() });
+        document.getElementById('newTName').value = '';
+        init(); // تحديث فوري
+    }
+
+    async function deleteTeacher(id) {
+        if (confirm("هل تريد حذف هذا المعلم نهائياً؟")) {
+            await db.collection('teachers').doc(id).delete();
+            init();
+        }
+    }
+
+    // 3. إدارة الأقفال
+    function renderLocks() {
+        const container = document.getElementById('weeksLock');
+        container.innerHTML = '';
+        for (let i = 1; i <= 14; i++) {
+            const key = `w${i}`;
+            const isChecked = weeksStatus[key] ? 'checked' : '';
+            container.innerHTML += `
+                <label class="check-item">
+                    <input type="checkbox" onchange="updateLock('${key}', this.checked)" ${isChecked}> أسبوع ${i}
+                </label>
+            `;
+        }
+    }
+
+    async function updateLock(key, val) {
+        updateStatus("⏳ جاري تحديث الأقفال...");
+        await db.collection('settings').doc('weeks_control').set({ [key]: val }, { merge: true });
+        updateStatus("✅ تم الحفظ");
+    }
+
+    // 4. جدولة الاختبارات
+    async function scheduleExam() {
+        const week = document.getElementById('examWeek').value;
+        const date = document.getElementById('examDate').value;
+        if (!date) return alert("اختر تاريخاً");
+
+        await db.collection('settings').doc('exams_schedule').set({
+            [week]: date
+        }, { merge: true });
+        alert("تمت جدولة الاختبار بنجاح");
+    }
+
+    // 5. تصفير البيانات
+    function loadResetOptions() {
+        const container = document.getElementById('resW');
+        container.innerHTML = '';
+        for (let i = 1; i <= 14; i++) {
+            container.innerHTML += `
+                <label class="check-item" style="font-size:12px;">
+                    <input type="checkbox" name="resetW" value="w${i}"> أسبوع ${i}
+                </label>`;
+        }
+    }
+
+    async function executeSafeReset() {
+        const teacherId = document.getElementById('resT').value;
+        const checkedWeeks = Array.from(document.querySelectorAll('input[name="resetW"]:checked')).map(el => el.value);
+
+        if (!teacherId || checkedWeeks.length === 0) return alert("حدد المعلم والأسابيع أولاً");
+
+        if (confirm("هل أنت متأكد؟ سيتم مسح درجات كافة الطلاب المرتبطين بهذا المعلم للأسابيع المختارة!")) {
+            updateStatus("⏳ جاري مسح الدرجات...");
+            const batch = db.batch();
+            
+            // فلترة الطلاب التابعين للمعلم (أو كل الطلاب إذا لم يتم ربطهم مسبقاً)
+            students.forEach(s => {
+                const sRef = db.collection('students').doc(s.id);
+                let updates = {};
+                checkedWeeks.forEach(w => {
+                    updates[w] = firebase.firestore.FieldValue.delete(); // حذف الحقل (الأسبوع) نهائياً من سجل الطالب
+                });
+                batch.update(sRef, updates);
+            });
+
+            await batch.commit();
+            alert("تم التصفير بنجاح");
+            init();
+        }
+    }
+
+    // 6. تصدير إكسل
+    function runExport() {
+        if (students.length === 0) return alert("لا توجد بيانات طلاب لتصديرها");
+        
+        const exportData = students.map(s => ({
+            "الاسم": s.name,
+            "الكود": s.code || 'N/A',
+            "الصف": s.grade || '',
+            "الدرجة الإجمالية": s.totalScore || 0
+        }));
+
+        const ws = XLSX.utils.json_to_sheet(exportData);
+        const wb = XLSX.utils.book_new();
+        XLSX.utils.book_append_sheet(wb, ws, "نتائج_الطلاب");
+        XLSX.writeFile(wb, `رصد_طلاب_${new Date().toLocaleDateString()}.xlsx`);
+    }
+
+    // التنقل بين التبويبات
+    function openTab(evt, id) {
+        document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
+        document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+        document.getElementById(id).classList.add('active');
+        evt.currentTarget.classList.add('active');
+    }
+
+    window.onload = init;
 </script>
-
 </body>
 </html>

@@ -14,12 +14,8 @@
 
     <script src="https://www.gstatic.com/firebasejs/9.0.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.0.0/firebase-firestore-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/9.0.0/firebase-auth-compat.js"></script>
-    
-    <script src="firebase-config.js"></script>
     
     <style>
-        /* تم الحفاظ على الـ CSS الخاص بك بالكامل لضمان نفس الشكل */
         * { box-sizing: border-box; }
         body { 
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; 
@@ -114,17 +110,19 @@
 </div>
 
 <script>
+    // تسجيل الـ Service Worker لضمان عمل الصفحة حتى بدون شبكة
     if ('serviceWorker' in navigator) {
-        window.addEventListener('load', () => { navigator.serviceWorker.register('./sw.js'); });
+        window.addEventListener('load', () => {
+            navigator.serviceWorker.register('./sw.js');
+        });
     }
 
-    // التهيئة من ملف الإعدادات
+    const firebaseConfig = { apiKey: "AIzaSyBePGZiqMPmZQdg36jZ4Rkdtd7OISxmob8", projectId: "rasd-tools" };
     firebase.initializeApp(firebaseConfig);
     const db = firebase.firestore();
-    const auth = firebase.auth();
 
     async function handleLogin() {
-        const u = document.getElementById('user').value.trim().toLowerCase();
+        const u = document.getElementById('user').value.trim();
         const p = document.getElementById('pass').value.trim();
         const btn = document.getElementById('loginBtn');
         const err = document.getElementById('err');
@@ -135,45 +133,27 @@
         btn.innerText = "جاري التحقق...";
         btn.disabled = true;
 
+        if (u === "admin" && p === "790707071") {
+            sessionStorage.setItem('userEmail', 'admin');
+            sessionStorage.setItem('isAdmin', 'true');
+            window.location.href = "admin.html";
+            return;
+        }
+
         try {
-            // 1. تسجيل الدخول الرسمي في Firebase Auth
-            // ملاحظة: نستخدم @rasd.com كمجال وهمي ثابت لكل الحسابات
-            const userCredential = await auth.signInWithEmailAndPassword(u + "@rasd.com", p);
-            const user = userCredential.user;
-
-            // 2. التحقق من صلاحياته في Firestore
             const tDoc = await db.collection('teachers').doc(u).get();
-            
             if (tDoc.exists) {
-                const userData = tDoc.data();
-                sessionStorage.setItem('userEmail', u);
-
-                // 3. التوجيه بناءً على الرتبة (Admin أو Teacher)
-                if (userData.role === "admin" || u === "admin") {
-                    sessionStorage.setItem('isAdmin', 'true');
-                    window.location.href = "admin.html";
-                } else {
-                    sessionStorage.setItem('isAdmin', 'false');
+                if (tDoc.data().pass === p) {
+                    sessionStorage.setItem('userEmail', u);
                     window.location.href = "teacher.html";
+                } else {
+                    showError("كلمة المرور غير صحيحة");
                 }
             } else {
-                // حالة خاصة للأدمن إذا لم يكن له وثيقة في Firestore (لأول مرة)
-                if (u === "admin") {
-                    sessionStorage.setItem('userEmail', 'admin');
-                    sessionStorage.setItem('isAdmin', 'true');
-                    window.location.href = "admin.html";
-                } else {
-                    showError("الحساب غير معرف في قاعدة البيانات");
-                    await auth.signOut();
-                }
+                showError("اسم المستخدم غير موجود");
             }
         } catch (e) {
-            console.error(e);
-            if (e.code === 'auth/user-not-found' || e.code === 'auth/wrong-password') {
-                showError("اسم المستخدم أو كلمة المرور خطأ");
-            } else {
-                showError("خطأ في الاتصال: تأكد من وجود إنترنت");
-            }
+            showError("خطأ في الاتصال بالخادم");
         }
     }
 
@@ -188,3 +168,4 @@
 </script>
 </body>
 </html>
+

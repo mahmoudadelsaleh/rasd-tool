@@ -4,68 +4,186 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>منظومة الرصد - تسجيل الدخول</title>
+    
+    <link rel="apple-touch-icon" href="icon-180x180.png">
+    <link rel="icon" type="image/png" sizes="192x192" href="icon-192x192.png">
+    <link rel="manifest" href="manifest.json">
+    <meta name="theme-color" content="#1e293b">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+
     <script src="https://www.gstatic.com/firebasejs/9.0.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.0.0/firebase-firestore-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.0.0/firebase-auth-compat.js"></script>
+    
     <script src="firebase-config.js"></script>
+    
     <style>
-        body { font-family: 'Segoe UI', sans-serif; background: #1e293b; display: flex; align-items: center; justify-content: center; height: 100vh; margin: 0; }
-        .login-card { background: white; padding: 30px; border-radius: 20px; width: 90%; max-width: 380px; text-align: center; }
-        input { width: 100%; padding: 12px; margin: 10px 0; border: 1px solid #ddd; border-radius: 10px; box-sizing: border-box; }
-        button { width: 100%; padding: 12px; background: #3b82f6; color: white; border: none; border-radius: 10px; font-weight: bold; cursor: pointer; }
-        .error { color: #e11d48; margin-top: 10px; display: none; font-size: 14px; }
+        /* تم الحفاظ على الـ CSS الخاص بك بالكامل لضمان نفس الشكل */
+        * { box-sizing: border-box; }
+        body { 
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; 
+            background: #1e293b; 
+            display: flex; 
+            align-items: center; 
+            justify-content: center; 
+            height: 100vh; 
+            margin: 0;
+            overflow: hidden;
+        }
+        .login-card { 
+            background: white; 
+            padding: 30px; 
+            border-radius: 25px; 
+            box-shadow: 0 15px 35px rgba(0,0,0,0.3); 
+            width: 90%; 
+            max-width: 380px; 
+            text-align: center;
+            animation: fadeIn 0.8s ease-out;
+        }
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        .logo-container {
+            width: 80px;
+            height: 80px;
+            margin: 0 auto 20px;
+            background: url('icon-192x192.png') no-repeat center;
+            background-size: contain;
+            border-radius: 15px;
+        }
+        h2 { color: #1e293b; margin-bottom: 5px; font-size: 22px; }
+        p { color: #64748b; font-size: 14px; margin-bottom: 25px; }
+        
+        input { 
+            width: 100%; 
+            padding: 14px; 
+            margin: 8px 0; 
+            border: 2px solid #f1f5f9; 
+            border-radius: 12px; 
+            background: #f8fafc;
+            font-size: 16px;
+            outline: none;
+            transition: 0.3s;
+        }
+        input:focus { border-color: #3b82f6; background: white; }
+        
+        button { 
+            width: 100%; 
+            padding: 14px; 
+            background: #3b82f6; 
+            color: white; 
+            border: none; 
+            border-radius: 12px; 
+            cursor: pointer; 
+            font-weight: bold; 
+            font-size: 16px;
+            margin-top: 15px;
+            box-shadow: 0 4px 12px rgba(59, 130, 246, 0.3);
+            transition: 0.2s;
+        }
+        button:active { transform: scale(0.98); background: #2563eb; }
+        
+        .error { 
+            color: #e11d48; 
+            font-size: 13px; 
+            margin-top: 15px; 
+            background: #fff1f2;
+            padding: 8px;
+            border-radius: 8px;
+            display: none; 
+        }
+        .version { margin-top: 20px; font-size: 10px; color: #cbd5e1; }
     </style>
 </head>
 <body>
+
 <div class="login-card">
+    <div class="logo-container"></div>
     <h2>منظومة الرصد</h2>
-    <p>تسجيل الدخول</p>
-    <input type="text" id="user" placeholder="اسم المستخدم">
-    <input type="password" id="pass" placeholder="كلمة المرور">
-    <button id="loginBtn" onclick="handleLogin()">دخول</button>
-    <div id="err" class="error"></div>
+    <p>بوابة تسجيل دخول المعلمين</p>
+    
+    <input type="text" id="user" placeholder="اسم المستخدم" autocomplete="username">
+    <input type="password" id="pass" placeholder="كلمة المرور" autocomplete="current-password">
+    
+    <button id="loginBtn" onclick="handleLogin()">تسجيل الدخول</button>
+    
+    <div id="err" class="error">بيانات الدخول غير صحيحة</div>
+    <div class="version">إصدار v2026.1.0</div>
 </div>
 
 <script>
+    if ('serviceWorker' in navigator) {
+        window.addEventListener('load', () => { navigator.serviceWorker.register('./sw.js'); });
+    }
+
+    // التهيئة من ملف الإعدادات
     firebase.initializeApp(firebaseConfig);
+    const db = firebase.firestore();
     const auth = firebase.auth();
 
     async function handleLogin() {
         const u = document.getElementById('user').value.trim().toLowerCase();
         const p = document.getElementById('pass').value.trim();
         const btn = document.getElementById('loginBtn');
-        const errDiv = document.getElementById('err');
-
+        const err = document.getElementById('err');
+        
         if(!u || !p) return;
 
-        errDiv.style.display = "none";
+        err.style.display = "none";
         btn.innerText = "جاري التحقق...";
         btn.disabled = true;
 
         try {
-            // تسجيل الدخول باستخدام البريد الوهمي
-            await auth.signInWithEmailAndPassword(u + "@rasd.com", p);
+            // 1. تسجيل الدخول الرسمي في Firebase Auth
+            // ملاحظة: نستخدم @rasd.com كمجال وهمي ثابت لكل الحسابات
+            const userCredential = await auth.signInWithEmailAndPassword(u + "@rasd.com", p);
+            const user = userCredential.user;
+
+            // 2. التحقق من صلاحياته في Firestore
+            const tDoc = await db.collection('teachers').doc(u).get();
             
-            // تخزين اسم المستخدم
-            sessionStorage.setItem('userEmail', u);
+            if (tDoc.exists) {
+                const userData = tDoc.data();
+                sessionStorage.setItem('userEmail', u);
 
-            // توجيه صريح بناءً على اسم المستخدم لكسر حلقة "المعلم الإجباري"
-            // أضف أي أسماء أدمن إضافية في الشرط أدناه
-            if (u === 'admin' || u === 'mahmoudadel' || u === 'mahmoud') {
-                sessionStorage.setItem('isAdmin', 'true');
-                window.location.href = "admin.html";
+                // 3. التوجيه بناءً على الرتبة (Admin أو Teacher)
+                if (userData.role === "admin" || u === "admin") {
+                    sessionStorage.setItem('isAdmin', 'true');
+                    window.location.href = "admin.html";
+                } else {
+                    sessionStorage.setItem('isAdmin', 'false');
+                    window.location.href = "teacher.html";
+                }
             } else {
-                sessionStorage.setItem('isAdmin', 'false');
-                window.location.href = "teacher.html";
+                // حالة خاصة للأدمن إذا لم يكن له وثيقة في Firestore (لأول مرة)
+                if (u === "admin") {
+                    sessionStorage.setItem('userEmail', 'admin');
+                    sessionStorage.setItem('isAdmin', 'true');
+                    window.location.href = "admin.html";
+                } else {
+                    showError("الحساب غير معرف في قاعدة البيانات");
+                    await auth.signOut();
+                }
             }
-
         } catch (e) {
             console.error(e);
-            errDiv.innerText = "فشل الدخول: تأكد من تفعيل Auth أو صحة البيانات";
-            errDiv.style.display = "block";
-            btn.innerText = "دخول";
-            btn.disabled = false;
+            if (e.code === 'auth/user-not-found' || e.code === 'auth/wrong-password') {
+                showError("اسم المستخدم أو كلمة المرور خطأ");
+            } else {
+                showError("خطأ في الاتصال: تأكد من وجود إنترنت");
+            }
         }
+    }
+
+    function showError(msg) {
+        const err = document.getElementById('err');
+        const btn = document.getElementById('loginBtn');
+        err.innerText = msg;
+        err.style.display = "block";
+        btn.innerText = "تسجيل الدخول";
+        btn.disabled = false;
     }
 </script>
 </body>

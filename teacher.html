@@ -3,81 +3,173 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>نسخة المعلم</title>
+<title>نظام الرصد الذكي v2026 - نسخة المعلم المطورة</title>
 
 <script src="https://www.gstatic.com/firebasejs/9.0.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.0.0/firebase-firestore-compat.js"></script>
 
 <style>
-body{font-family:Segoe UI;margin:0;background:#f1f5f9;}
-header{
-background:#1e293b;
-color:white;
-padding:15px;
-display:flex;
-justify-content:space-between;
-align-items:center;
-}
-button{
-background:#ef4444;
-color:white;
-border:none;
-padding:6px 12px;
-border-radius:8px;
-cursor:pointer;
-}
-.container{
-padding:15px;
-max-width:600px;
-margin:auto;
-}
+:root{--primary:#3b82f6;--success:#10b981;--sidebar:#1e293b;--danger:#ef4444;}
+body{font-family:'Segoe UI';margin:0;background:#f1f5f9;overscroll-behavior-y:contain;}
+header{background:var(--sidebar);color:white;padding:15px;display:flex;justify-content:space-between;align-items:center;position:sticky;top:0;}
+.container{padding:12px;max-width:600px;margin:auto;}
+.card{background:white;border-radius:12px;padding:12px;margin-bottom:10px;border:1px solid #e2e8f0;}
+.active-row{border:2px solid var(--primary);background:#eff6ff;}
+.smart-keyboard{position:fixed;bottom:15px;left:10px;right:10px;background:#e2e8f0;padding:10px;display:none;gap:6px;z-index:2000;border-radius:15px;box-shadow:0 -5px 15px rgba(0,0,0,0.2);}
+.key-btn{background:white;border-radius:8px;font-weight:bold;cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:16px;border:1px solid #94a3b8;height:45px;user-select:none;}
+.key-btn:active{background:var(--primary);color:white;transform:scale(.9);box-shadow:0 0 10px rgba(59,130,246,0.5);}
+.key-all{background:#8b5cf6;color:white;font-size:12px;}
+.key-done{background:var(--success);color:white;font-size:14px;}
+.kb-max-30{grid-template-columns:repeat(8,1fr);}
+.kb-max-15{grid-template-columns:repeat(5,1fr);}
+.score-sel{width:42px;height:38px;font-weight:bold;text-align:center;border-radius:8px;border:1px solid #cbd5e1;background:#fff;font-size:15px;cursor:pointer;caret-color:transparent;}
+.score-sel.active-input{border:3px solid var(--primary);box-shadow:0 0 10px rgba(59,130,246,0.3);}
+.score-sel.saved{border-color:var(--success);background:#f0fdf4;color:#15803d;}
+.score-sel.locked-item{background:#f1f5f9;cursor:not-allowed;opacity:.5;border-style:dashed;}
+.student-name{font-size:13px;font-weight:600;color:#334155;}
+.sync-status{position:fixed;bottom:5px;right:10px;font-size:10px;color:#64748b;background:rgba(255,255,255,.8);padding:2px 5px;border-radius:4px;}
+select{width:100%;padding:12px;border-radius:10px;border:1px solid #cbd5e1;font-weight:bold;margin-bottom:10px;background:white;}
 </style>
 </head>
+
 <body>
 
 <header>
-<div>👨‍🏫 <b id="tName"></b></div>
-<button onclick="logout()">تسجيل خروج</button>
+<div>👨‍🏫 <b id="tName">...</b></div>
+<button onclick="logout()" style="background:var(--danger);color:white;border:none;padding:6px 12px;border-radius:8px;">خروج</button>
 </header>
 
 <div class="container">
-<p>مرحباً بك في نظام الرصد</p>
+<select id="vGrade" onchange="loadStudentsData()"><option value="">اختر الصف...</option></select>
+<select id="vWeek" onchange="loadStudentsData()"></select>
+<div id="studentList"></div>
 </div>
 
+<div class="smart-keyboard" id="numPad"></div>
+<div class="sync-status" id="syncStat">جاري الاتصال...</div>
+
 <script>
-const firebaseConfig={
-apiKey:"AIzaSyBePGZiqMPmZQdg36jZ4Rkdtd7OISxmob8",
-projectId:"rasd-tools"
-};
+const firebaseConfig={apiKey:"AIzaSyBePGZiqMPmZQdg36jZ4Rkdtd7OISxmob8",projectId:"rasd-tools"};
 firebase.initializeApp(firebaseConfig);
 const db=firebase.firestore();
+db.enablePersistence().catch(()=>{});
 
 const tId=sessionStorage.getItem("userEmail");
-const isAdmin=sessionStorage.getItem("isAdmin");
+if(!tId) location.href="index.html";
 
-if(!tId||isAdmin==="true"){
-location.href="index.html";
+let currentStudents=[],activeInput=null,sysConfig={};
+let lastTapTime=0,isSaving=false;
+
+window.onload=async()=>{
+const conf=await db.collection("system").doc("config").get();
+sysConfig=conf.exists?conf.data():{openWeeks:[]};
+
+const tDoc=await db.collection("teachers").doc(tId).get();
+if(!tDoc.exists) logout();
+
+tName.innerText=tDoc.data().name;
+tDoc.data().classes.forEach(c=>{
+vGrade.innerHTML+=`<option value="${c}">${c}</option>`;
+});
+
+for(let i=1;i<=14;i++)
+vWeek.innerHTML+=`<option value="w${i}">الأسبوع ${i}</option>`;
+
+vWeek.innerHTML+=`<option value="ex1">اختبار 1</option>
+<option value="ex2">اختبار 2</option>`;
+
+syncStat.innerText="✅ متصل";
+};
+
+async function loadStudentsData(){
+const gV=vGrade.value,wV=vWeek.value;
+if(!gV||!wV)return;
+
+studentList.innerHTML="جاري التحميل...";
+
+const [g,b]=gV.split("_");
+const sSnap=await db.collection("students")
+.where("grade","==",g)
+.where("branch","==",b).get();
+
+currentStudents=sSnap.docs.map(d=>({id:d.id,...d.data()}));
+
+renderList(wV);
 }
 
-async function loadTeacher(){
-try{
-const doc=await db.collection("teachers").doc(tId).get();
-if(!doc.exists){
-logout();
+function renderList(wV){
+let html="";
+currentStudents.forEach((s,i)=>{
+html+=`<div class="card" id="row_${s.id}">
+<div style="display:flex;justify-content:space-between;align-items:center;">
+<span class="student-name">${i+1}. ${s.name}</span>
+<input readonly class="score-sel"
+id="inp_${s.id}_exam"
+onclick="openPad('${s.id}','exam',30)">
+</div></div>`;
+});
+studentList.innerHTML=html;
+}
+
+function openPad(sid,type,max){
+activeInput={sid,type,max};
+document.querySelectorAll('.card').forEach(c=>c.classList.remove('active-row'));
+document.getElementById(`row_${sid}`).classList.add('active-row');
+
+const pad=numPad;
+pad.style.display="grid";
+pad.className=`smart-keyboard ${max>15?'kb-max-30':'kb-max-15'}`;
+
+let keys="";
+for(let i=1;i<=max;i++)
+keys+=`<div class="key-btn" onclick="inputValue(${i})">${i}</div>`;
+
+keys+=`<div class="key-btn key-done" style="grid-column:span 2" onclick="closePad()">تم</div>`;
+pad.innerHTML=keys;
+}
+
+function inputValue(val){
+if(!activeInput)return;
+const now=Date.now();
+if(now-lastTapTime<120)return;
+lastTapTime=now;
+
+if(val>activeInput.max)return;
+
+const inp=document.getElementById(`inp_${activeInput.sid}_${activeInput.type}`);
+inp.value=val;
+inp.classList.add("saved");
+
+if(navigator.vibrate)navigator.vibrate(15);
+
+saveToFirebase(activeInput.sid,vWeek.value,activeInput.type,val);
+}
+
+async function saveToFirebase(sid,week,type,score){
+if(!week.startsWith("ex")&&!sysConfig.openWeeks.includes(week)){
+alert("الأسبوع مغلق");
+closePad();
 return;
 }
-tName.innerText=doc.data().name;
-}catch(e){
-logout();
+
+const docId=`${sid}_${week}_${type}_${tId}`;
+await db.collection("grades").doc(docId).set({
+sid,week,type,score:parseInt(score),
+teacher:tId,timestamp:Date.now()
+},{merge:true});
+
+syncStat.innerText="✅ تم الحفظ";
 }
+
+function closePad(){
+numPad.style.display="none";
+document.querySelectorAll('.card').forEach(c=>c.classList.remove('active-row'));
 }
 
 function logout(){
 sessionStorage.clear();
 location.href="index.html";
 }
-
-loadTeacher();
 </script>
 
 </body>

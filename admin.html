@@ -58,7 +58,7 @@
         <button class="tab-btn" onclick="openTab(event, 'students')">🎓 الطلاب</button>
         <button class="tab-btn" onclick="openTab(event, 'control')">🔓 الأقفال</button>
         <button class="tab-btn" onclick="openTab(event, 'reset')">🧹 التصفير</button>
-        <button class="tab-btn" onclick="event, 'export')">📥 التصدير</button>
+        <button class="tab-btn" onclick="openTab(event, 'export')">📥 التصدير</button>
     </div>
 
     <div class="content-area">
@@ -150,7 +150,12 @@
     const classAr = { '1_general': 'أولى ثانوي', '2_scientific': 'ثانية علمي', '2_literary': 'ثانية أدبي' };
 
     async function init() {
-        if(sessionStorage.getItem('isAdmin') !== 'true') return location.href="index.html";
+        // التحقق من صلاحية الأدمن
+        if(sessionStorage.getItem('isAdmin') !== 'true') {
+            location.href="index.html";
+            return;
+        }
+
         document.getElementById('status').innerText = "⏳";
         try {
             const [tS, sS, cS] = await Promise.all([
@@ -162,7 +167,6 @@
             students = sS.docs.map(d => ({id: d.id, ...d.data()})).sort((a,b)=>a.sortOrder-b.sortOrder);
             if(cS.exists) config = cS.data();
             renderUI();
-            loadBackups();
             document.getElementById('status').innerText = "✅";
         } catch (e) { document.getElementById('status').innerText = "❌"; }
     }
@@ -170,8 +174,7 @@
     function renderUI() {
         document.getElementById('s-t').innerText = teachers.length;
         document.getElementById('s-s').innerText = students.length;
-        
-        // تحديث قائمة المعلمين
+
         const tDiv = document.getElementById('teacherCards');
         tDiv.innerHTML = '<h4>قائمة المعلمين</h4>';
         teachers.forEach(t => {
@@ -184,7 +187,6 @@
             </div>`;
         });
 
-        // إعداد الأقفال
         const ex1 = document.getElementById('ex1W'), ex2 = document.getElementById('ex2W'), lockG = document.getElementById('weeksLock');
         ex1.innerHTML = ''; ex2.innerHTML = ''; lockG.innerHTML = '';
         const allW = []; for(let i=1; i<=14; i++) allW.push('w'+i); allW.push('ex1', 'ex2');
@@ -200,7 +202,7 @@
         const vsG = document.getElementById('viewSGrade');
         vsG.innerHTML = '<option value="">اختر الصف للعرض...</option>';
         Object.keys(classAr).forEach(c => vsG.innerHTML += `<option value="${c}">${classAr[c]}</option>`);
-        
+
         const resT = document.getElementById('resT');
         resT.innerHTML = '<option value="">اختر المعلم...</option>';
         teachers.forEach(t => resT.innerHTML += `<option value="${t.id}">${t.name}</option>`);
@@ -210,15 +212,15 @@
         const id = document.getElementById('tUser').value.trim();
         const cls = Array.from(document.querySelectorAll('input[name="tCls"]:checked')).map(c => c.value);
         if(!id || !cls.length) return alert("أكمل البيانات");
-        
+
         const data = { 
             name: document.getElementById('tName').value, 
             subject: document.getElementById('tSub').value, 
             pass: document.getElementById('tPass').value, 
             classes: cls,
-            role: "teacher" // الوضع الافتراضي
+            role: "teacher"
         };
-        
+
         await db.collection('teachers').doc(id).set(data, {merge:true});
         alert("تم الحفظ");
         location.reload(); 
@@ -246,11 +248,10 @@
     async function runExport(type) {
         const gV = document.getElementById('expGrade').value;
         document.getElementById('status').innerText = "⏳ سحب الدرجات...";
-        
-        // سحب الدرجات عند الطلب فقط (توفير كوتا)
+
         const gSnap = await db.collection('grades').get();
         const currentGrades = gSnap.docs.map(d => d.data());
-        
+
         const workbook = XLSX.utils.book_new();
         const subjects = [...new Set(teachers.map(t => t.subject))];
 
@@ -289,7 +290,6 @@
     async function deleteDoc(col, id) {
         if(!confirm("هل أنت متأكد من الحذف؟")) return;
         await db.collection(col).doc(id).delete();
-        // تحديث الواجهة فوراً دون إعادة تحميل الصفحة (توفيراً للكوتا)
         const el = document.getElementById(col === 'teachers' ? `card-${id}` : `stud-${id}`);
         if(el) el.remove();
     }

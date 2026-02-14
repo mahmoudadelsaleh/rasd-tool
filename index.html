@@ -33,7 +33,9 @@ padding:12px;
 margin:8px 0;
 border-radius:10px;
 border:1px solid #ddd;
+box-sizing:border-box;
 }
+input:focus{outline:2px solid #3b82f6;outline-offset:2px;}
 button{
 width:100%;
 padding:12px;
@@ -43,21 +45,37 @@ background:#3b82f6;
 color:white;
 font-weight:bold;
 cursor:pointer;
+transition:.2s;
 }
+button:active{transform:scale(.98);}
+button:disabled{opacity:.7;cursor:not-allowed;}
 .error{
 color:#ef4444;
 font-size:13px;
 margin-top:10px;
 display:none;
 }
+.remember{
+display:flex;
+align-items:center;
+gap:5px;
+margin:10px 0;
+font-size:14px;
+color:#475569;
+cursor:pointer;
+}
 </style>
 </head>
 <body>
 
 <div class="card">
-<h2>منظومة الرصد</h2>
-<input type="text" id="user" placeholder="اسم المستخدم">
+<div style="font-size:50px;margin-bottom:5px;">📊</div>
+<h2 style="margin-top:0;">منظومة الرصد</h2>
+<input type="text" id="user" placeholder="اسم المستخدم" autocomplete="off">
 <input type="password" id="pass" placeholder="كلمة المرور">
+<label class="remember">
+    <input type="checkbox" id="remember"> تذكرني
+</label>
 <button id="loginBtn" onclick="handleLogin()">تسجيل الدخول</button>
 <div id="err" class="error"></div>
 </div>
@@ -70,47 +88,70 @@ projectId:"rasd-tools"
 firebase.initializeApp(firebaseConfig);
 const db=firebase.firestore();
 
-if(sessionStorage.getItem("userEmail")){
-if(sessionStorage.getItem("isAdmin")==="true"){
-location.href="admin.html";
-}else{
-location.href="teacher.html";
-}
+// التحقق من وجود جلسة محفوظة
+const savedUser = localStorage.getItem("userEmail");
+if(savedUser) {
+    if(localStorage.getItem("isAdmin") === "true") {
+        sessionStorage.setItem("userEmail", savedUser);
+        sessionStorage.setItem("isAdmin", "true");
+        location.href = "admin.html";
+    } else {
+        sessionStorage.setItem("userEmail", savedUser);
+        location.href = "teacher.html";
+    }
 }
 
 async function handleLogin(){
 const u=user.value.trim();
 const p=pass.value.trim();
+const rememberMe = document.getElementById('remember').checked;
+
 if(!u||!p)return;
 
 loginBtn.disabled=true;
 loginBtn.innerText="جاري التحقق...";
 err.style.display="none";
 
+// تسجيل دخول الأدمن
 if(u==="admin"&&p==="790707071"){
-sessionStorage.setItem("userEmail","admin");
-sessionStorage.setItem("isAdmin","true");
-location.href="admin.html";
-return;
+    sessionStorage.setItem("userEmail","admin");
+    sessionStorage.setItem("isAdmin","true");
+    
+    if(rememberMe) {
+        localStorage.setItem("userEmail", "admin");
+        localStorage.setItem("isAdmin", "true");
+    }
+    
+    location.href="admin.html";
+    return;
 }
 
+// تسجيل دخول المعلمين
 try{
-const doc=await db.collection("teachers").doc(u).get();
-if(!doc.exists){
-showError("اسم المستخدم غير موجود");
-return;
-}
-if(doc.data().pass!==p){
-showError("كلمة المرور غير صحيحة");
-return;
-}
+    const doc=await db.collection("teachers").doc(u).get();
+    
+    if(!doc.exists){
+        showError("اسم المستخدم غير موجود");
+        return;
+    }
+    
+    if(doc.data().pass!==p){
+        showError("كلمة المرور غير صحيحة");
+        return;
+    }
 
-sessionStorage.setItem("userEmail",u);
-sessionStorage.removeItem("isAdmin");
-location.href="teacher.html";
+    sessionStorage.setItem("userEmail",u);
+    sessionStorage.removeItem("isAdmin");
+    
+    if(rememberMe) {
+        localStorage.setItem("userEmail", u);
+        localStorage.removeItem("isAdmin");
+    }
+    
+    location.href="teacher.html";
 
 }catch(e){
-showError("خطأ في الاتصال");
+    showError("خطأ في الاتصال");
 }
 }
 

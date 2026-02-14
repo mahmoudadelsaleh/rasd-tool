@@ -73,24 +73,16 @@
 <script>
     if ('serviceWorker' in navigator) {
         window.addEventListener('load', () => {
-            navigator.serviceWorker.register('./sw.js').then(reg => {
-                console.log('SW Registered');
-            }).catch(err => console.log('SW Failed', err));
+            navigator.serviceWorker.register('./sw.js');
         });
     }
 
-    // تهيئة Firebase من الملف الخارجي
     if (typeof firebaseConfig !== 'undefined') {
         firebase.initializeApp(firebaseConfig);
-    } else {
-        alert("خطأ: ملف firebase-config.js غير موجود!");
     }
 
     const db = firebase.firestore();
-    db.enablePersistence().catch((err) => {
-        if (err.code == 'failed-precondition') { console.log('Multiple tabs open'); }
-        else if (err.code == 'unimplemented') { console.log('Browser not supported'); }
-    });
+    db.enablePersistence().catch((err) => { console.log('Persistence failed'); });
 
     const tId = sessionStorage.getItem('userEmail');
     let currentStudents = [], activeInput = null, sysConfig = {};

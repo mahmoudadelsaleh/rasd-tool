@@ -36,7 +36,7 @@
         .stat-label { font-size: 11px; color: #64748b; }
         .teacher-card { background: white; border-radius: 12px; padding: 15px; margin-bottom: 12px; border-right: 5px solid var(--accent); position: relative; }
         .btn-main { width: 100%; padding: 12px; border-radius: 10px; border: none; font-weight: bold; cursor: pointer; color: white; margin-bottom: 8px; transition: 0.2s; }
-        input, select, textarea { width: 100%; padding: 12px; margin: 5px 0 10px; border-radius: 10px; border: 1px solid #cbd5e1; background: #f8fafc; font-size: 14px; }
+        input, select, textarea { width: 100%; padding: 12px; margin: 5px 0 10px; border-radius: 10px; border: 1px solid #cbd5e1; background: #f8fafc; font-size: 14px; box-sizing: border-box; }
         .grid-checks { display: flex; flex-wrap: wrap; gap: 8px; margin: 10px 0; background: #f8fafc; padding: 10px; border-radius: 10px; }
         .check-item { background: white; border: 1px solid #e2e8f0; padding: 6px 12px; border-radius: 20px; font-size: 11px; display: flex; align-items: center; gap: 5px; }
         .list-item { display: flex; justify-content: space-between; align-items: center; padding: 10px; border-bottom: 1px solid #f1f5f9; }
@@ -58,7 +58,7 @@
         <button class="tab-btn" onclick="openTab(event, 'students')">🎓 الطلاب</button>
         <button class="tab-btn" onclick="openTab(event, 'control')">🔓 الأقفال</button>
         <button class="tab-btn" onclick="openTab(event, 'reset')">🧹 التصفير</button>
-        <button class="tab-btn" onclick="event, 'export')">📥 التصدير</button>
+        <button class="tab-btn" onclick="openTab(event, 'export')">📥 التصدير</button>
     </div>
 
     <div class="content-area">
@@ -164,7 +164,10 @@
             renderUI();
             loadBackups();
             document.getElementById('status').innerText = "✅";
-        } catch (e) { document.getElementById('status').innerText = "❌"; }
+        } catch (e) { 
+            console.error(e);
+            document.getElementById('status').innerText = "❌"; 
+        }
     }
 
     function renderUI() {
@@ -216,12 +219,12 @@
             subject: document.getElementById('tSub').value, 
             pass: document.getElementById('tPass').value, 
             classes: cls,
-            role: "teacher" // الوضع الافتراضي
+            role: "teacher"
         };
         
         await db.collection('teachers').doc(id).set(data, {merge:true});
         alert("تم الحفظ");
-        location.reload(); 
+        init(); // تحديث بدون إعادة تحميل الصفحة
     }
 
     async function uploadStudents() {
@@ -232,7 +235,7 @@
             await db.collection('students').add({ name, grade: g, branch: b || 'general', sortOrder: 999 });
         }
         alert("تم رفع الطلاب");
-        location.reload();
+        init(); // تحديث بدون إعادة تحميل الصفحة
     }
 
     function renderStudentList() {
@@ -247,7 +250,6 @@
         const gV = document.getElementById('expGrade').value;
         document.getElementById('status').innerText = "⏳ سحب الدرجات...";
         
-        // سحب الدرجات عند الطلب فقط (توفير كوتا)
         const gSnap = await db.collection('grades').get();
         const currentGrades = gSnap.docs.map(d => d.data());
         
@@ -289,9 +291,14 @@
     async function deleteDoc(col, id) {
         if(!confirm("هل أنت متأكد من الحذف؟")) return;
         await db.collection(col).doc(id).delete();
-        // تحديث الواجهة فوراً دون إعادة تحميل الصفحة (توفيراً للكوتا)
+        // تحديث الواجهة
         const el = document.getElementById(col === 'teachers' ? `card-${id}` : `stud-${id}`);
         if(el) el.remove();
+        // تحديث الإحصائيات
+        if(col === 'teachers') teachers = teachers.filter(t => t.id !== id);
+        if(col === 'students') students = students.filter(s => s.id !== id);
+        document.getElementById('s-t').innerText = teachers.length;
+        document.getElementById('s-s').innerText = students.length;
     }
 
     function openTab(evt, tabId) {
@@ -311,6 +318,50 @@
         config.ex1W = document.getElementById('ex1W').value;
         config.ex2W = document.getElementById('ex2W').value;
         await db.collection('system').doc('config').set(config);
+    }
+
+    // الدوال المفقودة التي يتم استدعاؤها
+    function loadResetOptions() {
+        // مؤقتاً فقط لعرض رسالة
+        console.log('loadResetOptions called');
+        document.getElementById('resW').innerHTML = '<label class="check-item"><input type="checkbox"> أسبوع 1</label><label class="check-item"><input type="checkbox"> أسبوع 2</label>';
+    }
+
+    function loadBackups() {
+        // مؤقتاً - فارغة
+        console.log('loadBackups called');
+    }
+
+    function resetTForm() {
+        document.getElementById('tName').value = '';
+        document.getElementById('tSub').value = '';
+        document.getElementById('tUser').value = '';
+        document.getElementById('tPass').value = '';
+        document.querySelectorAll('input[name="tCls"]').forEach(c => c.checked = false);
+        document.getElementById('tCancelBtn').style.display = 'none';
+    }
+
+    function editT(teacherId) {
+        const teacher = teachers.find(t => t.id === teacherId);
+        if(!teacher) return;
+        
+        document.getElementById('tName').value = teacher.name || '';
+        document.getElementById('tSub').value = teacher.subject || '';
+        document.getElementById('tUser').value = teacher.id;
+        document.getElementById('tPass').value = teacher.pass || '';
+        
+        document.querySelectorAll('input[name="tCls"]').forEach(c => {
+            c.checked = teacher.classes ? teacher.classes.includes(c.value) : false;
+        });
+        
+        document.getElementById('tCancelBtn').style.display = 'block';
+        openTab({currentTarget: document.querySelectorAll('.tab-btn')[1]}, 'teachers');
+    }
+
+    function executeSafeReset() {
+        const teacherId = document.getElementById('resT').value;
+        if(!teacherId) return alert('اختر معلم أولاً');
+        alert('وظيفة التصفير غير مفعلة في هذه النسخة. يمكنك الحذف يدوياً من قائمة المعلمين.');
     }
 
     window.onload = init;
